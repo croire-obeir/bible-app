@@ -1,0 +1,14 @@
+# Dependencies
+node_modules/
+
+# Environment Secrets
+.env
+
+# React Native specific
+ios/build/
+android/build/
+*.swp
+.DS_Store
+
+# Backend specific
+dist/

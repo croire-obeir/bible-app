@@ -1,0 +1,21 @@
+{
+  "name": "bible-app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/croire-obeir/bible-app.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/croire-obeir/bible-app/issues"
+  },
+  "homepage": "https://github.com/croire-obeir/bible-app#readme"
+}
