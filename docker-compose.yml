@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: bible_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: bible_app
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+
+  backend:
+    build: 
+      context: ./backend
+      target: base  # Uses the dev stage from the Dockerfile
+    container_name: bible_api
+    volumes:
+      - ./backend:/app
+      - /app/node_modules # Prevents local node_modules from overwriting container
+    ports:
+      - "3000:3000"
+    environment:
+      - DB_HOST=db
+      - DB_USER=root
+      - DB_PASSWORD=root_password
+      - DB_NAME=bible_app
+    depends_on:
+      - db
+    
+    # Node 24: No need for dotenv, we use the native --env-file flag
+    command: npx nodemon --env-file=.env server.js
+
+  # Adding Adminer to visualize the DB in your browser
+  adminer:
+    image: adminer
+    container_name: bible_adminer
+    restart: always
+    ports:
+      - "8080:8080"
+
+volumes:
+  mysql_data:
