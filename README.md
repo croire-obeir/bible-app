@@ -25,6 +25,30 @@ git clone <votre-url-repo>
 cd bible-app
 
 
+### Option B : Vous avez déjà cloné le projet localement
+```bash
+
+
+# 1. Mettre à jour la liste des branches depuis le serveur
+git fetch origin
+
+# 2. Basculer sur la branche Docker
+git checkout initilise-docker
+
+# 3. exécutez la commande suivante pour lancer la compilation initiale (de l'emplacement où se trouve votre fichier docker-compose.yml)
+docker-compose up -d --build
+
+# Important : NE PAS exécuter « npm start ou npm run dev ou npm run build etc» pour le backend. Le backend est entièrement conteneurisé et doit être exécuté uniquement via Docker. Après la compilation initiale : 
+#Pour commence le backend
+```bash
+docker-compose up -d
+#Pour arreter le backend
+```bash
+docker-compose down
+
+
+
+
 
 
 
