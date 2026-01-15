@@ -14,37 +14,45 @@ Avant de commencer, assurez-vous d'avoir installé :
 
 ## 🏗️ Installation Initiale
 
-Choisissez l'option qui correspond à votre situation actuelle :
 
-### Option A : Vous n'avez pas encore cloné le projet
 ```bash
 # 1. Cloner le repo
 git clone <votre-url-repo>
 
+```
+### Frontend
+```bash
 # 2. Accéder au dossier
-cd bible-app
+cd bible-app/frontend
 
+# 3. installer les bibliothèques frontales
+npm install
 
-### Option B : Vous avez déjà cloné le projet localement
+# 4. Démarrer le serveur de développement React Native
+npx expo start (ou npm start)
+
+```
+
+### Backend
 ```bash
-
-
-# 1. Mettre à jour la liste des branches depuis le serveur
-git fetch origin
-
-# 2. Basculer sur la branche Docker
-git checkout initilise-docker
-
-# 3. exécutez la commande suivante pour lancer la compilation initiale (de l'emplacement où se trouve votre fichier docker-compose.yml)
+# 5. Retourner au dossier racine
+cd ..
+```
+*** N'exécutez pas npm install dans le backend ni aucune commande npm pour démarrer le serveur. 
+*** demander les variables d'environnement, créer un fichier .env dans le dossier racine et saisir les variables
+```bash
+# 6. Construire des conteneurs Docker (Assurez-vous que Docker Desktop est installé et en cours d'exécution.)
 docker-compose up -d --build
+#Exécutez cette commande si un nouveau paquet est modifié/dossier modifié ou lorsque des modifications importantes sont apportées au backend.
 
-# Important : NE PAS exécuter « npm start ou npm run dev ou npm run build etc» pour le backend. Le backend est entièrement conteneurisé et doit être exécuté uniquement via Docker. Après la compilation initiale : 
-#Pour commence le backend
-```bash
-docker-compose up -d
-#Pour arreter le backend
-```bash
+#7. arrêter le serveur backend
 docker-compose down
+
+#7. redemare le serveur backend
+docker-compose up
+```
+
+
 
 
 
