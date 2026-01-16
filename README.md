@@ -39,8 +39,10 @@ npx expo start (ou npm start)
 cd ..
 ```
 *** N'exécutez pas npm install dans le backend ni aucune commande npm pour démarrer le serveur. 
+
 *** demander les variables d'environnement, créer un fichier .env dans le dossier racine et saisir les variables
 ```bash
+
 # 6. Construire des conteneurs Docker (Assurez-vous que Docker Desktop est installé et en cours d'exécution.)
 docker-compose up -d --build
 #Exécutez cette commande si un nouveau paquet est modifié/dossier modifié ou lorsque des modifications importantes sont apportées au backend.
