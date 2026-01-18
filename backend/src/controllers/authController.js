@@ -56,3 +56,33 @@ export const signup=async(req,res)=>{
         res.status(500).json({ error: 'Internal server error' });
     }
 }
+
+export const login = async (req, res) => {
+    const { email, password } = req.body;
+    console.log(email,password)
+
+    try {
+        const [rows] = await db.execute('SELECT * FROM users WHERE email = ?', [email]);
+        
+        if (rows.length === 0) {
+            return res.status(401).json({ message: 'Invalid credentials' });
+        }
+
+        const user = rows[0];
+        const isMatch = await bcrypt.compare(password, user.password);
+
+        if (!isMatch) {
+            return res.status(401).json({ message: 'Invalid credentials' });
+        }
+
+        const token = jwt.sign(
+            { userId: user.id },
+            process.env.JWT_SECRET,
+            { expiresIn: '1h' }
+        );
+
+        res.json({ token, userId: user.id });
+    } catch (err) {
+        res.status(500).json({ error: err.message + "errrr" });
+    }
+};
