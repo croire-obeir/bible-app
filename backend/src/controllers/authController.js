@@ -2,6 +2,8 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import db from '../config/db.js';
 import { z } from 'zod';
+import { OAuth2Client } from 'google-auth-library';
+const googleClient = new OAuth2Client(process.env.GOOGLE_OAUTH_CLIENT_ID);
 
 const signupSchema = z.object({
     username: z.string().min(3).max(20),
@@ -88,6 +90,67 @@ export const login = async (req, res) => {
 };
 
 
-export const googleLogin= async(req,res)=>{
+export const googleLogin = async (req, res) => {
+    const { idToken } = req.body; // Sent from the Mobile App (React Native/Flutter)
 
-}
+    try {
+        // 1. Verify the token with Google
+        const ticket = await googleClient.verifyIdToken({
+            idToken,
+            audience: process.env.GOOGLE_OAUTH_CLIENT_ID,
+        });
+        const payload = ticket.getPayload();
+        const { sub: google_id, email, name: username, picture: avatar } = payload;
+
+        // 2. Check if user exists by google_id OR by email
+        const [rows] = await db.execute(
+            'SELECT * FROM users WHERE google_id = ? OR email = ?', 
+            [google_id, email]
+        );
+
+        let user;
+
+        if (rows.length > 0) {
+            user = rows[0];
+            
+            // Link account: If they had a traditional account but no google_id yet
+            if (!user.google_id) {
+                await db.execute(
+                    'UPDATE users SET google_id = ?, avatar = ? WHERE id = ?',
+                    [google_id, avatar, user.id]
+                );
+            }
+        } else {
+            // 3. Create new user if they don't exist
+            // Note: password is 'oauth_managed' because they don't have a traditional password
+            const [result] = await db.execute(
+                'INSERT INTO users (username, email, google_id, avatar, password) VALUES (?, ?, ?, ?, ?)',
+                [username, email, google_id, avatar, 'oauth_managed']
+            );
+            
+            const [newUser] = await db.execute('SELECT * FROM users WHERE id = ?', [result.insertId]);
+            user = newUser[0];
+        }
+
+        // 4. Generate the same JWT your traditional login uses
+        const token = jwt.sign(
+            { userId: user.id },
+            process.env.JWT_SECRET,
+            { expiresIn: '1h' }
+        );
+
+        res.json({ 
+            token, 
+            userId: user.id, 
+            user: { 
+                username: user.username, 
+                email: user.email, 
+                avatar: user.avatar 
+            } 
+        });
+
+    } catch (err) {
+        console.error("Google Login Error:", err);
+        res.status(401).json({ message: 'Invalid Google Token' });
+    }
+};
