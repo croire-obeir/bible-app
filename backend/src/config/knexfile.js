@@ -20,7 +20,7 @@ export default {
       port: Number(process.env.DB_PORT) || 3306,
     },
     migrations: {
-      directory: path.join(__dirname, 'migrations'),
+      directory: path.join(__dirname, '..', 'migrations'),
       // Ensures Knex handles the .js files as ES Modules
       loadExtensions: ['.js'],
     },

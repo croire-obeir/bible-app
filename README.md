@@ -59,6 +59,8 @@ visitez http://localhost:3000/ - Si la connexion s'établit et que l'API s'affic
 visitez http://localhost:8080/  pour accéder à l'interface graphique de MySQL
 
 
+docker exec -it <container_name> npx knex migrate:rollback --knexfile src/config/knexfile.js
+
 
 
 
