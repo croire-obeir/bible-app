@@ -4,10 +4,16 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import CustomInput from '../../components/CustomInput';
 
 export default function LoginScreen() {
   const router = useRouter();
+
+  const handleGoogleLogin = async () => {
+    // À implémenter avec expo-auth-session et @react-native-google-signin/google-signin
+    console.log('Connexion Google...');
+  };
 
   return (
     <View style={styles.container}>
@@ -42,6 +48,12 @@ export default function LoginScreen() {
               </LinearGradient>
             </TouchableOpacity>
 
+            {/* Bouton Google */}
+            <TouchableOpacity style={styles.googleButton} onPress={handleGoogleLogin}>
+              <Ionicons name="logo-google" size={20} color="#fff" />
+              <Text style={styles.googleButtonText}>SE CONNECTER AVEC GOOGLE</Text>
+            </TouchableOpacity>
+
             <TouchableOpacity onPress={() => router.push('/screens/Register')}>
               <Text style={styles.link}>
                 Pas encore de compte ? <Text style={styles.bold}>S'inscrire</Text>
@@ -69,6 +81,17 @@ const styles = StyleSheet.create({
   button: { height: 55, borderRadius: 15, overflow: 'hidden', marginTop: 20 },
   gradient: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   btnText: { color: '#fff', fontWeight: 'bold', letterSpacing: 1 },
+  googleButton: {
+    height: 55,
+    borderRadius: 15,
+    backgroundColor: '#4285F4',
+    marginTop: 15,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 10,
+  },
+  googleButtonText: { color: '#fff', fontWeight: 'bold', letterSpacing: 0.5 },
   link: { marginTop: 25, textAlign: 'center', color: '#666' },
   bold: { color: '#1565c0', fontWeight: 'bold' },
 });

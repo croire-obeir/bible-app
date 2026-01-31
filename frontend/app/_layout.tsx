@@ -15,6 +15,7 @@ export default function RootLayout() {
         <Stack.Screen name="screens/Login" />
         <Stack.Screen name="screens/Register" />
         <Stack.Screen name="screens/Home" />
+        <Stack.Screen name="screens/Profile" />
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>

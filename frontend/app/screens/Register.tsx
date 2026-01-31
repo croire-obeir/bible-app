@@ -1,6 +1,7 @@
 import React from 'react';
 import {
-  View, Text, TouchableOpacity, ScrollView, SafeAreaView, StyleSheet
+  View, Text, TouchableOpacity, ScrollView, SafeAreaView, StyleSheet,
+  ImageBackground
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -12,40 +13,47 @@ export default function RegisterScreen() {
 
   return (
     <View style={styles.container}>
-      <SafeAreaView style={styles.content}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="#1565c0" />
-        </TouchableOpacity>
-
-        <Text style={styles.brand}>CROIRE & OBÉIR</Text>
-
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <Text style={styles.heading}>Création de Compte</Text>
-
-          <CustomInput icon="person-outline" placeholder="Nom complet" />
-          <CustomInput icon="mail-outline" placeholder="Adresse e-mail" />
-          <CustomInput icon="lock-closed-outline" placeholder="Mot de passe" isPassword />
-          <CustomInput icon="checkmark-circle-outline" placeholder="Confirmer le mot de passe" isPassword />
-
-          <TouchableOpacity style={styles.button} onPress={() => router.push('/screens/Home')}>
-            <LinearGradient colors={['#D4AF37', '#AA8418']} style={styles.gradient}>
-              <Text style={styles.btnText}>CRÉER MON COMPTE</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-
+      <ImageBackground
+        source={require('../../assets/enregistrement.png')}
+        style={styles.bg}
+        imageStyle={{ opacity: 0.05 }}
+      >
+        <SafeAreaView style={styles.content}>
           <TouchableOpacity onPress={() => router.back()}>
-            <Text style={styles.link}>
-              Déjà un compte ? <Text style={styles.bold}>Se connecter</Text>
-            </Text>
+            <Ionicons name="arrow-back" size={24} color="#1565c0" />
           </TouchableOpacity>
-        </ScrollView>
-      </SafeAreaView>
+
+          <Text style={styles.brand}>CROIRE & OBÉIR</Text>
+
+          <ScrollView showsVerticalScrollIndicator={false}>
+            <Text style={styles.heading}>Création de Compte</Text>
+
+            <CustomInput icon="person-outline" placeholder="Nom complet" />
+            <CustomInput icon="mail-outline" placeholder="Adresse e-mail" />
+            <CustomInput icon="lock-closed-outline" placeholder="Mot de passe" isPassword />
+            <CustomInput icon="checkmark-circle-outline" placeholder="Confirmer le mot de passe" isPassword />
+
+            <TouchableOpacity style={styles.button} onPress={() => router.push('/screens/Home')}>
+              <LinearGradient colors={['#D4AF37', '#AA8418']} style={styles.gradient}>
+                <Text style={styles.btnText}>CRÉER MON COMPTE</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => router.back()}>
+              <Text style={styles.link}>
+                Déjà un compte ? <Text style={styles.bold}>Se connecter</Text>
+              </Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </SafeAreaView>
+      </ImageBackground>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
+  bg: { flex: 1 },
   content: { flex: 1, padding: 30 },
   brand: { textAlign: 'center', marginVertical: 20, fontWeight: 'bold', letterSpacing: 2 },
   heading: { fontSize: 26, fontWeight: '800', marginBottom: 30 },
