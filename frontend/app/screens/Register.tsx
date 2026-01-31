@@ -1,4 +1,4 @@
-import React from 'react';
+import  {useState} from 'react';
 import {
   View, Text, TouchableOpacity, ScrollView, SafeAreaView, StyleSheet
 } from 'react-native';
@@ -10,6 +10,23 @@ import CustomInput from '../../components/CustomInput';
 export default function RegisterScreen() {
   const router = useRouter();
 
+  // Initialize state as an object
+  const [userData, setUserData] = useState({
+    fullName: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  });
+
+  // Helper function to update specific fields
+  const handleInputChange = (name: string, value: string) => {
+    setUserData({
+      ...userData,
+      [name]: value,
+    });
+  }
+
+  console.log(userData)
   return (
     <View style={styles.container}>
       <SafeAreaView style={styles.content}>
@@ -22,10 +39,23 @@ export default function RegisterScreen() {
         <ScrollView showsVerticalScrollIndicator={false}>
           <Text style={styles.heading}>Création de Compte</Text>
 
-          <CustomInput icon="person-outline" placeholder="Nom complet" />
-          <CustomInput icon="mail-outline" placeholder="Adresse e-mail" />
-          <CustomInput icon="lock-closed-outline" placeholder="Mot de passe" isPassword />
-          <CustomInput icon="checkmark-circle-outline" placeholder="Confirmer le mot de passe" isPassword />
+          <CustomInput 
+          icon="person-outline" 
+          placeholder="Nom complet" 
+          value={userData.fullName}
+          onChangeText={(text) => handleInputChange('fullName', text)}
+          />
+          <CustomInput icon="mail-outline" placeholder="Adresse e-mail" 
+           value={userData.email}
+          onChangeText={(text) => handleInputChange('email', text)}
+          />
+          <CustomInput icon="lock-closed-outline" placeholder="Mot de passe" isPassword 
+           value={userData.password}
+          onChangeText={(text) => handleInputChange('password', text)}
+          />
+          <CustomInput icon="checkmark-circle-outline" placeholder="Confirmer le mot de passe" isPassword 
+           value={userData.confirmPassword}
+          onChangeText={(text) => handleInputChange('confirmPassword', text)}/>
 
           <TouchableOpacity style={styles.button} onPress={() => router.push('/screens/Home')}>
             <LinearGradient colors={['#D4AF37', '#AA8418']} style={styles.gradient}>

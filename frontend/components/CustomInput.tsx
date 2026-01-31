@@ -6,9 +6,11 @@ type Props = {
   icon: any;
   placeholder: string;
   isPassword?: boolean;
+  value:string;
+  onChangeText:(text: string) => void;
 };
 
-export default function CustomInput({ icon, placeholder, isPassword = false }: Props) {
+export default function CustomInput({ icon,value,onChangeText, placeholder, isPassword = false }: Props) {
   const [secure, setSecure] = useState(isPassword);
 
   return (
@@ -19,6 +21,8 @@ export default function CustomInput({ icon, placeholder, isPassword = false }: P
         placeholderTextColor="#999"
         secureTextEntry={secure}
         style={styles.input}
+        value={value}
+        onChangeText={onChangeText}
       />
       {isPassword && (
         <TouchableOpacity onPress={() => setSecure(!secure)}>
