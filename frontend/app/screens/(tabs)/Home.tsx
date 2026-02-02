@@ -49,7 +49,7 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <ImageBackground
-        source={require('../../assets/enregistrement.png')}
+        source={require('../../../assets/enregistrement.png')}
         style={styles.bg}
         imageStyle={{ opacity: 0.05 }}
       >
@@ -60,7 +60,7 @@ export default function HomeScreen() {
             <Text style={styles.headerSubtitle}>CROIRE & OBÉIR</Text>
           </View>
           <TouchableOpacity
-            onPress={() => router.push('/screens/Profile')}
+            onPress={() => router.push('/screens/(tabs)/Profile')}
             style={styles.profileButton}
           >
             <Ionicons name="person-circle-outline" size={32} color="#D4AF37" />
