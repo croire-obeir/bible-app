@@ -1,6 +1,7 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
+import { Stack, Tabs } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { Ionicons } from '@expo/vector-icons';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -10,11 +11,14 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack initialRouteName="screens/index" screenOptions={{ headerShown: false }}>
+      <Stack screenOptions={{ headerShown: false }}>
+        {/* Écrans hors navigation par onglets (Auth) */}
         <Stack.Screen name="screens/index" />
         <Stack.Screen name="screens/Login" />
         <Stack.Screen name="screens/Register" />
-        <Stack.Screen name="screens/Home" />
+        
+        {/* L'écran principal qui contiendra tes onglets */}
+        <Stack.Screen name="screens/MainTabs" />
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>

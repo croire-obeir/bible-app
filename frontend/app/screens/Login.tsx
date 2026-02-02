@@ -1,21 +1,51 @@
-import React from 'react';
-import {
-  View, Text, TouchableOpacity, ImageBackground, SafeAreaView, StyleSheet
-} from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, ImageBackground, SafeAreaView, StyleSheet, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import CustomInput from '../../components/CustomInput';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function LoginScreen() {
   const router = useRouter();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert("Erreur", "Veuillez remplir tous les champs.");
+      return;
+    }
+
+    try {
+      const storedUsers = await AsyncStorage.getItem('@all_users');
+      const users = storedUsers ? JSON.parse(storedUsers) : [];
+
+      // Vérification de l'utilisateur
+      const user = users.find((u: any) => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
+
+      if (user) {
+        // On stocke l'utilisateur actuellement connecté
+        await AsyncStorage.setItem('@current_user', JSON.stringify(user));
+        // On synchronise aussi avec la clé profile pour ton écran profil
+        await AsyncStorage.setItem('@user_profile_data', JSON.stringify({
+          name: user.name,
+          email: user.email,
+          avatar: null
+        }));
+        
+        router.push('/screens/(tabs)/Home');
+      } else {
+        Alert.alert("Échec", "Email ou mot de passe incorrect.");
+      }
+    } catch (e) {
+      Alert.alert("Erreur", "Une erreur est survenue lors de la connexion.");
+    }
+  };
 
   return (
     <View style={styles.container}>
-      <ImageBackground
-        source={require('../../assets/enregistrement.png')}
-        style={styles.bg}
-        imageStyle={{ opacity: 0.05 }}
-      >
+      <ImageBackground source={require('../../assets/enregistrement.png')} style={styles.bg} imageStyle={{ opacity: 0.05 }}>
         <SafeAreaView style={styles.content}>
           <TouchableOpacity onPress={() => router.back()}>
             <Text style={styles.backButton}>← Retour</Text>
@@ -29,17 +59,33 @@ export default function LoginScreen() {
           <View style={styles.card}>
             <Text style={styles.heading}>Connexion</Text>
 
-            <CustomInput icon="mail-outline" placeholder="Adresse e-mail" />
-            <CustomInput icon="lock-closed-outline" placeholder="Mot de passe" isPassword />
+            <CustomInput 
+              icon="mail-outline" 
+              placeholder="Adresse e-mail" 
+              value={email}
+              onChangeText={setEmail}
+            />
+            <CustomInput 
+              icon="lock-closed-outline" 
+              placeholder="Mot de passe" 
+              isPassword 
+              value={password}
+              onChangeText={setPassword}
+            />
 
             <TouchableOpacity style={styles.forgot}>
               <Text style={styles.forgotText}>Mot de passe oublié ?</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.button} onPress={() => router.push('/screens/Home')}>
+            <TouchableOpacity style={styles.button} onPress={handleLogin}>
               <LinearGradient colors={['#D4AF37', '#0a2d55']} style={styles.gradient}>
                 <Text style={styles.btnText}>SE CONNECTER</Text>
               </LinearGradient>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.googleButton}>
+              <Ionicons name="logo-google" size={20} color="#fff" />
+              <Text style={styles.googleButtonText}>SE CONNECTER AVEC GOOGLE</Text>
             </TouchableOpacity>
 
             <TouchableOpacity onPress={() => router.push('/screens/Register')}>
@@ -54,6 +100,7 @@ export default function LoginScreen() {
   );
 }
 
+// ... (garder les mêmes styles que ton code original)
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
   bg: { flex: 1 },
@@ -69,6 +116,11 @@ const styles = StyleSheet.create({
   button: { height: 55, borderRadius: 15, overflow: 'hidden', marginTop: 20 },
   gradient: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   btnText: { color: '#fff', fontWeight: 'bold', letterSpacing: 1 },
+  googleButton: {
+    height: 55, borderRadius: 15, backgroundColor: '#4285F4', marginTop: 15,
+    flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 10,
+  },
+  googleButtonText: { color: '#fff', fontWeight: 'bold', letterSpacing: 0.5 },
   link: { marginTop: 25, textAlign: 'center', color: '#666' },
   bold: { color: '#1565c0', fontWeight: 'bold' },
 });
