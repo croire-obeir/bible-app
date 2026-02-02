@@ -2,20 +2,13 @@ import React, { useState } from 'react';
 import { View, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-// 1. Mise à jour de l'interface pour accepter les props de contrôle
+// 1. Définition des types attendus (Props)
 type Props = {
-  icon: any;
+  icon: any; // Idéalement: keyof typeof Ionicons.glyphMap
   placeholder: string;
-  isPassword?: boolean;
-<<<<<<< Updated upstream
-  value:string;
-  onChangeText:(text: string) => void;
-};
-
-export default function CustomInput({ icon,value,onChangeText, placeholder, isPassword = false }: Props) {
-=======
-  value?: string;           // Ajouté : la valeur du texte
-  onChangeText?: (text: string) => void; // Ajouté : la fonction de modification
+  isPassword?: boolean; // Optionnel (le ? signifie non obligatoire)
+  value: string;        // Obligatoire pour le "controlled input"
+  onChangeText: (text: string) => void; // Obligatoire
 };
 
 export default function CustomInput({ 
@@ -25,7 +18,9 @@ export default function CustomInput({
   value, 
   onChangeText 
 }: Props) {
->>>>>>> Stashed changes
+  
+  // 2. Initialisation de l'état pour la visibilité du mot de passe
+  // On utilise 'isPassword' pour savoir si on doit cacher le texte au départ
   const [secure, setSecure] = useState(isPassword);
 
   return (
@@ -35,19 +30,18 @@ export default function CustomInput({
       <TextInput
         placeholder={placeholder}
         placeholderTextColor="#999"
-        secureTextEntry={secure}
+        // Si ce n'est pas un champ mot de passe, secureTextEntry doit toujours être false
+        secureTextEntry={isPassword ? secure : false} 
         style={styles.input}
-<<<<<<< Updated upstream
+        
+        // 3. Liaison des données (Props)
         value={value}
         onChangeText={onChangeText}
-=======
-        // 2. Liaison des props avec le TextInput natif
-        value={value}
-        onChangeText={onChangeText}
-        autoCapitalize="none" // Souvent utile pour les emails/mots de passe
->>>>>>> Stashed changes
+        
+        autoCapitalize="none"
       />
 
+      {/* Afficher l'œil uniquement si c'est un champ mot de passe */}
       {isPassword && (
         <TouchableOpacity onPress={() => setSecure(!secure)}>
           <Ionicons
