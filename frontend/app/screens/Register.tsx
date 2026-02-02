@@ -1,8 +1,14 @@
-import React from 'react';
+import { useState } from 'react';
 import {
-  View, Text, TouchableOpacity, ScrollView, SafeAreaView, StyleSheet,
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  StyleSheet,
   ImageBackground
 } from 'react-native';
+// 1. Changement de l'import pour SafeAreaView
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,6 +17,22 @@ import CustomInput from '../../components/CustomInput';
 export default function RegisterScreen() {
   const router = useRouter();
 
+  // Initialize state as an object
+  const [userData, setUserData] = useState({
+    fullName: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  });
+
+  // Helper function to update specific fields
+  const handleInputChange = (name: string, value: string) => {
+    setUserData({
+      ...userData,
+      [name]: value,
+    });
+  }
+
   return (
     <View style={styles.container}>
       <ImageBackground
@@ -18,8 +40,11 @@ export default function RegisterScreen() {
         style={styles.bg}
         imageStyle={{ opacity: 0.05 }}
       >
+        {/* 2. Structure nettoyée : Une seule SafeAreaView qui englobe le contenu */}
         <SafeAreaView style={styles.content}>
-          <TouchableOpacity onPress={() => router.back()}>
+          
+          {/* Header avec bouton retour */}
+          <TouchableOpacity onPress={() => router.back()} style={{ alignSelf: 'flex-start' }}>
             <Ionicons name="arrow-back" size={24} color="#1565c0" />
           </TouchableOpacity>
 
@@ -28,10 +53,35 @@ export default function RegisterScreen() {
           <ScrollView showsVerticalScrollIndicator={false}>
             <Text style={styles.heading}>Création de Compte</Text>
 
-            <CustomInput icon="person-outline" placeholder="Nom complet" />
-            <CustomInput icon="mail-outline" placeholder="Adresse e-mail" />
-            <CustomInput icon="lock-closed-outline" placeholder="Mot de passe" isPassword />
-            <CustomInput icon="checkmark-circle-outline" placeholder="Confirmer le mot de passe" isPassword />
+            <CustomInput
+              icon="person-outline"
+              placeholder="Nom complet"
+              value={userData.fullName}
+              onChangeText={(text: string) => handleInputChange('fullName', text)}
+            />
+            
+            <CustomInput 
+              icon="mail-outline" 
+              placeholder="Adresse e-mail"
+              value={userData.email}
+              onChangeText={(text: string) => handleInputChange('email', text)}
+            />
+            
+            <CustomInput 
+              icon="lock-closed-outline" 
+              placeholder="Mot de passe" 
+              isPassword
+              value={userData.password}
+              onChangeText={(text: string) => handleInputChange('password', text)}
+            />
+            
+            <CustomInput 
+              icon="checkmark-circle-outline" 
+              placeholder="Confirmer le mot de passe" 
+              isPassword
+              value={userData.confirmPassword}
+              onChangeText={(text: string) => handleInputChange('confirmPassword', text)}
+            />
 
             <TouchableOpacity style={styles.button} onPress={() => router.push('/screens/Home')}>
               <LinearGradient colors={['#D4AF37', '#AA8418']} style={styles.gradient}>
@@ -44,6 +94,10 @@ export default function RegisterScreen() {
                 Déjà un compte ? <Text style={styles.bold}>Se connecter</Text>
               </Text>
             </TouchableOpacity>
+            
+            {/* Ajout d'un petit espace en bas pour le scroll */}
+            <View style={{ height: 20 }} /> 
+
           </ScrollView>
         </SafeAreaView>
       </ImageBackground>
