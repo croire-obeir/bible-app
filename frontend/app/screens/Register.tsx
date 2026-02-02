@@ -15,6 +15,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import CustomInput from '../../components/CustomInput';
 // import AsyncStorage from '@react-native-async-storage/async-storage';
+import { handleUserRegistration } from '@/api/services/authServices';
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -75,44 +76,52 @@ export default function RegisterScreen() {
       [name]: value,
     });
   }
-  const getApiUrl = () => {
-    if (Platform.OS === 'web') {
-      return 'http://localhost:3000';
-    } else if (Platform.OS === 'android') {
-      return 'http://10.0.2.2:3000';
-    } else {
-      // iOS Simulator or Physical Device
-      return 'http://192.168.1.XX:3000'; // Replace with your IP
-    }
-  };
+  // const getApiUrl = () => {
+  //   if (Platform.OS === 'web') {
+  //     return 'http://localhost:3000';
+  //   } else if (Platform.OS === 'android') {
+  //     return 'http://10.0.2.2:3000';
+  //   } else {
+  //     // iOS Simulator or Physical Device
+  //     return 'http://192.168.1.XX:3000'; // Replace with your IP
+  //   }
+  // };
 
-  const handleUserRegistration=async()=>{
-    const API_URL= `${getApiUrl()}/api/auth/signup`
-    try{
-      const response = await fetch(API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        username: userData.userName,
-        email: userData.email,
-        password: userData.password,
-      }),
-    });
+  // const handleUserRegistration=async()=>{
+  //   const API_URL= `${getApiUrl()}/api/auth/signup`
+  //   try{
+  //     const response = await fetch(API_URL, {
+  //     method: 'POST',
+  //     headers: {
+  //       'Content-Type': 'application/json',
+  //     },
+  //     body: JSON.stringify({
+  //       username: userData.userName,
+  //       email: userData.email,
+  //       password: userData.password,
+  //     }),
+  //   });
 
-    const data = await response.json();
+  //   const data = await response.json();
 
-    if (response.ok) {
-      console.log("Success:", data);
+  //   if (response.ok) {
+  //     console.log("Success:", data);
+  //     router.push('/screens/Home');
+  //   } else {
+  //     alert("Registration failed: " + data.message);
+  //   }
+
+  //   }catch(error){
+  //     console.log("error: ", error)
+  //     alert("Could not connect to the server.");
+  //   }
+  // }
+
+  const onRegisterPressed=async()=>{
+    const result = await handleUserRegistration(userData);
+
+    if (result?.success) {
       router.push('/screens/Home');
-    } else {
-      alert("Registration failed: " + data.message);
-    }
-
-    }catch(error){
-      console.log("error: ", error)
-      alert("Could not connect to the server.");
     }
   }
 
@@ -177,7 +186,7 @@ export default function RegisterScreen() {
               onChangeText={(text) => handleInputChange('password', text)}
               />
               {!passwordsMatch &&  (
-                <Text style={styles.errorText}>
+                <Text>
                   Les mots de passe ne correspondent pas
                 </Text>
               )}
@@ -198,7 +207,7 @@ export default function RegisterScreen() {
               </LinearGradient>
             </TouchableOpacity> */}
 
-            <TouchableOpacity style={styles.button} onPress={handleUserRegistration}>
+            <TouchableOpacity style={styles.button} onPress={onRegisterPressed}>
               <LinearGradient colors={['#D4AF37', '#AA8418']} style={styles.gradient}>
                 <Text style={styles.btnText}>CRÉER MON COMPTE</Text>
               </LinearGradient>
