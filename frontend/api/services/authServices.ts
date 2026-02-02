@@ -62,6 +62,7 @@ export const handleUserSignIn= async(userLoginData:any)=>{
     // 2. Logic: Handle the success globally
     if (response.data) {
     //   setLogin({ username: response.data.user.username });
+    console.log(response.data)
       return { success: true, data: response.data };
     }
   } catch (error: any) {

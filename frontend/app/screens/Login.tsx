@@ -5,17 +5,21 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import CustomInput from '../../components/CustomInput';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { handleUserSignIn } from '@/api/services/authServices';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+   // Initialize state as an object
+  const [userLoginData, setUserLoginData] = useState({
+    email: '',
+    password: ''
+  });
 
   const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert("Erreur", "Veuillez remplir tous les champs.");
-      return;
-    }
+    // if (!email || !password) {
+    //   Alert.alert("Erreur", "Veuillez remplir tous les champs.");
+    //   return;
+    // }
 
     try {
       const storedUsers = await AsyncStorage.getItem('@all_users');
@@ -43,6 +47,23 @@ export default function LoginScreen() {
     }
   };
 
+    const handleInputChange = (name: string, value: string) => {
+      
+      setUserLoginData({
+        ...userLoginData,
+        [name]: value,
+      });
+    }
+
+
+    const onLoginPressed=async()=>{
+        const result = await handleUserSignIn(userLoginData);
+    
+        if (result?.success) {
+          router.push('/screens/Home');
+        }
+      }
+
   return (
     <View style={styles.container}>
       <ImageBackground source={require('../../assets/enregistrement.png')} style={styles.bg} imageStyle={{ opacity: 0.05 }}>
@@ -59,25 +80,19 @@ export default function LoginScreen() {
           <View style={styles.card}>
             <Text style={styles.heading}>Connexion</Text>
 
-            <CustomInput 
-              icon="mail-outline" 
-              placeholder="Adresse e-mail" 
-              value={email}
-              onChangeText={setEmail}
+            <CustomInput icon="mail-outline" placeholder="Adresse e-mail" 
+            value={userLoginData.email}
+            onChangeText={(text) => handleInputChange('email', text)}
             />
-            <CustomInput 
-              icon="lock-closed-outline" 
-              placeholder="Mot de passe" 
-              isPassword 
-              value={password}
-              onChangeText={setPassword}
+            <CustomInput icon="lock-closed-outline" placeholder="Mot de passe" isPassword 
+            value={userLoginData.password}
+            onChangeText={(text) => handleInputChange('password', text)}
             />
-
             <TouchableOpacity style={styles.forgot}>
               <Text style={styles.forgotText}>Mot de passe oublié ?</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.button} onPress={handleLogin}>
+            <TouchableOpacity style={styles.button} onPress={onLoginPressed}>
               <LinearGradient colors={['#D4AF37', '#0a2d55']} style={styles.gradient}>
                 <Text style={styles.btnText}>SE CONNECTER</Text>
               </LinearGradient>
