@@ -1,6 +1,7 @@
 import  {useState} from 'react';
 import {
-  View, Text, TouchableOpacity, ScrollView, SafeAreaView, StyleSheet
+  View, Text, TouchableOpacity, ScrollView, SafeAreaView, StyleSheet,
+  Platform
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -12,21 +13,65 @@ export default function RegisterScreen() {
 
   // Initialize state as an object
   const [userData, setUserData] = useState({
-    fullName: '',
+    userName: '',
     email: '',
     password: '',
     confirmPassword: '',
   });
 
+  const [passwordsMatch, setPasswordsMatch]=useState(true);
+
   // Helper function to update specific fields
   const handleInputChange = (name: string, value: string) => {
+    if (name==="confirmPassword" && value!==userData.password)setPasswordsMatch(false);
+    if (name==="confirmPassword" && value===userData.password)setPasswordsMatch(true);
     setUserData({
       ...userData,
       [name]: value,
     });
   }
+  const getApiUrl = () => {
+    if (Platform.OS === 'web') {
+      return 'http://localhost:3000';
+    } else if (Platform.OS === 'android') {
+      return 'http://10.0.2.2:3000';
+    } else {
+      // iOS Simulator or Physical Device
+      return 'http://192.168.1.XX:3000'; // Replace with your IP
+    }
+  };
 
-  console.log(userData)
+  const handleUserRegistration=async()=>{
+    const API_URL= `${getApiUrl()}/api/auth/signup`
+    try{
+      const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        username: userData.userName,
+        email: userData.email,
+        password: userData.password,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      console.log("Success:", data);
+      router.push('/screens/Home');
+    } else {
+      alert("Registration failed: " + data.message);
+    }
+
+    }catch(error){
+      console.log("error: ", error)
+      alert("Could not connect to the server.");
+    }
+  }
+
+
   return (
     <View style={styles.container}>
       <SafeAreaView style={styles.content}>
@@ -42,8 +87,8 @@ export default function RegisterScreen() {
           <CustomInput 
           icon="person-outline" 
           placeholder="Nom complet" 
-          value={userData.fullName}
-          onChangeText={(text) => handleInputChange('fullName', text)}
+          value={userData.userName}
+          onChangeText={(text) => handleInputChange('userName', text)}
           />
           <CustomInput icon="mail-outline" placeholder="Adresse e-mail" 
            value={userData.email}
@@ -53,11 +98,16 @@ export default function RegisterScreen() {
            value={userData.password}
           onChangeText={(text) => handleInputChange('password', text)}
           />
+          {!passwordsMatch &&  (
+            <Text style={styles.errorText}>
+              Les mots de passe ne correspondent pas
+            </Text>
+          )}
           <CustomInput icon="checkmark-circle-outline" placeholder="Confirmer le mot de passe" isPassword 
            value={userData.confirmPassword}
           onChangeText={(text) => handleInputChange('confirmPassword', text)}/>
 
-          <TouchableOpacity style={styles.button} onPress={() => router.push('/screens/Home')}>
+          <TouchableOpacity style={styles.button} onPress={handleUserRegistration}>
             <LinearGradient colors={['#D4AF37', '#AA8418']} style={styles.gradient}>
               <Text style={styles.btnText}>CRÉER MON COMPTE</Text>
             </LinearGradient>
