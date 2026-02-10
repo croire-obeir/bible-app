@@ -1,5 +1,5 @@
 import apiClient from "../client";
-import { Alert } from 'react-native';
+import { Alert, Platform } from 'react-native';
 
 interface User {
   id: string;
@@ -13,18 +13,7 @@ interface AuthResponse {
   token: string;
 }
 
-// export const authService = {
-//   // We specify that this returns a Promise of AuthResponse
-//   register: async (userData: Partial<User>): Promise<AuthResponse> => {
-//     const response = await apiClient.post<AuthResponse>('/api/auth/signup', userData);
-//     return response.data;
-//   },
 
-//   login: async (credentials: object): Promise<AuthResponse> => {
-//     const response = await apiClient.post<AuthResponse>('/auth/login', credentials);
-//     return response.data;
-//   },
-// };
 
 export const handleUserRegistration = async (userData: any) => {
   // 1. Get the action from the Store
@@ -62,7 +51,6 @@ export const handleUserSignIn= async(userLoginData:any)=>{
     // 2. Logic: Handle the success globally
     if (response.data) {
     //   setLogin({ username: response.data.user.username });
-    console.log(response.data)
       return { success: true, data: response.data };
     }
   } catch (error: any) {
@@ -73,3 +61,25 @@ export const handleUserSignIn= async(userLoginData:any)=>{
     return { success: false, error: message };
   }
 };
+
+
+export const sendGoogleTokenToBackend = async (idToken:string) => {
+    try {
+      
+      const response = await apiClient.post('/api/auth/google-login', {
+        idToken: idToken
+      });
+       // 2. Logic: Handle the success globally
+      if (response.data) {
+      //   setLogin({ username: response.data.user.username });
+        return { success: true, data: response.data };
+      }
+    } catch (error: any) {
+      // 3. Logic: Handle the error globally
+      const message = error.response?.data?.message || "Server connection failed";
+      Alert.alert("Registration Error", message);
+      
+      return { success: false, error: message };
+    }
+  };
+

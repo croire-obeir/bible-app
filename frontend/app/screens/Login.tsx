@@ -1,11 +1,18 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ImageBackground, SafeAreaView, StyleSheet, Alert } from 'react-native';
+import { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, ImageBackground, SafeAreaView, StyleSheet, Alert, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import CustomInput from '../../components/CustomInput';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { handleUserSignIn } from '@/api/services/authServices';
+import { handleUserSignIn, sendGoogleTokenToBackend } from '@/api/services/authServices';
+//Google login
+import * as Google from 'expo-auth-session/providers/google';
+import * as AuthSession from 'expo-auth-session';
+import * as WebBrowser from 'expo-web-browser';
+
+// This is required to make sure the popup closes correctly on web
+WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -64,6 +71,48 @@ export default function LoginScreen() {
         }
       }
 
+
+    const [request, response, promptAsync] = Google.useAuthRequest({
+    // androidClientId: "73677966494-a556nbq4q8e81g55t95edkubqph5bceq.apps.googleusercontent.com",
+    // iosClientId: "73677966494-u7vr5o6oqs2ga6ukt4vakr7i077klr80.apps.googleusercontent.com",
+    webClientId: "73677966494-5g1uaag0q1d15u0ki10k8an4ptehe9tq.apps.googleusercontent.com",
+    responseType: "id_token",// change this later for prod and to implement refresh tokens
+    redirectUri: Platform.select({
+      web: 'http://localhost:8081', // Replace with your app's scheme
+      }),
+    });
+
+
+
+    const getApiUrl = () => {
+    if (Platform.OS === 'web') {
+      return 'http://localhost:3000';
+    } else if (Platform.OS === 'android') {
+      return 'http://10.0.2.2:3000';
+    } else {
+      // iOS Simulator or Physical Device
+      return 'http://192.168.1.XX:3000'; // Replace with your IP
+    }
+  };
+
+
+
+  
+const onGoggleLoginPressed=async(idToken:string)=>{
+     const result = await sendGoogleTokenToBackend(idToken);
+        if (result?.success) {
+          router.push('/screens/Home');
+        }
+      }
+
+  useEffect(() => {
+    if (response?.type === 'success') {
+     onGoggleLoginPressed(response.params.id_token)
+    }
+  }, [response]);
+
+  
+
   return (
     <View style={styles.container}>
       <ImageBackground source={require('../../assets/enregistrement.png')} style={styles.bg} imageStyle={{ opacity: 0.05 }}>
@@ -98,7 +147,7 @@ export default function LoginScreen() {
               </LinearGradient>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.googleButton}>
+            <TouchableOpacity style={styles.googleButton} disabled={!request} onPress={() => promptAsync()}>
               <Ionicons name="logo-google" size={20} color="#fff" />
               <Text style={styles.googleButtonText}>SE CONNECTER AVEC GOOGLE</Text>
             </TouchableOpacity>

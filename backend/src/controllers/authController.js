@@ -61,7 +61,7 @@ export const signup=async(req,res)=>{
 
 export const login = async (req, res) => {
     const { email, password } = req.body;
-    console.log(email,password)
+   
 
     try {
         const [rows] = await db.execute('SELECT * FROM users WHERE email = ?', [email]);
