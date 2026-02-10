@@ -1,6 +1,10 @@
 services:
   db:
     image: mysql:8.0
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 5s
+      retries: 10
     container_name: bible_mysql
     restart: always
     environment:

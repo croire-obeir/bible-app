@@ -54,12 +54,14 @@ docker-compose down
 docker-compose up
 ```
 
+
 ### vérifier que le serveur fonctionne
 visitez http://localhost:3000/ - Si la connexion s'établit et que l'API s'affiche, cela signifie qu'elle fonctionne !
 visitez http://localhost:8080/  pour accéder à l'interface graphique de MySQL
 
 
-docker exec -it <container_name> npx knex migrate:rollback --knexfile src/config/knexfile.js
+docker exec -it bible_api npx knex migrate:latest --knexfile src/config/knexfile.js
+npx knex migrate:make users_test --knexfile src/config/knex.js --env development
 
 
 
