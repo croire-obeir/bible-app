@@ -73,9 +73,9 @@ export default function LoginScreen() {
 
 
     const [request, response, promptAsync] = Google.useAuthRequest({
-    // androidClientId: "73677966494-a556nbq4q8e81g55t95edkubqph5bceq.apps.googleusercontent.com",
-    // iosClientId: "73677966494-u7vr5o6oqs2ga6ukt4vakr7i077klr80.apps.googleusercontent.com",
-    webClientId: "73677966494-5g1uaag0q1d15u0ki10k8an4ptehe9tq.apps.googleusercontent.com",
+    androidClientId: process.env.EXPO_GOOGLE_ANDROID_CLIENT_ID,
+    iosClientId: process.env.EXPO_GOOGLE_IOS_CLIENT_ID,
+    webClientId: '73677966494-5g1uaag0q1d15u0ki10k8an4ptehe9tq.apps.googleusercontent.com',
     responseType: "id_token",// change this later for prod and to implement refresh tokens
     redirectUri: Platform.select({
       web: 'http://localhost:8081', // Replace with your app's scheme
