@@ -16,7 +16,8 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const STORAGE_KEY = '@user_profile_data';
 
@@ -77,15 +78,31 @@ export default function ProfileScreen() {
 
   // --- Fonctions de gestion ---
 
-  const handleLogout = () => {
-    Alert.alert("Déconnexion", "Êtes-vous sûr de vouloir vous déconnecter ?", [
-      { text: "Annuler", style: "cancel" },
-      { text: "Oui", onPress: async () => {
-          await AsyncStorage.removeItem('@current_user');
-          router.push('/screens/Login');
-        } 
-      }
-    ]);
+  const handleLogout =async () => {
+    try {
+      // 1. Remove the JWT from the encrypted hardware storage
+      await SecureStore.deleteItemAsync('userToken');
+      // 2. Remove the user profile from standard storage
+      await AsyncStorage.removeItem('userprofile');
+      // 4. Trigger the Alert now that storage is empty
+      Alert.alert(
+        "Déconnexion",
+        "Vous avez été déconnecté avec succès.",
+        [
+          { 
+            text: "OK", 
+            onPress: () => {
+              router.push('/screens/Login');
+            } 
+          }
+        ],
+        { cancelable: false } // Ensures user must click OK
+      );
+
+    } catch (error) {
+      console.error("Logout Error:", error);
+      Alert.alert("Erreur", "Un problème est survenu lors de la déconnexion.");
+    }
   };
 
   const handleChangePassword = () => {
