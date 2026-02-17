@@ -1,11 +1,12 @@
 {
   "expo": {
-    "name": "frontend",
+    "name": "Croire et Obéir",
     "slug": "frontend",
+    "owner": "croir-et-obeir",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "frontend",
+    "scheme": "croire-et-obeir",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -41,7 +42,14 @@
           }
         }
       ],
-      "expo-web-browser"
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.73677966494-u7vr5o6oqs2ga6ukt4vakr7i077klr80"
+        }
+      ],
+      "expo-web-browser",
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,
