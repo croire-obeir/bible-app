@@ -52,7 +52,19 @@ export const signup=async(req,res)=>{
         const insertSql = 'INSERT INTO users (email, password, username) VALUES (?, ?, ?)';
         await db.execute(insertSql, [email, hashedPassword, username]);
         
-        res.status(201).json({ message: 'User created successfully' });
+        // Fetch the newly created user to get the ID and confirm data
+        const [rows] = await db.execute('SELECT id, username, email FROM users WHERE email = ?', [email]);
+        const user = rows[0];
+
+        // Send ONE response containing everything the frontend needs
+        return res.status(201).json({ 
+            message: 'User created successfully',
+            user: {
+                id: user.id,
+                email: user.email,
+                username: user.username
+            }
+        });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Internal server error' });
@@ -84,8 +96,10 @@ export const login = async (req, res) => {
         );
 
         res.json({ token, 
-            userId: user.id, 
-            username:user.username });
+            id: user.id, 
+            username:user.username,
+            email: user.email
+         });
     } catch (err) {
         res.status(500).json({ error: err.message + "errrr" });
     }
@@ -141,18 +155,32 @@ export const googleLogin = async (req, res) => {
             { expiresIn: '1h' }
         );
 
-        res.json({ 
-            token, 
-            userId: user.id, 
-            user: { 
-                username: user.username, 
-                email: user.email, 
-                avatar: user.avatar 
-            } 
-        });
+        // res.json({ 
+        //     token, 
+        //     userId: user.id, 
+        //     user: { 
+        //         username: user.username, 
+        //         email: user.email, 
+        //         avatar: user.avatar 
+        //     } 
+        // });
+
+         res.json({ token, 
+            id: user.id, 
+            username:user.username,
+            email: user.email,
+            avatar: user.avatar 
+         });
 
     } catch (err) {
         console.error("Google Login Error:", err);
-        res.status(401).json({ message: 'Invalid Google Token' });
+
+        // If the error is specifically about the Google Token
+        if (err.message.includes("Token") || err.message.includes("ticket")) {
+            return res.status(401).json({ message: 'Invalid Google Token' });
+        }
+
+        // If it's a server configuration error (like the missing JWT secret)
+        res.status(500).json({ message: 'Internal Server Error', details: err.message });
     }
 };
