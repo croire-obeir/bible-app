@@ -121,7 +121,7 @@ export default function RegisterScreen() {
     const result = await handleUserRegistration(userData);
 
     if (result?.success) {
-      router.push('/screens/Home');
+      router.push('/screens/Login');
     }
   }
 
