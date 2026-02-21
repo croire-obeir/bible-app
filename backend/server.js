@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import authRoutes from './src/routes/authRoutes.js';
+import userDataManipulationRoutes from './src/routes/uerDatamanipulationRoutes.js'
 import passport from 'passport';
 
 const app = express();
@@ -11,6 +12,7 @@ app.use(passport.initialize());
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/user', userDataManipulationRoutes);
 
 const PORT = process.env.PORT || 3000;
 
