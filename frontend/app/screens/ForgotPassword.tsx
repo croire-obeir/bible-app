@@ -60,7 +60,10 @@ export default function ForgotPasswordScreen() {
               
                <CustomInput icon="mail-outline" placeholder="Adresse e-mail" 
                 value={userEmail.email}
-                onChangeText={(text) => setUserEmail({...userEmail, email: text})}
+                onChangeText={(text) =>{ 
+                  setUserEmail({...userEmail, email: text})
+                  setEmailSent('')
+                }}
                 />
                { emailSent ? <Text style={{ marginTop: 20, color:'#AA8418' }}>{emailSent}</Text> : null}
             <TouchableOpacity style={styles.button} onPress={onForgotPasswordPressed}>

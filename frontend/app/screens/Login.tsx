@@ -197,7 +197,7 @@ const onGoggleLoginPressed=async(idToken:string)=>{
 
             <TouchableOpacity style={styles.googleButton}  onPress={() => handlegoogleSignin()}>
               <Ionicons name="logo-google" size={20} color="#fff" />
-              <Text style={styles.googleButtonText}>SE CONNECTER AVEC GOOGLE </Text>
+              <Text style={styles.googleButtonText}>SE CONNECTER AVEC GOOGLE</Text>
             </TouchableOpacity> 
 
             <TouchableOpacity onPress={() => router.push('/screens/Register')}>

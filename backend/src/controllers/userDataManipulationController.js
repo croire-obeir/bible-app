@@ -109,10 +109,32 @@ export const forgotPassword= async(req,res)=>{
             to: [email], // Resend expects an array or a string
             subject: 'Demande de modification du mot de passe',
             html: `
-                <p>Vous avez demandé une réinitialisation de mot de passe.</p>
-                <p>Cliquez sur le lien ci-dessous pour définir un nouveau mot de passe. Ce lien expire dans 1 heure.</p>
-                <a href="croire-et-obeir://reset-password?token=${token}">Réset mot de passe</a>
-            `,
+                <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6; max-width: 600px;">
+                    <p>Bonjour,</p>
+                    
+                    <p>Vous avez demandé la réinitialisation de votre mot de passe pour votre compte <strong>Croire et Obéir</strong>.</p>
+                    
+                    <p>Pour définir un nouveau mot de passe, veuillez cliquer sur le bouton ci-dessous. Ce lien est valable pour une durée de <strong>1 heure</strong> :</p>
+                    
+                    <p style="text-align: center; margin: 30px 0;">
+                        <a href="http://localhost:3000/reset-password?token=${token}" 
+                        style="background-color: #007AFF; color: #ffffff; padding: 12px 25px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+                        Réinitialiser mon mot de passe
+                        </a>
+                    </p>
+                    
+                    <p>Si vous n'avez pas sollicité cette modification, vous pouvez ignorer cet e-mail en toute sécurité. Votre mot de passe actuel restera inchangé.</p>
+                    
+                    <p>Cordialement,<br>
+                    L'équipe Croire et Obéir</p>
+                    
+                    <hr style="border: 0; border-top: 1px solid #eee; margin-top: 30px;">
+                    <p style="font-size: 11px; color: #999;">
+                        Note : Si le bouton ne s'affiche pas correctement, copiez le lien suivant dans votre navigateur :<br>
+                        http://localhost:3000/reset-password?token=${token}
+                    </p>
+                </div>
+                        `,
         });
 
         if (error) {
@@ -120,7 +142,7 @@ export const forgotPassword= async(req,res)=>{
             return res.status(400).json({ error });
         }
 
-        res.status(200).send(`Mot de passe a été envoyé à ${email}, c'est valable pour 1hr. Veuillez vérifier votre boîte de réception. `);
+        res.status(200).send(`un lien pour renouveler votre mot de passe a été envoyé à ${email}. Attention, ce lien expirera dans 60 minutes. Pensez à vérifier vos spams. `);
   
     }catch(err){
         res.status(500).json({ error: err.message });
@@ -149,7 +171,10 @@ export const passwordReset = async (req, res) => {
             [token, new Date()]
         );
 
-        if (user.length === 0) return res.status(400).send('Token invalide ou expiré');
+        if (user.length === 0) return res.status(400).json({ 
+            message: "Lien de réinitialisation invalide ou expiré. Veuillez refaire une demande de réinitialisation. \nRetournez sur l'application Croire et Obéir et cliquez sur \"Mot de passe oublié\" pour recevoir un nouveau lien.",
+            success: true 
+        });
 
         const userId = user[0].user_id;
         const hashedPassword = await bcrypt.hash(password, 12);
@@ -165,7 +190,10 @@ export const passwordReset = async (req, res) => {
             [userId]
         );
 
-        res.status(200).send('Mot de passe réinitialisé avec succès');
+        res.status(200).json({ 
+            message: "Votre nouveau mot de passe est maintenant actif.Vous pouvez fermer cette page et retourner sur l\'application Croire et Obéir pour vous connecter.",
+            success: true 
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
