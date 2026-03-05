@@ -28,7 +28,12 @@ const apiClient = axios.create({
 
 apiClient.interceptors.request.use(
   async(config)=>{
-    const publicEndpoints = ['api/auth/signup', 'api/auth/login', 'api/auth/google-login'];
+    const publicEndpoints = [
+      '/api/auth/signup', 
+      '/api/auth/login', 
+      '/api/auth/google-login',
+       '/api/user/forgot-password'
+      ];
     if (publicEndpoints.includes(config.url || '')) {
       return config;
     }

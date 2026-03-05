@@ -18,7 +18,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { handleNameEmailChange } from '../../../api/services/userDataUpdateServices';
+import { handleNameEmailChange, handleDeleteAccount } from '../../../api/services/userDataUpdateServices';
 
 const STORAGE_KEY = '@user_profile_data';
 
@@ -155,10 +155,8 @@ export default function ProfileScreen() {
   const saveChanges = async () => {
     const result = await handleNameEmailChange(userData.username, userData.email, userData.userId);
     if (result?.success) {
-          cancelChanges()
-          // Alert.alert("Succès", "Votre nom et email ont été mis à jour.");
-          // loadProfileData();
-          // setIsEditing(false);
+          Alert.alert("Succès", "Votre nom et email ont été mis à jour.");
+          setIsEditing(false);
         }
   };
 
@@ -166,11 +164,40 @@ export default function ProfileScreen() {
     setIsEditing(false);
   };
 
+  const handleDelete = () => {
+    Alert.alert(
+      "Confirmer la suppression",
+      "Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible.",
+      [
+        { text: "Annuler", style: "cancel" },
+        { 
+          text: "Supprimer", 
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const result = await handleDeleteAccount(userData.userId);
+              if (result?.success) {
+                Alert.alert("Compte supprimé", "Votre compte a été supprimé avec succès.");
+                router.push('/screens/Login');
+              } else {
+                Alert.alert("Erreur", "Impossible de supprimer le compte.");
+              }
+            } catch (e) {
+              Alert.alert("Erreur", "Impossible de supprimer le compte.");
+            }
+          } 
+        }
+      ],
+      { cancelable: false }
+    );
+  }
+
   // Tes items de menu d'origine
   const menuItems = [
-    { id: '2', title: 'Changer le mot de passe', icon: 'lock-closed-outline', onPress: handleChangePassword },
-    { id: '3', title: 'Gérer les préférences', icon: 'settings-outline', onPress: () => console.log('Prefs') },
-    { id: '4', title: 'Notifications', icon: 'notifications-outline', onPress: () => console.log('Notifs') },
+    { id: '2', title: 'Supprimer votre compte', icon: 'lock-closed-outline', onPress: handleDelete },
+    { id: '3', title: 'Changer le mot de passe', icon: 'lock-closed-outline', onPress: handleChangePassword },
+    { id: '4', title: 'Gérer les préférences', icon: 'settings-outline', onPress: () => console.log('Prefs') },
+    { id: '5', title: 'Notifications', icon: 'notifications-outline', onPress: () => console.log('Notifs') },
   ];
 
   const currentAvatar =  userData.avatar;
@@ -257,7 +284,15 @@ export default function ProfileScreen() {
                 <Ionicons name="mail-outline" size={20} color="#D4AF37" />
                 <View style={styles.infoText}>
                   <Text style={styles.infoLabel}>Email</Text>
-                  <Text style={styles.infoValue}>{userData.email}</Text>
+                   {isEditing ? (
+                    <TextInput
+                      style={styles.inputField}
+                      value={userData.email}
+                      onChangeText={(text) => setUserData({ ...userData, email: text })}
+                    />
+                  ) : (
+                    <Text style={styles.infoValue}>{userData.email}</Text>
+                  )}
                 </View>
               </View>
             </View>

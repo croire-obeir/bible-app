@@ -185,7 +185,7 @@ const onGoggleLoginPressed=async(idToken:string)=>{
             value={userLoginData.password}
             onChangeText={(text) => handleInputChange('password', text)}
             />
-            <TouchableOpacity style={styles.forgot}>
+            <TouchableOpacity style={styles.forgot} onPress={() => router.push('/screens/ForgotPassword')}>
               <Text style={styles.forgotText}>Mot de passe oublié ?</Text>
             </TouchableOpacity>
 
