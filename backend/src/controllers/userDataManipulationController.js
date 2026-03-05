@@ -105,13 +105,13 @@ export const forgotPassword= async(req,res)=>{
 
         // 4. Send Email via Resend
         const { data, error } = await resend.emails.send({
-            from: 'MyTabe <noreply@mail.tommytabe.dev>', // Change to your verified domain in production
+            from: 'croire et obéir <noreply@mail.tommytabe.dev>', // Change to your verified domain in production
             to: [email], // Resend expects an array or a string
             subject: 'Demande de modification du mot de passe',
             html: `
                 <p>Vous avez demandé une réinitialisation de mot de passe.</p>
                 <p>Cliquez sur le lien ci-dessous pour définir un nouveau mot de passe. Ce lien expire dans 1 heure.</p>
-                <a href="http://localhost:3000/reset-password?token=${token}">Réset mot de passe</a>
+                <a href="croire-et-obeir://reset-password?token=${token}">Réset mot de passe</a>
             `,
         });
 
@@ -120,7 +120,7 @@ export const forgotPassword= async(req,res)=>{
             return res.status(400).json({ error });
         }
 
-        res.status(200).send('Mot de passe a été envoyé');
+        res.status(200).send(`Mot de passe a été envoyé à ${email}, c'est valable pour 1hr. Veuillez vérifier votre boîte de réception. `);
   
     }catch(err){
         res.status(500).json({ error: err.message });
