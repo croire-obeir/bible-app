@@ -8,7 +8,7 @@ const router = express.Router();
 // Rate Limiter goes FIRST, then Token Verification, then the Controller
 router.put('/update/:userId', authLimiter, tokkenVerify, updateUserData);
 router.delete('/delete/:userId', authLimiter, tokkenVerify, deleteUserData);
-router.post('/forgot-password', authLimiter,tokkenVerify, forgotPassword);
-router.post('/password-reset', authLimiter,tokkenVerify, passwordReset);
+router.post('/forgot-password', authLimiter, forgotPassword);
+router.post('/password-reset', authLimiter, passwordReset);
 
 export default router;
