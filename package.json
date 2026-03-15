@@ -17,7 +17,9 @@
   "bugs": {
     "url": "https://github.com/croire-obeir/bible-app/issues"
   },
-  "homepage": "https://github.com/croire-obeir/bible-app#readme"
+  "homepage": "https://github.com/croire-obeir/bible-app#readme",
+  "dependencies": {
+    "expo": "^55.0.6",
+    "knex": "^3.1.0"
+  }
 }
-
-

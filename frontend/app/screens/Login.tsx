@@ -35,7 +35,7 @@ export default function LoginScreen() {
       const users = storedUsers ? JSON.parse(storedUsers) : [];
 
       // Vérification de l'utilisateur
-      const user = users.find((u: any) => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
+      const user = users.find((u: any) => u.email.toLowerCase() === userLoginData.email.toLowerCase() && u.password === userLoginData.password);
 
       if (user) {
         // On stocke l'utilisateur actuellement connecté
@@ -47,7 +47,7 @@ export default function LoginScreen() {
           avatar: null
         }));
         
-        router.push('/screens/(tabs)/Home');
+        router.replace('/screens/Home'); // Changed to router.replace
       } else {
         Alert.alert("Échec", "Email ou mot de passe incorrect.");
       }
@@ -65,15 +65,15 @@ export default function LoginScreen() {
     }
 
 
-    const onLoginPressed=async()=>{
-        const result = await handleUserSignIn(userLoginData);
-        if (result?.success) {
-          router.push('/screens/Home');
-        }
-      }
-
+    const onLoginPressed = async () => {
+    const result = await handleUserSignIn(userLoginData);
     
-  const handlegoogleSignin = async () => {
+    if (result?.success) {
+        router.replace('/screens/Home'); 
+    }
+};
+
+    const handlegoogleSignin = async () => {
     try {
     await GoogleSignin.hasPlayServices();
     const response = await GoogleSignin.signIn();
