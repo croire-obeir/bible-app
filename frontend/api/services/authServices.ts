@@ -1,5 +1,5 @@
 import apiClient from "../client";
-import { Alert, Platform } from 'react-native';
+import { Alert } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -37,7 +37,7 @@ export const handleUserRegistration = async (userData: any) => {
     }
   } catch (error: any) {
     // 3. Logic: Handle the error globally
-    const message = error.response?.data?.message || "Server connection failed";
+    const message = error.response?.data?.message || "Échec de la connexion au serveur";
     Alert.alert("Registration Error", message);
     
     return { success: false, error: message };
@@ -58,15 +58,14 @@ export const handleUserSignIn= async(userLoginData:any)=>{
       // Store the token securely
       await SecureStore.setItemAsync('userToken', response.data.token);
       const savedProfile = await AsyncStorage.getItem('userprofile');
-     
-      const userprofile= {username: response.data.username, email: response.data.email};
+      const userprofile= {username: response.data.username, email: response.data.email, userId: response.data.id};
       await AsyncStorage.setItem('userprofile', JSON.stringify(userprofile));
      
       return { success: true, data: response.data };
     }
   } catch (error: any) {
     // 3. Logic: Handle the error globally
-    const message = error.response?.data?.message || "Server connection failed";
+    const message = error.response?.data?.message || "Échec de la connexion au serveur";
     Alert.alert("Registration Error", message);
     
     return { success: false, error: message };
@@ -84,16 +83,15 @@ export const sendGoogleTokenToBackend = async (idToken:string) => {
       // Store the token securely
       await SecureStore.setItemAsync('userToken', response.data.token);
       const savedProfile = await AsyncStorage.getItem('userprofile');
-     
-      const userprofile= {username: response.data.username, email: response.data.email};
+      const userprofile= {username: response.data.username, email: response.data.email, userId: response.data.id};
       await AsyncStorage.setItem('userprofile', JSON.stringify(userprofile));
      
       return { success: true, data: response.data };
     }
     } catch (error: any) {
       // 3. Logic: Handle the error globally
-      const message = error.response?.data?.message || "Server connection failed";
-      Alert.alert("Registration Error", message);
+      const message = error.response?.data?.message || "Échec de la connexion au serveur";
+      Alert.alert("Google Login Error", message);
       
       return { success: false, error: message };
     }

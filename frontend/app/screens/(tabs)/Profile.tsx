@@ -18,12 +18,14 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { handleNameEmailChange, handleDeleteAccount } from '../../../api/services/userDataUpdateServices';
 
 const STORAGE_KEY = '@user_profile_data';
 
 interface UserData {
-  name: string;
+  username: string;
   email: string;
+  userId: string;
   avatar: string | null;
 }
 
@@ -34,47 +36,36 @@ export default function ProfileScreen() {
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [userData, setUserData] = useState<UserData>({
-    name: '',
+    username: '',
     email: '',
+    userId: '',
     avatar: null,
   });
-  const [tempData, setTempData] = useState<UserData>({ ...userData });
+  // const [tempData, setTempData] = useState<UserData>({ ...userData });
 
   // --- Chargement des données au montage ---
-  useEffect(() => {
-    loadProfileData();
-  }, []);
 
   const loadProfileData = async () => {
     try {
-      // 1. On récupère d'abord l'utilisateur actuellement connecté
-      const currentUserJson = await AsyncStorage.getItem('@current_user');
-      const profileJson = await AsyncStorage.getItem(STORAGE_KEY);
-
-      if (currentUserJson) {
-        const currentUser = JSON.parse(currentUserJson);
-        let finalData: UserData;
-
-        if (profileJson) {
-          // Si un profil personnalisé existe, on le prend
-          finalData = JSON.parse(profileJson);
-        } else {
-          // Sinon, on initialise avec les infos du compte créé (Register)
-          finalData = {
-            name: currentUser.name,
-            email: currentUser.email,
-            avatar: null,
-          };
-        }
-        setUserData(finalData);
-        setTempData(finalData);
+      
+      const storedData = await AsyncStorage.getItem('userprofile');
+      if (storedData) {
+        const parsedData = JSON.parse(storedData);
+        setUserData(parsedData);
+      } else {
+        Alert.alert("Aucun profil trouvé", "Veuillez vous connecter pour voir votre profil.");
+        router.push('/screens/Login');
       }
-    } catch (e) {
-      console.error("Erreur chargement profil", e);
+    } catch (error) {
+      console.error("Erreur chargement profil", error);
     } finally {
       setIsLoading(false);
     }
   };
+
+   useEffect(() => {
+    loadProfileData();
+   }, []);
 
   // --- Fonctions de gestion ---
 
@@ -135,52 +126,81 @@ export default function ProfileScreen() {
     );
   };
 
-  const pickImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert("Permission refusée", "Accès galerie requis.");
-      return;
-    }
+  // const pickImage = async () => {
+  //   const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  //   if (status !== 'granted') {
+  //     Alert.alert("Permission refusée", "Accès galerie requis.");
+  //     return;
+  //   }
 
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    });
+  //   let result = await ImagePicker.launchImageLibraryAsync({
+  //     mediaTypes: ImagePicker.MediaTypeOptions.Images,
+  //     allowsEditing: true,
+  //     aspect: [1, 1],
+  //     quality: 1,
+  //   });
 
-    if (!result.canceled && result.assets && result.assets.length > 0) {
-      const newAvatar = result.assets[0].uri;
-      if (isEditing) {
-        setTempData({ ...tempData, avatar: newAvatar });
-      } else {
-        const newData = { ...userData, avatar: newAvatar };
-        setUserData(newData);
-        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(newData));
-      }
-    }
-  };
+  //   if (!result.canceled && result.assets && result.assets.length > 0) {
+  //     const newAvatar = result.assets[0].uri;
+  //     if (isEditing) {
+  //       setTempData({ ...tempData, avatar: newAvatar });
+  //     } else {
+  //       const newData = { ...userData, avatar: newAvatar };
+  //       setUserData(newData);
+  //       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(newData));
+  //     }
+  //   }
+  // };
 
   const saveChanges = async () => {
-    setUserData(tempData);
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(tempData));
-    setIsEditing(false);
-    Alert.alert("Succès", "Profil sauvegardé.");
+    const result = await handleNameEmailChange(userData.username, userData.email, userData.userId);
+    if (result?.success) {
+          Alert.alert("Succès", "Votre nom et email ont été mis à jour.");
+          setIsEditing(false);
+        }
   };
 
   const cancelChanges = () => {
     setIsEditing(false);
-    setTempData({ ...userData });
   };
+
+  const handleDelete = () => {
+    Alert.alert(
+      "Confirmer la suppression",
+      "Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible.",
+      [
+        { text: "Annuler", style: "cancel" },
+        { 
+          text: "Supprimer", 
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const result = await handleDeleteAccount(userData.userId);
+              if (result?.success) {
+                Alert.alert("Compte supprimé", "Votre compte a été supprimé avec succès.");
+                router.push('/screens/Login');
+              } else {
+                Alert.alert("Erreur", "Impossible de supprimer le compte.");
+              }
+            } catch (e) {
+              Alert.alert("Erreur", "Impossible de supprimer le compte.");
+            }
+          } 
+        }
+      ],
+      { cancelable: false }
+    );
+  }
 
   // Tes items de menu d'origine
   const menuItems = [
-    { id: '2', title: 'Changer le mot de passe', icon: 'lock-closed-outline', onPress: handleChangePassword },
-    { id: '3', title: 'Gérer les préférences', icon: 'settings-outline', onPress: () => console.log('Prefs') },
-    { id: '4', title: 'Notifications', icon: 'notifications-outline', onPress: () => console.log('Notifs') },
+    { id: '2', title: 'Supprimer votre compte', icon: 'lock-closed-outline', onPress: handleDelete },
+    { id: '3', title: 'Changer le mot de passe', icon: 'lock-closed-outline', onPress: handleChangePassword },
+    { id: '4', title: 'Gérer les préférences', icon: 'settings-outline', onPress: () => console.log('Prefs') },
+    { id: '5', title: 'Notifications', icon: 'notifications-outline', onPress: () => console.log('Notifs') },
   ];
 
-  const currentAvatar = isEditing ? tempData.avatar : userData.avatar;
+  const currentAvatar =  userData.avatar;
 
   if (isLoading) {
     return (
@@ -209,7 +229,7 @@ export default function ProfileScreen() {
           
           <LinearGradient colors={['#0a2d55', '#1565c0']} style={styles.profileCard}>
             <View style={styles.avatarContainer}>
-              <TouchableOpacity onPress={pickImage}>
+              <TouchableOpacity onPress={() => Alert.alert("Fonctionnalité à venir", "La modification de l'avatar sera disponible dans une future mise à jour.")}>
                 <View style={styles.avatar}>
                   {currentAvatar ? (
                     <Image source={{ uri: currentAvatar }} style={styles.avatarImage} />
@@ -220,13 +240,8 @@ export default function ProfileScreen() {
                 <View style={styles.editAvatarButton}>
                   <Ionicons name="camera" size={16} color="#fff" />
                 </View>
-              </TouchableOpacity>
+              </TouchableOpacity> 
             </View>
-
-            <Text style={styles.userName}>
-              {isEditing ? tempData.name : userData.name}
-            </Text>
-
             {isEditing ? (
               <View style={styles.actionButtonsRow}>
                 <TouchableOpacity style={[styles.actionButton, styles.cancelButton]} onPress={cancelChanges}>
@@ -254,11 +269,11 @@ export default function ProfileScreen() {
                   {isEditing ? (
                     <TextInput
                       style={styles.inputField}
-                      value={tempData.name}
-                      onChangeText={(text) => setTempData({ ...tempData, name: text })}
+                      value={userData.username}
+                      onChangeText={(text) => setUserData({ ...userData, username: text })}
                     />
                   ) : (
-                    <Text style={styles.infoValue}>{userData.name}</Text>
+                    <Text style={styles.infoValue}>{userData.username}</Text>
                   )}
                 </View>
               </View>
@@ -269,7 +284,15 @@ export default function ProfileScreen() {
                 <Ionicons name="mail-outline" size={20} color="#D4AF37" />
                 <View style={styles.infoText}>
                   <Text style={styles.infoLabel}>Email</Text>
-                  <Text style={styles.infoValue}>{userData.email}</Text>
+                   {isEditing ? (
+                    <TextInput
+                      style={styles.inputField}
+                      value={userData.email}
+                      onChangeText={(text) => setUserData({ ...userData, email: text })}
+                    />
+                  ) : (
+                    <Text style={styles.infoValue}>{userData.email}</Text>
+                  )}
                 </View>
               </View>
             </View>
