@@ -12,6 +12,8 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
+type AppRoute = `/${string}`;
+
 export default function HomeScreen() {
   const router = useRouter();
 
@@ -22,6 +24,7 @@ export default function HomeScreen() {
       icon: 'book-outline',
       description: 'Lire la Bible en plusieurs langues',
       color: '#D4AF37',
+      route: '/Bible' as AppRoute,
     },
     {
       id: '2',
@@ -29,6 +32,7 @@ export default function HomeScreen() {
       icon: 'volume-high-outline',
       description: 'Accédez à des enregistrements audio',
       color: '#1565c0',
+      route: '/Audios' as AppRoute,
     },
     {
       id: '3',
@@ -36,6 +40,7 @@ export default function HomeScreen() {
       icon: 'play-circle-outline',
       description: 'Regardez des enseignements vidéo',
       color: '#0a2d55',
+      route: '/Enseignements' as AppRoute,
     },
     {
       id: '4',
@@ -43,6 +48,7 @@ export default function HomeScreen() {
       icon: 'document-text-outline',
       description: 'Plongez dans des documents inspirants',
       color: '#AA8418',
+      route: '/Documents' as AppRoute,
     },
   ];
 
@@ -60,7 +66,7 @@ export default function HomeScreen() {
             <Text style={styles.headerSubtitle}>CROIRE & OBÉIR</Text>
           </View>
           <TouchableOpacity
-            onPress={() => router.push('/screens/(tabs)/Profile')}
+            onPress={() => router.push('/screens/Profile' as AppRoute)}
             style={styles.profileButton}
           >
             <Ionicons name="person-circle-outline" size={32} color="#D4AF37" />
@@ -76,10 +82,17 @@ export default function HomeScreen() {
             colors={['#0a2d55', '#1565c0']}
             style={styles.verseCard}
           >
-            <Ionicons name="star" size={24} color="#D4AF37" style={{ marginBottom: 10 }} />
+            <Ionicons
+              name="star"
+              size={24}
+              color="#D4AF37"
+              style={{ marginBottom: 10 }}
+            />
             <Text style={styles.verseTitle}>Verset du jour</Text>
             <Text style={styles.verseText}>
-              "Car Dieu a tant aimé le monde qu'il a donné son Fils unique, afin que quiconque croit en lui ne périsse point, mais qu'il ait la vie éternelle."
+              "Car Dieu a tant aimé le monde qu'il a donné son Fils unique,
+              afin que quiconque croit en lui ne périsse point, mais qu'il ait
+              la vie éternelle."
             </Text>
             <Text style={styles.verseReference}>Jean 3:16</Text>
           </LinearGradient>
@@ -93,6 +106,7 @@ export default function HomeScreen() {
                   key={feature.id}
                   style={styles.featureCard}
                   activeOpacity={0.8}
+                  onPress={() => router.push(feature.route as AppRoute)}
                 >
                   <View
                     style={[
@@ -107,7 +121,9 @@ export default function HomeScreen() {
                     />
                   </View>
                   <Text style={styles.featureTitle}>{feature.title}</Text>
-                  <Text style={styles.featureDescription}>{feature.description}</Text>
+                  <Text style={styles.featureDescription}>
+                    {feature.description}
+                  </Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -121,7 +137,10 @@ export default function HomeScreen() {
                 <Text style={styles.seeAll}>Voir tout →</Text>
               </TouchableOpacity>
             </View>
-            <TouchableOpacity style={styles.readingCard}>
+            <TouchableOpacity
+              style={styles.readingCard}
+              onPress={() => router.push('/Bible' as AppRoute)}
+            >
               <View style={styles.readingContent}>
                 <Ionicons name="book" size={24} color="#D4AF37" />
                 <View style={styles.readingText}>
