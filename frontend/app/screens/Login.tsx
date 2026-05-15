@@ -202,7 +202,7 @@ const onGoggleLoginPressed=async(idToken:string)=>{
 
             <TouchableOpacity onPress={() => router.push('/screens/Register')}>
               <Text style={styles.link}>
-                Pas encore de compte ? <Text style={styles.bold}>S'inscrire</Text>
+                Pas encore de compte? <Text style={styles.bold}>S'inscrire</Text>
               </Text>
             </TouchableOpacity>
           </View>

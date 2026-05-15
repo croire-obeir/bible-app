@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ImageBackground, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import BibleSearch from './bible/BibleSearch';
 
 type Verse = {
   id: string;
@@ -55,6 +56,7 @@ export default function BibleScreen() {
         </SafeAreaView>
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          <BibleSearch/>
           <Text style={styles.sectionTitle}>Livres</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.booksRow}>
             {books.map((b) => {
