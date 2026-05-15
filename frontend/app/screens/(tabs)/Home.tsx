@@ -11,6 +11,7 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import CustomHeader from '../../../components/CustomHeader'
 
 type AppRoute = `/${string}`;
 
@@ -24,7 +25,7 @@ export default function HomeScreen() {
       icon: 'book-outline',
       description: 'Lire la Bible en plusieurs langues',
       color: '#D4AF37',
-      route: '/Bible' as AppRoute,
+      route: '/screens/(tabs)/Bible' as AppRoute,
     },
     {
       id: '2',
@@ -32,7 +33,7 @@ export default function HomeScreen() {
       icon: 'volume-high-outline',
       description: 'Accédez à des enregistrements audio',
       color: '#1565c0',
-      route: '/Audios' as AppRoute,
+      route: '/screens/(tabs)/Audios' as AppRoute,
     },
     {
       id: '3',
@@ -40,7 +41,7 @@ export default function HomeScreen() {
       icon: 'play-circle-outline',
       description: 'Regardez des enseignements vidéo',
       color: '#0a2d55',
-      route: '/Enseignements' as AppRoute,
+      route: '/screens/(tabs)/Videos' as AppRoute,
     },
     {
       id: '4',
@@ -48,7 +49,7 @@ export default function HomeScreen() {
       icon: 'document-text-outline',
       description: 'Plongez dans des documents inspirants',
       color: '#AA8418',
-      route: '/Documents' as AppRoute,
+      route: '/screens/(tabs)/Documents' as AppRoute,
     },
   ];
 
@@ -58,21 +59,20 @@ export default function HomeScreen() {
         source={require('../../../assets/enregistrement.png')}
         style={styles.bg}
         imageStyle={{ opacity: 0.05 }}
-      >
-        {/* Header */}
-        <SafeAreaView style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>Bienvenue</Text>
-            <Text style={styles.headerSubtitle}>CROIRE & OBÉIR</Text>
-          </View>
-          <TouchableOpacity
-            onPress={() => router.push('/screens/Profile' as AppRoute)}
-            style={styles.profileButton}
-          >
-            <Ionicons name="person-circle-outline" size={32} color="#D4AF37" />
-          </TouchableOpacity>
-        </SafeAreaView>
-
+      > 
+        <CustomHeader 
+          leftSlot={
+            <TouchableOpacity onPress={() => console.log('Open drawer')}>
+              <Ionicons name="menu" size={28} color="#0a2d55" />
+            </TouchableOpacity>
+          }
+          centerSlot="CROIRE & OBÉIR"
+          rightSlot={
+            <TouchableOpacity onPress={() => console.log('Open Search')}>
+              <Ionicons name="search" size={24} color="#0a2d55" />
+            </TouchableOpacity>
+          }
+      />
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
@@ -180,12 +180,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4,
   },
-  greeting: {
-    color: '#D4AF37',
-    fontSize: 14,
-    fontWeight: '600',
-    letterSpacing: 0.5,
-  },
+
   headerSubtitle: {
     color: '#fff',
     fontSize: 18,

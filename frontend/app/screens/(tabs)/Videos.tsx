@@ -11,7 +11,7 @@ type VideoItem = {
   url: string;
 };
 
-export default function EnseignementsScreen() {
+export default function VideosScreen() {
   const videos: VideoItem[] = useMemo(
     () => [
       {
@@ -42,7 +42,7 @@ export default function EnseignementsScreen() {
 
   return (
     <View style={styles.container}>
-      <ImageBackground source={require('../assets/enregistrement.png')} style={styles.bg} imageStyle={{ opacity: 0.05 }}>
+      <ImageBackground source={require('../../../assets/enregistrement.png')} style={styles.bg} imageStyle={{ opacity: 0.05 }}>
         <SafeAreaView style={styles.header}>
           <Text style={styles.headerTitle}>Enseignements</Text>
         </SafeAreaView>

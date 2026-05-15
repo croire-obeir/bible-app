@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ImageBackground, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import CustomHeader from '../../../components/CustomHeader';
 
 type Verse = {
   id: string;
@@ -49,11 +50,21 @@ export default function BibleScreen() {
 
   return (
     <View style={styles.container}>
-      <ImageBackground source={require('../assets/enregistrement.png')} style={styles.bg} imageStyle={{ opacity: 0.05 }}>
-        <SafeAreaView style={styles.header}>
-          <Text style={styles.headerTitle}>Bible</Text>
-        </SafeAreaView>
-
+      <ImageBackground source={require('../../../assets/enregistrement.png')} style={styles.bg} imageStyle={{ opacity: 0.05 }}>
+      
+        <CustomHeader
+          leftSlot={
+            <TouchableOpacity onPress={() => console.log('Open drawer')}>
+              <Ionicons name="menu" size={28} color="#0a2d55" />
+            </TouchableOpacity>
+          }
+          centerSlot="Lecture de la Bible"
+          rightSlot={
+            <TouchableOpacity onPress={() => console.log('Open Search')}>
+              <Ionicons name="search" size={24} color="#0a2d55" />
+            </TouchableOpacity>
+          }
+        />
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           <Text style={styles.sectionTitle}>Livres</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.booksRow}>
