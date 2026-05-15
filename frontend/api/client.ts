@@ -3,11 +3,17 @@ import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 
 const getApiUrl = () => {
+    const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+
+    if (apiUrl) {
+      return apiUrl;
+    }
+
     if (Platform.OS === 'web') {
       return 'http://localhost:3000';
     } else if (Platform.OS === 'android') {
       // http://192.168.178.100:3000
-      return 'http://192.168.0.176:3000';
+      return 'http://192.168.1.200:3000';
     } else {
       // iOS Simulator or Physical Device
       return 'http://192.168.1.XX:3000'; // Replace with your IP
@@ -34,7 +40,12 @@ apiClient.interceptors.request.use(
       '/api/auth/google-login',
        '/api/user/forgot-password'
       ];
-    if (publicEndpoints.includes(config.url || '')) {
+    const publicPrefixes = ['/api/bible'];
+
+    if (
+      publicEndpoints.includes(config.url || '') ||
+      publicPrefixes.some((prefix) => config.url?.startsWith(prefix))
+    ) {
       return config;
     }
     const token = await SecureStore.getItemAsync('userToken');

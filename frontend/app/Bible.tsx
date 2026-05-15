@@ -1,124 +1,283 @@
-import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ImageBackground, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Href, useRouter } from 'expo-router';
+import { BibleBook, fetchBibleBooks, Testament } from '@/api/services/bibleServices';
+import { SacredPage } from '@/components/sacred/SacredPage';
+import { sacredColors } from '@/constants/sacredTheme';
 
-type Verse = {
-  id: string;
-  book: string;
-  reference: string;
-  text: string;
+type BookSection = {
+  title: string;
+  description: string;
+  books: BibleBook[];
 };
 
+function getSections(books: BibleBook[], testament: Testament): BookSection[] {
+  if (testament === 'AT') {
+    return [
+      {
+        title: 'Le Pentateuque',
+        description:
+          "Les cinq livres de Moïse, fondant la loi et l'histoire des origines du peuple de l'alliance.",
+        books: books.filter((book) => book.id >= 1 && book.id <= 5),
+      },
+      {
+        title: 'Les Livres Historiques',
+        description: 'La marche du peuple, des conquêtes aux royaumes.',
+        books: books.filter((book) => book.id >= 6 && book.id <= 17),
+      },
+      {
+        title: 'Poésie et Sagesse',
+        description: 'Prières, louanges et sagesse pour la vie quotidienne.',
+        books: books.filter((book) => book.id >= 18 && book.id <= 22),
+      },
+      {
+        title: 'Les Prophètes',
+        description: "L'appel de Dieu, la justice et l'espérance annoncée.",
+        books: books.filter((book) => book.id >= 23 && book.id <= 39),
+      },
+    ].filter((section) => section.books.length > 0);
+  }
+
+  return [
+    {
+      title: 'Les Évangiles',
+      description: 'La vie, les paroles et les œuvres de Jésus-Christ.',
+      books: books.filter((book) => book.id >= 40 && book.id <= 43),
+    },
+    {
+      title: 'Église et Mission',
+      description: "Les débuts de l'Église et l'expansion de l'Évangile.",
+      books: books.filter((book) => book.id === 44),
+    },
+    {
+      title: 'Les Épîtres',
+      description: 'Lettres apostoliques pour enseigner, corriger et fortifier.',
+      books: books.filter((book) => book.id >= 45 && book.id <= 65),
+    },
+    {
+      title: 'Révélation',
+      description: "La victoire finale de Dieu et l'espérance de l'Église.",
+      books: books.filter((book) => book.id === 66),
+    },
+  ].filter((section) => section.books.length > 0);
+}
+
 export default function BibleScreen() {
-  const verses: Verse[] = useMemo(
-    () => [
-      {
-        id: 'jn-3-16',
-        book: 'Jean',
-        reference: 'Jean 3:16',
-        text:
-          "Car Dieu a tant aimé le monde qu'il a donné son Fils unique, afin que quiconque croit en lui ne périsse point, mais qu'il ait la vie éternelle.",
-      },
-      {
-        id: 'ps-23-1',
-        book: 'Psaumes',
-        reference: 'Psaume 23:1',
-        text: "L'Éternel est mon berger: je ne manquerai de rien.",
-      },
-      {
-        id: 'pr-3-5',
-        book: 'Proverbes',
-        reference: 'Proverbes 3:5',
-        text: "Confie-toi en l'Éternel de tout ton cœur, Et ne t'appuie pas sur ta sagesse.",
-      },
-      {
-        id: 'rm-8-28',
-        book: 'Romains',
-        reference: 'Romains 8:28',
-        text:
-          "Nous savons, du reste, que toutes choses concourent au bien de ceux qui aiment Dieu, de ceux qui sont appelés selon son dessein.",
-      },
-    ],
-    []
-  );
+  const router = useRouter();
+  const [testament, setTestament] = useState<Testament>('AT');
+  const [books, setBooks] = useState<BibleBook[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const books = useMemo(() => Array.from(new Set(verses.map((v) => v.book))), [verses]);
-  const [selectedBook, setSelectedBook] = useState<string>(books[0] ?? '');
+  useEffect(() => {
+    let mounted = true;
 
-  const filtered = useMemo(() => verses.filter((v) => (selectedBook ? v.book === selectedBook : true)), [verses, selectedBook]);
+    setLoading(true);
+    fetchBibleBooks(testament)
+      .then((data) => {
+        if (mounted) {
+          setBooks(data);
+          setError('');
+        }
+      })
+      .catch(() => {
+        if (mounted) {
+          setError("Impossible de charger les livres bibliques.");
+        }
+      })
+      .finally(() => {
+        if (mounted) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [testament]);
+
+  const sections = useMemo(() => getSections(books, testament), [books, testament]);
+
+  const openBook = (book: BibleBook) => {
+    router.push({
+      pathname: '/Reader',
+      params: { bookId: String(book.id), chapter: '1' },
+    } as Href);
+  };
 
   return (
-    <View style={styles.container}>
-      <ImageBackground source={require('../assets/enregistrement.png')} style={styles.bg} imageStyle={{ opacity: 0.05 }}>
-        <SafeAreaView style={styles.header}>
-          <Text style={styles.headerTitle}>Bible</Text>
-        </SafeAreaView>
+    <SacredPage activeTab="bible">
+      <View style={styles.segment}>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => setTestament('AT')}
+          style={[styles.segmentButton, testament === 'AT' && styles.segmentActive]}
+        >
+          <Text style={[styles.segmentText, testament === 'AT' && styles.segmentTextActive]}>
+            Ancien Testament
+          </Text>
+          {testament === 'AT' ? <View style={styles.segmentDot} /> : null}
+        </TouchableOpacity>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => setTestament('NT')}
+          style={[styles.segmentButton, testament === 'NT' && styles.segmentActive]}
+        >
+          <Text style={[styles.segmentText, testament === 'NT' && styles.segmentTextActive]}>
+            Nouveau Testament
+          </Text>
+          {testament === 'NT' ? <View style={styles.segmentDot} /> : null}
+        </TouchableOpacity>
+      </View>
 
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          <Text style={styles.sectionTitle}>Livres</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.booksRow}>
-            {books.map((b) => {
-              const active = b === selectedBook;
-              return (
-                <TouchableOpacity key={b} onPress={() => setSelectedBook(b)} style={[styles.bookChip, active && styles.bookChipActive]}>
-                  <Text style={[styles.bookChipText, active && styles.bookChipTextActive]}>{b}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
+      {loading ? (
+        <View style={styles.stateBlock}>
+          <ActivityIndicator color={sacredColors.navy} />
+        </View>
+      ) : error ? (
+        <Text style={styles.errorText}>{error}</Text>
+      ) : (
+        sections.map((section) => (
+          <View key={section.title} style={styles.section}>
+            <Text style={styles.sectionTitle}>{section.title}</Text>
+            <Text style={styles.sectionDescription}>{section.description}</Text>
 
-          <Text style={[styles.sectionTitle, { marginTop: 18 }]}>Versets</Text>
-          {filtered.map((v) => (
-            <View key={v.id} style={styles.verseCard}>
-              <View style={styles.verseHeader}>
-                <Ionicons name="book-outline" size={18} color="#D4AF37" />
-                <Text style={styles.verseRef}>{v.reference}</Text>
-              </View>
-              <Text style={styles.verseText}>{v.text}</Text>
-            </View>
-          ))}
-
-          <View style={styles.bottomPadding} />
-        </ScrollView>
-      </ImageBackground>
-    </View>
+            {section.books.map((book) => (
+              <TouchableOpacity
+                activeOpacity={0.86}
+                key={book.id}
+                onPress={() => openBook(book)}
+                style={styles.bookCard}
+              >
+                <View>
+                  <View style={styles.bookTopRow}>
+                    <Text style={styles.bookLabel}>LIVRE {book.id}</Text>
+                    <Ionicons name="book-outline" size={16} color="#CABD92" />
+                  </View>
+                  <Text style={styles.bookName}>{book.name}</Text>
+                  <Text style={styles.chapterCount}>{book.chapterCount} Chapitres</Text>
+                </View>
+                <View style={styles.arrowCircle}>
+                  <Ionicons name="arrow-forward" size={18} color={sacredColors.navy} />
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        ))
+      )}
+    </SacredPage>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
-  bg: { flex: 1 },
-  header: { backgroundColor: '#0a2d55', paddingVertical: 20, alignItems: 'center' },
-  headerTitle: { color: '#fff', fontSize: 20, fontWeight: '700', letterSpacing: 1 },
-  scrollContent: { padding: 20 },
-  sectionTitle: { fontSize: 16, fontWeight: '800', color: '#0a2d55', marginBottom: 12 },
-  booksRow: { gap: 10, paddingRight: 10 },
-  bookChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 999,
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: 'rgba(10,45,85,0.15)',
+  segment: {
+    height: 52,
+    backgroundColor: '#F7F4F0',
+    borderRadius: 26,
+    flexDirection: 'row',
+    marginBottom: 20,
+    padding: 4,
   },
-  bookChipActive: { backgroundColor: '#0a2d55', borderColor: '#0a2d55' },
-  bookChipText: { color: '#0a2d55', fontWeight: '700' },
-  bookChipTextActive: { color: '#fff' },
-  verseCard: {
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    padding: 16,
+  segmentButton: {
+    flex: 1,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  segmentActive: {
+    backgroundColor: sacredColors.white,
+  },
+  segmentText: {
+    color: '#2D3854',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  segmentTextActive: {
+    color: sacredColors.navy,
+  },
+  segmentDot: {
+    width: 3,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: sacredColors.gold,
+    marginTop: 5,
+  },
+  stateBlock: {
+    alignItems: 'center',
+    paddingVertical: 42,
+  },
+  errorText: {
+    color: '#9A3C37',
+    fontSize: 12,
+    fontWeight: '700',
+    paddingVertical: 20,
+    textAlign: 'center',
+  },
+  section: {
+    marginBottom: 18,
+  },
+  sectionTitle: {
+    color: sacredColors.navy,
+    fontFamily: 'serif',
+    fontSize: 25,
+    fontStyle: 'italic',
+    marginBottom: 6,
+  },
+  sectionDescription: {
+    color: '#5A6378',
+    fontSize: 13,
+    lineHeight: 19,
+    marginBottom: 14,
+    width: '100%',
+  },
+  bookCard: {
+    minHeight: 92,
+    backgroundColor: sacredColors.cream,
+    borderRadius: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 12,
-    borderLeftWidth: 4,
-    borderLeftColor: '#D4AF37',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 2,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
   },
-  verseHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 },
-  verseRef: { fontSize: 14, fontWeight: '800', color: '#0a2d55' },
-  verseText: { fontSize: 14, color: '#333', lineHeight: 20, fontWeight: '500' },
-  bottomPadding: { height: 20 },
+  bookTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 5,
+  },
+  bookLabel: {
+    color: '#8FA2C7',
+    fontSize: 10,
+    fontWeight: '900',
+  },
+  bookName: {
+    color: sacredColors.navy,
+    fontFamily: 'serif',
+    fontSize: 28,
+    fontWeight: '700',
+    lineHeight: 32,
+  },
+  chapterCount: {
+    color: '#6A6670',
+    fontSize: 12,
+    fontWeight: '700',
+    marginTop: 2,
+  },
+  arrowCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: sacredColors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });

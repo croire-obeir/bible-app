@@ -1,331 +1,265 @@
-import React from 'react';
+import React, { ComponentProps, useEffect, useMemo, useState } from 'react';
 import {
-  View,
+  Dimensions,
+  ImageBackground,
+  StyleSheet,
   Text,
   TouchableOpacity,
-  ScrollView,
-  SafeAreaView,
-  StyleSheet,
-  ImageBackground,
+  View,
 } from 'react-native';
-import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Href, useRouter } from 'expo-router';
+import { SacredPage } from '@/components/sacred/SacredPage';
+import { sacredColors, sacredShadow } from '@/constants/sacredTheme';
+import { BibleVerse, fetchDailyVerse } from '@/api/services/bibleServices';
 
-type AppRoute = `/${string}`;
+const { height: screenHeight } = Dimensions.get('window');
+const heroHeight = Math.min(Math.max(screenHeight * 0.31, 240), 320);
+
+type IconName = ComponentProps<typeof Ionicons>['name'];
+
+type Feature = {
+  title: string;
+  subtitle: string;
+  icon: IconName;
+  route: Href;
+  tone: 'light' | 'sage' | 'stone' | 'taupe';
+};
+
+const fallbackVerse: BibleVerse = {
+  versionId: 1,
+  bookId: 6,
+  bookName: 'Josué',
+  shortName: 'Jos',
+  chapter: 1,
+  verseNum: 8,
+  text: "Que ce livre de la loi ne s'éloigne point de ta bouche; médite-le jour et nuit.",
+  canonicalId: 6001008,
+};
 
 export default function HomeScreen() {
   const router = useRouter();
+  const [dailyVerse, setDailyVerse] = useState<BibleVerse>(fallbackVerse);
 
-  const features = [
-    {
-      id: '1',
-      title: 'Bible',
-      icon: 'book-outline',
-      description: 'Lire la Bible en plusieurs langues',
-      color: '#D4AF37',
-      route: '/Bible' as AppRoute,
-    },
-    {
-      id: '2',
-      title: 'Audios',
-      icon: 'volume-high-outline',
-      description: 'Accédez à des enregistrements audio',
-      color: '#1565c0',
-      route: '/Audios' as AppRoute,
-    },
-    {
-      id: '3',
-      title: 'Enseignements',
-      icon: 'play-circle-outline',
-      description: 'Regardez des enseignements vidéo',
-      color: '#0a2d55',
-      route: '/Enseignements' as AppRoute,
-    },
-    {
-      id: '4',
-      title: 'Documents',
-      icon: 'document-text-outline',
-      description: 'Plongez dans des documents inspirants',
-      color: '#AA8418',
-      route: '/Documents' as AppRoute,
-    },
-  ];
+  useEffect(() => {
+    let mounted = true;
+
+    fetchDailyVerse()
+      .then((verse) => {
+        if (mounted && verse) {
+          setDailyVerse(verse);
+        }
+      })
+      .catch(() => {
+        setDailyVerse(fallbackVerse);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const features = useMemo<Feature[]>(
+    () => [
+      {
+        title: 'La Bible',
+        subtitle: 'Lire',
+        icon: 'book',
+        route: '/Bible' as Href,
+        tone: 'light',
+      },
+      {
+        title: 'Enseignements',
+        subtitle: 'Audio',
+        icon: 'headset',
+        route: '/Audios' as Href,
+        tone: 'sage',
+      },
+      {
+        title: 'Vidéos',
+        subtitle: 'Sacrées',
+        icon: 'play-circle',
+        route: '/Enseignements' as Href,
+        tone: 'stone',
+      },
+      {
+        title: 'Documents',
+        subtitle: 'PDF',
+        icon: 'folder-open-outline',
+        route: '/Documents' as Href,
+        tone: 'taupe',
+      },
+    ],
+    []
+  );
+
+  const openShare = () => {
+    router.push({
+      pathname: '/ShareVerse',
+      params: {
+        bookName: dailyVerse.bookName,
+        chapter: String(dailyVerse.chapter),
+        verseNum: String(dailyVerse.verseNum),
+        text: dailyVerse.text,
+      },
+    } as Href);
+  };
 
   return (
-    <View style={styles.container}>
-      <ImageBackground
-        source={require('../../../assets/enregistrement.png')}
-        style={styles.bg}
-        imageStyle={{ opacity: 0.05 }}
-      >
-        {/* Header */}
-        <SafeAreaView style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>Bienvenue</Text>
-            <Text style={styles.headerSubtitle}>CROIRE & OBÉIR</Text>
-          </View>
-          <TouchableOpacity
-            onPress={() => router.push('/screens/Profile' as AppRoute)}
-            style={styles.profileButton}
-          >
-            <Ionicons name="person-circle-outline" size={32} color="#D4AF37" />
-          </TouchableOpacity>
-        </SafeAreaView>
-
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
+    <SacredPage activeTab="home">
+      <TouchableOpacity activeOpacity={0.9} onPress={openShare} style={styles.hero}>
+        <ImageBackground
+          source={require('../../../assets/bible.cross_.webp')}
+          resizeMode="cover"
+          style={styles.heroImage}
+          imageStyle={styles.heroImageRadius}
         >
-          {/* Section Verset du jour */}
           <LinearGradient
-            colors={['#0a2d55', '#1565c0']}
-            style={styles.verseCard}
+            colors={['rgba(5,16,38,0.18)', 'rgba(5,36,90,0.9)']}
+            style={styles.heroOverlay}
           >
-            <Ionicons
-              name="star"
-              size={24}
-              color="#D4AF37"
-              style={{ marginBottom: 10 }}
-            />
-            <Text style={styles.verseTitle}>Verset du jour</Text>
-            <Text style={styles.verseText}>
-              "Car Dieu a tant aimé le monde qu'il a donné son Fils unique,
-              afin que quiconque croit en lui ne périsse point, mais qu'il ait
-              la vie éternelle."
+            <Text style={styles.kicker}>· VERSET DU JOUR</Text>
+            <Text style={styles.heroText} numberOfLines={5}>
+              {`"${dailyVerse.text}"`}
             </Text>
-            <Text style={styles.verseReference}>Jean 3:16</Text>
+            <Text style={styles.heroRef}>
+              {dailyVerse.bookName} {dailyVerse.chapter}: {dailyVerse.verseNum}
+            </Text>
           </LinearGradient>
+        </ImageBackground>
+      </TouchableOpacity>
 
-          {/* Grille de fonctionnalités */}
-          <View style={styles.featuresSection}>
-            <Text style={styles.sectionTitle}>Explorez</Text>
-            <View style={styles.featuresGrid}>
-              {features.map((feature) => (
-                <TouchableOpacity
-                  key={feature.id}
-                  style={styles.featureCard}
-                  activeOpacity={0.8}
-                  onPress={() => router.push(feature.route as AppRoute)}
-                >
-                  <View
-                    style={[
-                      styles.featureIconContainer,
-                      { backgroundColor: feature.color + '20' },
-                    ]}
-                  >
-                    <Ionicons
-                      name={feature.icon as any}
-                      size={28}
-                      color={feature.color}
-                    />
-                  </View>
-                  <Text style={styles.featureTitle}>{feature.title}</Text>
-                  <Text style={styles.featureDescription}>
-                    {feature.description}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+      <View style={styles.featureGrid}>
+        {features.map((feature) => (
+          <TouchableOpacity
+            key={feature.title}
+            activeOpacity={0.82}
+            onPress={() => router.push(feature.route)}
+            style={[styles.featureCard, cardToneStyles[feature.tone]]}
+          >
+            <View style={styles.decorOne} />
+            <View style={styles.decorTwo} />
+            <View style={styles.featureIcon}>
+              <Ionicons name={feature.icon} size={22} color={sacredColors.navy} />
             </View>
-          </View>
-
-          {/* Section Lecture */}
-          <View style={styles.readingSection}>
-            <View style={styles.readingHeader}>
-              <Text style={styles.sectionTitle}>Continuer la lecture</Text>
-              <TouchableOpacity>
-                <Text style={styles.seeAll}>Voir tout →</Text>
-              </TouchableOpacity>
-            </View>
-            <TouchableOpacity
-              style={styles.readingCard}
-              onPress={() => router.push('/Bible' as AppRoute)}
-            >
-              <View style={styles.readingContent}>
-                <Ionicons name="book" size={24} color="#D4AF37" />
-                <View style={styles.readingText}>
-                  <Text style={styles.readingTitle}>Genèse 1:1-5</Text>
-                  <Text style={styles.readingProgress}>Progression: 15%</Text>
-                </View>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color="#1565c0" />
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.bottomPadding} />
-        </ScrollView>
-      </ImageBackground>
-    </View>
+            <Text style={styles.featureTitle}>{feature.title}</Text>
+            <Text style={styles.featureSubtitle}>{feature.subtitle}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </SacredPage>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  hero: {
+    ...sacredShadow,
+    height: heroHeight,
+    borderRadius: 22,
+    marginBottom: 22,
+    overflow: 'hidden',
+  },
+  heroImage: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
-  bg: {
+  heroImageRadius: {
+    borderRadius: 22,
+  },
+  heroOverlay: {
     flex: 1,
+    justifyContent: 'flex-end',
+    padding: 24,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    backgroundColor: '#0a2d55',
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-  },
-  greeting: {
-    color: '#D4AF37',
-    fontSize: 14,
-    fontWeight: '600',
-    letterSpacing: 0.5,
-  },
-  headerSubtitle: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '800',
-    letterSpacing: 2,
-    marginTop: 4,
-  },
-  profileButton: {
-    padding: 8,
-  },
-  scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 30,
-  },
-  verseCard: {
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 25,
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-  },
-  verseTitle: {
-    color: '#D4AF37',
-    fontSize: 14,
-    fontWeight: '700',
-    letterSpacing: 0.5,
+  kicker: {
+    color: '#E6D170',
+    fontSize: 11,
+    fontWeight: '900',
     marginBottom: 10,
   },
-  verseText: {
-    color: '#fff',
-    fontSize: 15,
-    lineHeight: 24,
-    fontWeight: '500',
-    marginBottom: 15,
+  heroText: {
+    color: sacredColors.white,
+    fontFamily: 'serif',
+    fontSize: 24,
+    lineHeight: 31,
   },
-  verseReference: {
-    color: '#D4AF37',
+  heroRef: {
+    color: '#9FB4D8',
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '700',
+    marginTop: 12,
   },
-  featuresSection: {
-    marginBottom: 25,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#0a2d55',
-    marginBottom: 15,
-    letterSpacing: 0.5,
-  },
-  featuresGrid: {
+  featureGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    gap: 12,
   },
   featureCard: {
     width: '48%',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-  },
-  featureIconContainer: {
-    width: 50,
-    height: 50,
+    height: 126,
     borderRadius: 10,
-    justifyContent: 'center',
+    justifyContent: 'flex-end',
+    overflow: 'hidden',
+    padding: 14,
+  },
+  lightCard: {
+    backgroundColor: '#FBFAEE',
+  },
+  sageCard: {
+    backgroundColor: '#D3D1BF',
+  },
+  stoneCard: {
+    backgroundColor: '#C9C6B4',
+  },
+  taupeCard: {
+    backgroundColor: '#C4B6A7',
+  },
+  decorOne: {
+    position: 'absolute',
+    right: -12,
+    top: -10,
+    width: 62,
+    height: 92,
+    backgroundColor: 'rgba(255,255,255,0.36)',
+    transform: [{ rotate: '38deg' }],
+  },
+  decorTwo: {
+    position: 'absolute',
+    right: 4,
+    top: 8,
+    width: 46,
+    height: 72,
+    backgroundColor: 'rgba(255,255,255,0.24)',
+    transform: [{ rotate: '38deg' }],
+  },
+  featureIcon: {
+    position: 'absolute',
+    left: 14,
+    top: 16,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: sacredColors.white,
     alignItems: 'center',
-    marginBottom: 10,
+    justifyContent: 'center',
   },
   featureTitle: {
+    color: sacredColors.navy,
+    fontFamily: 'serif',
+    fontSize: 18,
+    lineHeight: 22,
+  },
+  featureSubtitle: {
+    color: '#1E2A3B',
+    fontFamily: 'serif',
     fontSize: 14,
-    fontWeight: '700',
-    color: '#0a2d55',
-    marginBottom: 6,
-  },
-  featureDescription: {
-    fontSize: 12,
-    color: '#999',
-    lineHeight: 16,
-  },
-  readingSection: {
-    marginBottom: 20,
-  },
-  readingHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  seeAll: {
-    color: '#1565c0',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  readingCard: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    padding: 16,
-    borderRadius: 12,
-    borderLeftWidth: 4,
-    borderLeftColor: '#D4AF37',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-  },
-  readingContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  readingText: {
-    marginLeft: 15,
-    flex: 1,
-  },
-  readingTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#0a2d55',
-    marginBottom: 4,
-  },
-  readingProgress: {
-    fontSize: 12,
-    color: '#999',
-    fontWeight: '500',
-  },
-  bottomPadding: {
-    height: 20,
+    lineHeight: 18,
   },
 });
+
+const cardToneStyles = {
+  light: styles.lightCard,
+  sage: styles.sageCard,
+  stone: styles.stoneCard,
+  taupe: styles.taupeCard,
+};

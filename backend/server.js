@@ -3,6 +3,7 @@ import cors from 'cors';
 import authRoutes from './src/routes/authRoutes.js';
 import userDataManipulationRoutes from './src/routes/uerDatamanipulationRoutes.js';
 import passwordResetPageRoute from './src/routes/passowrdResetPageRoute.js';
+import bibleRoutes from './src/routes/bibleRoutes.js';
 import passport from 'passport';
 
 
@@ -16,6 +17,7 @@ app.use(passport.initialize());
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userDataManipulationRoutes);
 app.use('/reset-password', passwordResetPageRoute);
+app.use('/api/bible', bibleRoutes);
 
 app.get('/', (req, res) => {
     res.send('Welcome to the Bible App API!');

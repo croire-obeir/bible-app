@@ -1,13 +1,20 @@
 import React, { useCallback, useMemo } from 'react';
-import { View, Text, StyleSheet, ImageBackground, SafeAreaView, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { Alert, Dimensions, ImageBackground, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as WebBrowser from 'expo-web-browser';
+import { SacredPage } from '@/components/sacred/SacredPage';
+import { sacredColors } from '@/constants/sacredTheme';
+
+const { height: screenHeight } = Dimensions.get('window');
+const videoCardHeight = Math.min(Math.max(screenHeight * 0.25, 190), 260);
 
 type VideoItem = {
   id: string;
   title: string;
-  speaker?: string;
-  duration?: string;
+  speaker: string;
+  duration: string;
+  image: number;
   url: string;
 };
 
@@ -16,16 +23,18 @@ export default function EnseignementsScreen() {
     () => [
       {
         id: 'video-1',
-        title: 'Enseignement (YouTube) - Test',
-        speaker: 'Temporaire',
-        duration: '10:00',
+        title: 'Marcher avec foi',
+        speaker: 'Croire & Obéir',
+        duration: '10 min',
+        image: require('../assets/Dimage.jpg'),
         url: 'https://www.youtube.com/watch?v=ysz5S6PUM-U',
       },
       {
         id: 'video-2',
-        title: 'Enseignement (YouTube) - Test #2',
-        speaker: 'Temporaire',
-        duration: '08:00',
+        title: 'Demeurer dans la Parole',
+        speaker: 'Croire & Obéir',
+        duration: '8 min',
+        image: require('../assets/Timage.jpg'),
         url: 'https://www.youtube.com/watch?v=jNQXAC9IVRw',
       },
     ],
@@ -35,96 +44,101 @@ export default function EnseignementsScreen() {
   const openVideo = useCallback(async (item: VideoItem) => {
     try {
       await WebBrowser.openBrowserAsync(item.url);
-    } catch (e) {
+    } catch {
       Alert.alert('Erreur', "Impossible d'ouvrir la vidéo.");
     }
   }, []);
 
   return (
-    <View style={styles.container}>
-      <ImageBackground source={require('../assets/enregistrement.png')} style={styles.bg} imageStyle={{ opacity: 0.05 }}>
-        <SafeAreaView style={styles.header}>
-          <Text style={styles.headerTitle}>Enseignements</Text>
-        </SafeAreaView>
+    <SacredPage activeTab="library">
+      <Text style={styles.title}>Vidéos Sacrées</Text>
+      <Text style={styles.subtitle}>Des enseignements courts pour nourrir la semaine.</Text>
 
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          <Text style={styles.sectionTitle}>Vidéos</Text>
-
-          {videos.map((v) => (
-            <TouchableOpacity key={v.id} style={styles.itemCard} activeOpacity={0.85} onPress={() => openVideo(v)}>
-              <View style={styles.left}>
-                <View style={styles.iconWrap}>
-                  <Ionicons name="play-circle-outline" size={24} color="#0a2d55" />
-                </View>
-                <View style={styles.textWrap}>
-                  <Text style={styles.itemTitle}>{v.title}</Text>
-                  <Text style={styles.itemMeta}>{[v.speaker, v.duration].filter(Boolean).join(' • ')}</Text>
-                </View>
+      {videos.map((video) => (
+        <TouchableOpacity
+          key={video.id}
+          activeOpacity={0.86}
+          onPress={() => openVideo(video)}
+          style={styles.videoCard}
+        >
+          <ImageBackground
+            source={video.image}
+            resizeMode="cover"
+            style={styles.videoImage}
+            imageStyle={styles.videoImageRadius}
+          >
+            <LinearGradient
+              colors={['rgba(5,19,44,0.12)', 'rgba(2,36,90,0.78)']}
+              style={styles.videoOverlay}
+            >
+              <View style={styles.playCircle}>
+                <Ionicons name="play" size={20} color={sacredColors.navy} />
               </View>
-              <Ionicons name="open-outline" size={18} color="#D4AF37" />
-            </TouchableOpacity>
-          ))}
-
-          <View style={styles.tipCard}>
-            <Ionicons name="information-circle-outline" size={18} color="#D4AF37" />
-            <Text style={styles.tipText}>
-              Pour le moment, les vidéos sont temporaires et s'ouvrent dans le navigateur pour tester la lecture.
-            </Text>
-          </View>
-
-          <View style={styles.bottomPadding} />
-        </ScrollView>
-      </ImageBackground>
-    </View>
+              <Text style={styles.videoTitle}>{video.title}</Text>
+              <Text style={styles.videoMeta}>
+                {video.speaker} · {video.duration}
+              </Text>
+            </LinearGradient>
+          </ImageBackground>
+        </TouchableOpacity>
+      ))}
+    </SacredPage>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
-  bg: { flex: 1 },
-  header: { backgroundColor: '#0a2d55', paddingVertical: 20, alignItems: 'center' },
-  headerTitle: { color: '#fff', fontSize: 20, fontWeight: '700', letterSpacing: 1 },
-  scrollContent: { padding: 20 },
-  sectionTitle: { fontSize: 16, fontWeight: '800', color: '#0a2d55', marginBottom: 12 },
-  itemCard: {
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 12,
-    borderLeftWidth: 4,
-    borderLeftColor: '#0a2d55',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 2,
+  title: {
+    color: sacredColors.navy,
+    fontFamily: 'serif',
+    fontSize: 25,
+    fontStyle: 'italic',
+    fontWeight: '800',
+    marginBottom: 4,
   },
-  left: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1, paddingRight: 10 },
-  iconWrap: {
+  subtitle: {
+    color: '#5A6378',
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 18,
+  },
+  videoCard: {
+    height: videoCardHeight,
+    borderRadius: 12,
+    marginBottom: 18,
+    overflow: 'hidden',
+  },
+  videoImage: {
+    flex: 1,
+  },
+  videoImageRadius: {
+    borderRadius: 12,
+  },
+  videoOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    padding: 20,
+  },
+  playCircle: {
+    position: 'absolute',
+    right: 16,
+    top: 16,
     width: 42,
     height: 42,
-    borderRadius: 12,
-    backgroundColor: 'rgba(10,45,85,0.10)',
+    borderRadius: 21,
+    backgroundColor: sacredColors.white,
+    alignItems: 'center',
     justifyContent: 'center',
-    alignItems: 'center',
   },
-  textWrap: { flex: 1 },
-  itemTitle: { fontSize: 14, fontWeight: '800', color: '#0a2d55' },
-  itemMeta: { marginTop: 4, fontSize: 12, color: '#777', fontWeight: '600' },
-  tipCard: {
-    marginTop: 8,
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    padding: 14,
-    flexDirection: 'row',
-    gap: 10,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(212,175,55,0.25)',
+  videoTitle: {
+    color: sacredColors.white,
+    fontFamily: 'serif',
+    fontSize: 24,
+    fontWeight: '800',
   },
-  tipText: { flex: 1, color: '#333', fontWeight: '500', lineHeight: 18 },
-  bottomPadding: { height: 20 },
+  videoMeta: {
+    color: '#D8E0EF',
+    fontSize: 12,
+    fontWeight: '800',
+    marginTop: 6,
+  },
 });

@@ -1,20 +1,21 @@
 import { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ImageBackground, SafeAreaView, StyleSheet, Alert, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, ImageBackground, SafeAreaView, StyleSheet, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import CustomInput from '../../components/CustomInput';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { handleUserSignIn, sendGoogleTokenToBackend } from '@/api/services/authServices';
-//Google login
-import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
-import { makeRedirectUri } from 'expo-auth-session';
 
 import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 
 // This is required to make sure the popup closes correctly on web
 WebBrowser.maybeCompleteAuthSession();
+
+const GOOGLE_DEVELOPER_ERROR_CODE = '10';
+const ANDROID_PACKAGE_NAME = 'com.croireetobeir';
+const DEBUG_SHA1 = '5E:8F:16:06:2E:A3:CD:2C:4A:0D:54:78:76:BA:A6:F3:8C:AB:F6:25';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -51,7 +52,7 @@ export default function LoginScreen() {
       } else {
         Alert.alert("Échec", "Email ou mot de passe incorrect.");
       }
-    } catch (e) {
+    } catch {
       Alert.alert("Erreur", "Une erreur est survenue lors de la connexion.");
     }
   };
@@ -75,6 +76,14 @@ export default function LoginScreen() {
 
     const handlegoogleSignin = async () => {
     try {
+    const webClientId = process.env.EXPO_PUBLIC_GOOGLE_OAUTH_WEB_ID;
+
+    if (!webClientId) {
+      Alert.alert("Google Error", "Le Web Client ID Google est manquant dans le fichier .env.");
+      console.warn("Missing EXPO_PUBLIC_GOOGLE_OAUTH_WEB_ID in .env");
+      return;
+    }
+
     await GoogleSignin.hasPlayServices();
     const response = await GoogleSignin.signIn();
     
@@ -92,10 +101,26 @@ export default function LoginScreen() {
       Alert.alert("In Progress", "Google is already trying to sign you in.");
     } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
       Alert.alert("Error", "Play Services not available.");
+    } else if (error.code === GOOGLE_DEVELOPER_ERROR_CODE) {
+      Alert.alert(
+        "Configuration Google",
+        "La configuration OAuth Android est invalide. Verifie le package name, le SHA-1 et le Web Client ID dans Google Cloud/Firebase."
+      );
+      console.log("Google Sign-In DEVELOPER_ERROR", {
+        code: error.code,
+        message: error.message,
+        expectedAndroidPackage: ANDROID_PACKAGE_NAME,
+        expectedDebugSha1: DEBUG_SHA1,
+        webClientId: process.env.EXPO_PUBLIC_GOOGLE_OAUTH_WEB_ID,
+      });
     } else {
       // THIS IS THE MOST IMPORTANT ALERT
       Alert.alert("Google Error", `Code: ${error.code}\nMessage: ${error.message}`);
-      console.log("Full error object:", JSON.stringify(error));
+      console.log("Google Sign-In error:", {
+        code: error.code,
+        message: error.message,
+        error,
+      });
     }
   }
   };
@@ -110,8 +135,15 @@ const onGoggleLoginPressed=async(idToken:string)=>{
 
 
   useEffect(() => {
+    const webClientId = process.env.EXPO_PUBLIC_GOOGLE_OAUTH_WEB_ID;
+
+    if (!webClientId) {
+      console.warn("Missing EXPO_PUBLIC_GOOGLE_OAUTH_WEB_ID in .env");
+      return;
+    }
+
     GoogleSignin.configure({
-      webClientId: process.env.EXPO_PUBLIC_GOOGLE_OAUTH_WEB_ID, 
+      webClientId, 
       offlineAccess: true, 
       });
     }, []);
@@ -202,7 +234,7 @@ const onGoggleLoginPressed=async(idToken:string)=>{
 
             <TouchableOpacity onPress={() => router.push('/screens/Register')}>
               <Text style={styles.link}>
-                Pas encore de compte ? <Text style={styles.bold}>S'inscrire</Text>
+                Pas encore de compte ? <Text style={styles.bold}>{"S'inscrire"}</Text>
               </Text>
             </TouchableOpacity>
           </View>
