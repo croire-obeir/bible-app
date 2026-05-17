@@ -3,73 +3,70 @@ import { View, Text, StyleSheet, ImageBackground, SafeAreaView, ScrollView, Touc
 import { Ionicons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
 
-type AudioItem = {
+type PdfItem = {
   id: string;
   title: string;
-  author?: string;
-  duration?: string;
+  description?: string;
   url: string;
 };
 
-export default function AudiosScreen() {
-  const audios: AudioItem[] = useMemo(
+export default function DocumentsScreen() {
+  const pdfs: PdfItem[] = useMemo(
     () => [
       {
-        id: 'sample-audio-1',
-        title: 'Audio de test (MP3)',
-        author: 'Temporaire',
-        duration: '00:30',
-        url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+        id: 'pdf-1',
+        title: 'Document PDF de test',
+        description: 'Lecture temporaire (sera remplacé par le backend).',
+        url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
       },
       {
-        id: 'sample-audio-2',
-        title: 'Audio de test (MP3) #2',
-        author: 'Temporaire',
-        duration: '00:20',
-        url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
+        id: 'pdf-2',
+        title: 'PDF - Spécification (exemple)',
+        description: 'Un autre PDF de démonstration.',
+        url: 'https://unec.edu.az/application/uploads/2014/12/pdf-sample.pdf',
       },
     ],
     []
   );
 
-  const openAudio = useCallback(async (item: AudioItem) => {
+  const openPdf = useCallback(async (item: PdfItem) => {
     try {
       await WebBrowser.openBrowserAsync(item.url);
     } catch (e) {
-      Alert.alert('Erreur', "Impossible d'ouvrir l'audio.");
+      Alert.alert('Erreur', "Impossible d'ouvrir le PDF.");
     }
   }, []);
 
   return (
     <View style={styles.container}>
-      <ImageBackground source={require('../assets/enregistrement.png')} style={styles.bg} imageStyle={{ opacity: 0.05 }}>
+      <ImageBackground source={require('../../../assets/enregistrement.png')} style={styles.bg} imageStyle={{ opacity: 0.05 }}>
         <SafeAreaView style={styles.header}>
-          <Text style={styles.headerTitle}>Audios</Text>
+          <Text style={styles.headerTitle}>Documents</Text>
         </SafeAreaView>
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          <Text style={styles.sectionTitle}>Liste</Text>
+          <Text style={styles.sectionTitle}>PDF</Text>
 
-          {audios.map((a) => (
-            <TouchableOpacity key={a.id} style={styles.itemCard} activeOpacity={0.85} onPress={() => openAudio(a)}>
+          {pdfs.map((p) => (
+            <TouchableOpacity key={p.id} style={styles.itemCard} activeOpacity={0.85} onPress={() => openPdf(p)}>
               <View style={styles.left}>
                 <View style={styles.iconWrap}>
-                  <Ionicons name="volume-high-outline" size={22} color="#1565c0" />
+                  <Ionicons name="document-text-outline" size={22} color="#AA8418" />
                 </View>
                 <View style={styles.textWrap}>
-                  <Text style={styles.itemTitle}>{a.title}</Text>
-                  <Text style={styles.itemMeta}>{[a.author, a.duration].filter(Boolean).join(' • ')}</Text>
+                  <Text style={styles.itemTitle}>{p.title}</Text>
+                  <Text style={styles.itemMeta} numberOfLines={2}>
+                    {p.description ?? ''}
+                  </Text>
                 </View>
               </View>
-              <Ionicons name="play" size={18} color="#D4AF37" />
+              <Ionicons name="open-outline" size={18} color="#D4AF37" />
             </TouchableOpacity>
           ))}
 
           <View style={styles.tipCard}>
             <Ionicons name="information-circle-outline" size={18} color="#D4AF37" />
-            <Text style={styles.tipText}>
-              Pour le moment, les audios sont temporaires et s'ouvrent dans le navigateur pour tester l'écoute.
-            </Text>
+            <Text style={styles.tipText}>Pour le moment, les PDF s'ouvrent dans le navigateur pour tester la lecture.</Text>
           </View>
 
           <View style={styles.bottomPadding} />
@@ -92,7 +89,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
     borderLeftWidth: 4,
-    borderLeftColor: '#1565c0',
+    borderLeftColor: '#AA8418',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -107,13 +104,13 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 12,
-    backgroundColor: 'rgba(21,101,192,0.12)',
+    backgroundColor: 'rgba(170,132,24,0.12)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   textWrap: { flex: 1 },
   itemTitle: { fontSize: 14, fontWeight: '800', color: '#0a2d55' },
-  itemMeta: { marginTop: 4, fontSize: 12, color: '#777', fontWeight: '600' },
+  itemMeta: { marginTop: 4, fontSize: 12, color: '#777', fontWeight: '600', lineHeight: 16 },
   tipCard: {
     marginTop: 8,
     backgroundColor: '#fff',

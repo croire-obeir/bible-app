@@ -12,7 +12,7 @@ export default function TabsLayout() {
           backgroundColor: '#0a2d55', // Bleu foncé
           borderTopWidth: 0,
           height: 60,
-          paddingBottom: 10,
+          paddingBottom: 30,
         },
       }}
     >
@@ -23,20 +23,36 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, size }) => <Ionicons name="home" size={size} color={color} />,
         }}
       />
-      <Tabs.Screen
-        name="Search"
+       <Tabs.Screen
+        name="bible" // Points to app/screens/(tabs)/bible.tsx
         options={{
-          title: 'Recherche',
-          tabBarIcon: ({ color, size }) => <Ionicons name="search" size={size} color={color} />,
+          title: 'Bible',
+          tabBarIcon: ({ color, size }) => <Ionicons name="book" size={size} color={color} />,
         }}
-      />
-      <Tabs.Screen
-        name="Favorites"
+        />
+     <Tabs.Screen
+        name="Videos" // Points to app/screens/(tabs)/videos.tsx
         options={{
-          title: 'Favoris',
-          tabBarIcon: ({ color, size }) => <Ionicons name="heart" size={size} color={color} />,
+          title: 'Vidéos',
+          tabBarIcon: ({ color, size }) => <Ionicons name="play-circle" size={size} color={color} />,
         }}
-      />
+        />
+
+      <Tabs.Screen
+        name="Audios" // Points to app/screens/(tabs)/audios.tsx
+        options={{
+          title: 'Audios',
+          tabBarIcon: ({ color, size }) => <Ionicons name="musical-notes" size={size} color={color} />,
+        }}
+        />
+
+      <Tabs.Screen
+        name="Documents" // Points to app/screens/(tabs)/documents.tsx
+        options={{
+          title: 'Documents',
+          tabBarIcon: ({ color, size }) => <Ionicons name="document" size={size} color={color} />,
+        }}
+        />
       <Tabs.Screen
         name="Profile"
         options={{
