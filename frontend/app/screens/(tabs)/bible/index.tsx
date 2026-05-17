@@ -94,7 +94,7 @@ export default function BibleScreen() {
             <Ionicons name="globe-outline" size={18} color="#0a2d55" style={styles.iconSpacing} />
             <Text style={styles.versionText}>{currentVersion}</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => console.log('Open Search')}>
+          <TouchableOpacity onPress={() => router.push('/screens/SearchByTopic') }>
             <Ionicons name="search" size={24} color="#0a2d55" />
           </TouchableOpacity>
         </CustomHeader>

@@ -33,6 +33,7 @@ export default function RootLayout() {
             <Stack.Screen name="screens/(tabs)" />
             {/* <Stack.Screen name="Bible" /> */}
             <Stack.Screen name="screens/VersionSelect" />
+            <Stack.Screen name="screens/searchByTopic" />
           </Stack>
         </SQLiteProvider>
       </Suspense>
