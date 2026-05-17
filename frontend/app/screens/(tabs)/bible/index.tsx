@@ -2,7 +2,7 @@ import React, { useMemo, useState , useEffect} from 'react';
 import { View, Text, StyleSheet, ImageBackground, SafeAreaView, ScrollView, TouchableOpacity,ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import CustomHeader from '../../../components/CustomHeader';
+import CustomHeader from '../../../../components/CustomHeader';
 import { useSQLiteContext } from 'expo-sqlite';
 
 
@@ -64,10 +64,17 @@ export default function BibleScreen() {
     }
   });
 
-  const handleBookPress = (bookId: number, bookName: string) => {
+  const handleBookPress = (bookId: number, bookName: string, chapterCount: number) => {
     // Navigate deep into chapters view
     console.log(`Navigating to book: ${bookName} (ID: ${bookId})`);
-    // router.push({ pathname: '/screens/Chapters', params: { bookId, bookName } });
+    router.push({
+      pathname: '/screens/(tabs)/bible/chapters', // Updated clean nested route path
+      params: { 
+        bookId: bookId.toString(), 
+        bookName: bookName,
+        chapterCount: chapterCount
+      }
+    });
   };
 
   
@@ -76,7 +83,7 @@ export default function BibleScreen() {
 
   return (
     <View style={styles.container}>
-      <ImageBackground source={require('../../../assets/enregistrement.png')} style={styles.bg} imageStyle={{ opacity: 0.05 }}>
+      <ImageBackground source={require('../../../../assets/enregistrement.png')} style={styles.bg} imageStyle={{ opacity: 0.05 }}>
       
         <CustomHeader>
           <TouchableOpacity
@@ -142,7 +149,7 @@ export default function BibleScreen() {
                 <TouchableOpacity
                   key={book.id}
                   style={styles.bookCard}
-                  onPress={() => handleBookPress(book.id, book.name)}
+                  onPress={() => handleBookPress(book.id, book.name, book.chapter_count)}
                   activeOpacity={0.7}
                 >
                   <View style={styles.bookInfo}>

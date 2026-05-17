@@ -24,7 +24,7 @@ export default function TabsLayout() {
         }}
       />
        <Tabs.Screen
-        name="Bible" // Points to app/screens/(tabs)/bible.tsx
+        name="bible" // Points to app/screens/(tabs)/bible.tsx
         options={{
           title: 'Bible',
           tabBarIcon: ({ color, size }) => <Ionicons name="book" size={size} color={color} />,

@@ -15,7 +15,7 @@ export default function VersionSelectScreen() {
   const handleSelect = (versionName: string) => {
     // Navigate back to the bible screen while passing the selected version as a query parameter
     router.replace({
-      pathname: '/screens/(tabs)/Bible',
+      pathname: '/screens/(tabs)/bible',
       params: { selectedVersion: versionName }
     });
   };

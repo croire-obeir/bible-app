@@ -25,7 +25,7 @@ export default function HomeScreen() {
       icon: 'book-outline',
       description: 'Lire la Bible en plusieurs langues',
       color: '#D4AF37',
-      route: '/screens/(tabs)/Bible' as AppRoute,
+      route: '/screens/(tabs)/bible' as AppRoute,
     },
     {
       id: '2',
@@ -106,7 +106,10 @@ export default function HomeScreen() {
                   key={feature.id}
                   style={styles.featureCard}
                   activeOpacity={0.8}
-                  onPress={() => router.push(feature.route as AppRoute)}
+                  onPress={() => {
+                    console.log(`Navigating to ${feature.route as AppRoute}`);
+                    router.push(feature.route as AppRoute)
+                  }}
                 >
                   <View
                     style={[
