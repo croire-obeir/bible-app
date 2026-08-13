@@ -3,6 +3,7 @@ import cors from 'cors';
 import authRoutes from './src/routes/authRoutes.js';
 import userDataManipulationRoutes from './src/routes/uerDatamanipulationRoutes.js';
 import passwordResetPageRoute from './src/routes/passowrdResetPageRoute.js';
+import refreshTokenauthRoute from './src/routes/refreshTokenauthRoute.js';
 import passport from 'passport';
 
 
@@ -16,6 +17,7 @@ app.use(passport.initialize());
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userDataManipulationRoutes);
 app.use('/reset-password', passwordResetPageRoute);
+app.use('/api/refresh-token', refreshTokenauthRoute);
 
 app.get('/', (req, res) => {
     res.send('Welcome to the Bible App API!');
@@ -27,6 +29,5 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server started on port ${PORT}`);
 });
-
 
 
