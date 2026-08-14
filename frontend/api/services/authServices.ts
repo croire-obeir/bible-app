@@ -53,12 +53,19 @@ export const handleUserSignIn= async(userLoginData:any)=>{
     });
 
     // 2. Logic: Handle the success globally
+    const {
+      accessToken,
+      refreshToken,
+      id,
+      username,
+      email,
+    } = response.data;
   
-    if (response.data?.token && response.data?.email) {
+    if (accessToken && refreshToken && email) {
       // Store the token securely
-      await SecureStore.setItemAsync('userToken', response.data.token);
-      const savedProfile = await AsyncStorage.getItem('userprofile');
-      const userprofile= {username: response.data.username, email: response.data.email, userId: response.data.id};
+      await SecureStore.setItemAsync('accessToken', accessToken);
+      await SecureStore.setItemAsync('refreshToken', refreshToken);
+      const userprofile= {username: username, email: email, userId: id};
       await AsyncStorage.setItem('userprofile', JSON.stringify(userprofile));
      
       return { success: true, data: response.data };
@@ -79,11 +86,20 @@ export const sendGoogleTokenToBackend = async (idToken:string) => {
       const response = await apiClient.post('/api/auth/google-login', {
         idToken: idToken
       });
-       if (response.data?.token && response.data?.email) {
+
+       const {
+          accessToken,
+          refreshToken,
+          id,
+          username,
+          email,
+        } = response.data;
+
+       if (accessToken && refreshToken && email) {
       // Store the token securely
-      await SecureStore.setItemAsync('userToken', response.data.token);
-      const savedProfile = await AsyncStorage.getItem('userprofile');
-      const userprofile= {username: response.data.username, email: response.data.email, userId: response.data.id};
+      await SecureStore.setItemAsync('accessToken', accessToken);
+      await SecureStore.setItemAsync('refreshToken', refreshToken);
+      const userprofile= {username: username, email: email, userId: id};
       await AsyncStorage.setItem('userprofile', JSON.stringify(userprofile));
      
       return { success: true, data: response.data };

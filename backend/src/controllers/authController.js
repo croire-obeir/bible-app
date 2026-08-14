@@ -113,7 +113,7 @@ export const login = async (req, res) => {
         );
 
         res.json({ 
-            token, 
+            accessToken: token,
             refreshToken,
             id: user.id, 
             username:user.username,
@@ -190,7 +190,7 @@ export const googleLogin = async (req, res) => {
        
 
          res.json({ 
-            token, 
+             accessToken: token, 
             refreshToken,
             id: user.id, 
             username:user.username,
