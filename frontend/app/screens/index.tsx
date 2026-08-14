@@ -42,7 +42,7 @@ export default function OnboardingScreen() {
   const router = useRouter();
   const scrollX = useRef(new Animated.Value(0)).current;
   const flatListRef = useRef<any>(null);
-  const [checkingOnboarding, setCheckingOnboarding] = useState(true);
+  // const [checkingOnboarding, setCheckingOnboarding] = useState(true);
 
   const handleNext = (index: number) => {
     if (index < slides.length - 1) {
@@ -52,33 +52,6 @@ export default function OnboardingScreen() {
       });
     }
   };
-
- 
-
-  //skip onbarding if already completed
-  useEffect(() => {
-    const checkOnboarding = async () => {
-      try {
-            const completed = await AsyncStorage.getItem('hasCompletedOnboarding');
-
-            if (completed === 'true') {
-              // Onboarding was already completed
-              router.replace('/screens/Login');
-              return;
-            }
-          } catch (error) {
-            console.error('Error checking onboarding:', error);
-          } finally {
-            setCheckingOnboarding(false);
-          }
-        };
-
-        checkOnboarding();
-      }, []);
-
-  if (checkingOnboarding) {
-      return null;
-    }
 
   const handleStart = async () => {
       try {
