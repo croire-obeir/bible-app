@@ -7,12 +7,11 @@ const getApiUrl = () => {
       return 'http://localhost:3000';
     } else if (Platform.OS === 'android') {
       // http://192.168.178.100:3000
-      return 'http://192.168.0.176:3000';
+      return 'http://192.168.100.49:3000';
     } else {
       // iOS Simulator or Physical Device
       return 'http://192.168.1.XX:3000'; // Replace with your IP
-    }
-
+    }  
     // //deployed backend url
     // return 'https://backend-production-9988.up.railway.app'
   };

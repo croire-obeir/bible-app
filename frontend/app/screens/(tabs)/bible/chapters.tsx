@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   View, 
   Text, 
@@ -10,6 +10,7 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import CustomHeader from '../../../../components/CustomHeader';
+import { useSQLiteContext } from 'expo-sqlite';
 
 // Structure for our verse elements
 interface Verse {
@@ -19,6 +20,7 @@ interface Verse {
 
 export default function ChaptersScreen() {
   const router = useRouter();
+  const db = useSQLiteContext();
   
   // 1. Retrieve the metadata forwarded from the books index page
   const { bookId, bookName, chapterCount } = useLocalSearchParams<{
@@ -29,33 +31,60 @@ export default function ChaptersScreen() {
 
   // 2. Local State Management
   const [activeChapter, setActiveChapter] = useState<number>(1);
-  const [loadingVerses, setLoadingVerses] = useState<boolean>(false);
+  const [loadingVerses, setLoadingVerses] = useState<boolean>(true);
+  const [verses, setVerses] = useState<Verse[]>([]);
 
   // Generate an array containing indices from 1 up to total chapters count
   const totalChapters = chapterCount ? parseInt(chapterCount, 10) : 0;
   const chaptersArray = Array.from({ length: totalChapters }, (_, i) => i + 1);
 
-  // 3. Static Dummy Data Store
-  const dummyGenesis1: Verse[] = [
-    { number: 1, text: "Au commencement, Dieu créa les cieux et la terre." },
-    { number: 2, text: "La terre était informe et vide: il y avait des ténèbres à la surface de l'abîme, et l'esprit de Dieu se mouvait au-dessus des eaux." },
-    { number: 3, text: "Dieu dit: Que la lumière soit! Et la lumière fut." },
-  ];
+  useEffect(() => {
+    let isActive = true;
 
-  // Intercept selection updates to allow for loading states during live db parsing later
+    const loadVerses = async () => {
+      const numericBookId = Number(bookId);
+      if (!Number.isInteger(numericBookId) || numericBookId < 1) {
+        if (isActive) {
+          setVerses([]);
+          setLoadingVerses(false);
+        }
+        return;
+      }
+
+      try {
+        setLoadingVerses(true);
+        const rows = await db.getAllAsync<Verse>(
+          `SELECT verse_num AS number, verse_text AS text
+           FROM verses
+           WHERE version_id = ? AND book_id = ? AND chapter = ?
+           ORDER BY verse_num ASC`,
+          [1, numericBookId, activeChapter]
+        );
+
+        if (isActive) {
+          setVerses(rows);
+        }
+      } catch (error) {
+        console.error('Error loading verses from SQLite:', error);
+        if (isActive) {
+          setVerses([]);
+        }
+      } finally {
+        if (isActive) {
+          setLoadingVerses(false);
+        }
+      }
+    };
+
+    loadVerses();
+    return () => {
+      isActive = false;
+    };
+  }, [activeChapter, bookId, db]);
+
   const handleChapterChange = (chapterNumber: number) => {
-    setLoadingVerses(true);
     setActiveChapter(chapterNumber);
-    
-    // Simulate brief querying runtime latency
-    setTimeout(() => {
-      setLoadingVerses(false);
-    }, 200);
   };
-
-  // 4. Dynamic Data Switch Check
-  // Evaluates whether we should print our Genesis text block or pass blank parameters
-  const currentVerses = activeChapter === 1 ? dummyGenesis1 : [];
 
   return (
     <View style={styles.container}>
@@ -103,12 +132,12 @@ export default function ChaptersScreen() {
         <View style={styles.centeredState}>
           <ActivityIndicator size="small" color="#0a2d55" />
         </View>
-      ) : currentVerses.length > 0 ? (
+      ) : verses.length > 0 ? (
         <ScrollView 
           contentContainerStyle={styles.verseScrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {currentVerses.map((verse) => (
+          {verses.map((verse) => (
             <View key={verse.number} style={styles.verseRow}>
               {/* Verse Numeric Identifier Marker */}
               <Text style={styles.verseNumber}>{verse.number}</Text>
