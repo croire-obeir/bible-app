@@ -1,5 +1,7 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { StyleSheet, View } from 'react-native';
+import type { ComponentProps } from 'react';
 
 export default function TabsLayout() {
   return (
@@ -7,33 +9,45 @@ export default function TabsLayout() {
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: '#D4AF37', // Or
-        tabBarInactiveTintColor: '#8E8E93',
+        tabBarInactiveTintColor: '#8da0ba',
         tabBarStyle: {
-          backgroundColor: '#0a2d55', // Bleu foncé
+          backgroundColor: '#ffffff', // Bleu foncé
           borderTopWidth: 0,
-          height: 60,
-          paddingBottom: 30,
+          height: 64,
+          position: 'absolute',
+          left: 14,
+          right: 14,
+          bottom: 55,
+          borderRadius: 50,
+          paddingBottom: 7,
+          paddingTop: 7,
+          elevation: 0,
+          shadowColor: '#88500b',
+          shadowOpacity: 0.12,
+          shadowOffset: { width: 0, height: 2 },
+          shadowRadius: 12,
         },
+        tabBarLabelStyle: { fontSize: 15, fontWeight: '600' },
       }}
     >
       <Tabs.Screen
         name="Home"
         options={{
           title: 'Accueil',
-          tabBarIcon: ({ color, size }) => <Ionicons name="home" size={size} color={color} />,
+          tabBarIcon: ({ color, size, focused }) => <TabIcon name="book-outline" color={color} size={size} focused={focused} />,
         }}
       />
        <Tabs.Screen
         name="bible" // Points to app/screens/(tabs)/bible.tsx
         options={{
           title: 'Bible',
-          tabBarIcon: ({ color, size }) => <Ionicons name="book" size={size} color={color} />,
+          tabBarIcon: ({ color, size, focused }) => <TabIcon name="book-outline" color={color} size={size} focused={focused} />,
         }}
         />
      <Tabs.Screen
         name="Videos" // Points to app/screens/(tabs)/videos.tsx
         options={{
-          title: 'Vidéos',
+          href: null,
           tabBarIcon: ({ color, size }) => <Ionicons name="play-circle" size={size} color={color} />,
         }}
         />
@@ -41,7 +55,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="Audios" // Points to app/screens/(tabs)/audios.tsx
         options={{
-          title: 'Audios',
+          href: null,
           tabBarIcon: ({ color, size }) => <Ionicons name="musical-notes" size={size} color={color} />,
         }}
         />
@@ -49,17 +63,26 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="Documents" // Points to app/screens/(tabs)/documents.tsx
         options={{
-          title: 'Documents',
-          tabBarIcon: ({ color, size }) => <Ionicons name="document" size={size} color={color} />,
+          title: 'Bibliothèque',
+          tabBarIcon: ({ color, size, focused }) => <TabIcon name="library-outline" color={color} size={size} focused={focused} />,
         }}
         />
       <Tabs.Screen
         name="Profile"
         options={{
           title: 'Profil',
-          tabBarIcon: ({ color, size }) => <Ionicons name="person" size={size} color={color} />,
+          tabBarIcon: ({ color, size, focused }) => <TabIcon name="person-outline" color={color} size={size} focused={focused} />,
         }}
       />
     </Tabs>
   );
 }
+
+function TabIcon({ name, color, size, focused }: { name: ComponentProps<typeof Ionicons>['name']; color: string; size: number; focused: boolean }) {
+  return <View style={styles.icon}><Ionicons name={name} size={size} color={color} />{focused && <View style={styles.dot} />}</View>;
+}
+
+const styles = StyleSheet.create({
+  icon: { alignItems: 'center', minHeight: 24 },
+  dot: { width: 3, height: 3, borderRadius: 2, backgroundColor: '#D4AF37', marginTop: 2 },
+});

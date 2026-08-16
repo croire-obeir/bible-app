@@ -178,13 +178,13 @@ const styles = StyleSheet.create({
   // Layout Base
   container: { 
     flex: 1, 
-    backgroundColor: '#f5f5f5' 
+    backgroundColor: '#fff'
   },
   bg: { 
     flex: 1 
   },
   scrollContent: { 
-    padding: 20 
+    padding: 12
   },
   bottomPadding: { 
     height: 20 
@@ -227,10 +227,12 @@ const styles = StyleSheet.create({
   // Segmented Toggle Switch
   toggleContainer: {
     flexDirection: 'row',
-    backgroundColor: '#e2e8f0', 
-    borderRadius: 12,
-    padding: 4,
-    marginBottom: 20,
+    backgroundColor: '#f5f5f7',
+    borderRadius: 10,
+    padding: 3,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#e9e7e1',
   },
   toggleTab: {
     flex: 1,
@@ -240,20 +242,20 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   activeToggleTab: {
-    backgroundColor: '#0a2d55', 
-    elevation: 2,
+    backgroundColor: '#fff',
+    elevation: 0,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.15,
     shadowRadius: 2,
   },
   toggleText: {
-    fontSize: 14,
+    fontSize: 11,
     fontWeight: '600',
     color: '#64748b',
   },
   activeToggleText: {
-    color: '#fff',
+    color: '#082d70',
   },
 
   // Books List Cards
@@ -264,12 +266,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#edf2f7',
-    elevation: 1,
+    backgroundColor: '#fff5df',
+    borderRadius: 8,
+    padding: 15,
+    minHeight: 88,
+    borderWidth: 0,
+    elevation: 0,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -279,13 +281,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   bookName: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontFamily: 'serif',
+    fontSize: 23,
+    fontWeight: '400',
     color: '#0a2d55',
     marginBottom: 4,
   },
   bookChapters: {
-    fontSize: 13,
+    fontSize: 10,
     color: '#8a99ad',
     fontWeight: '500',
   },

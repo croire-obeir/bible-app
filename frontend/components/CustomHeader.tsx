@@ -1,16 +1,23 @@
 // components/CustomHeader.tsx
 import React from 'react';
-import { StyleSheet, View, SafeAreaView, Platform, StatusBar } from 'react-native';
+import { StyleSheet, View, SafeAreaView, Platform, StatusBar, Text } from 'react-native';
 
 interface CustomHeaderProps {
-  children?: React.ReactNode; // Dynamic container for all items passed from the parent
+  children?: React.ReactNode;
+  leftSlot?: React.ReactNode;
+  centerSlot?: React.ReactNode;
+  rightSlot?: React.ReactNode;
 }
 
-export default function CustomHeader({ children }: CustomHeaderProps) {
+export default function CustomHeader({ children, leftSlot, centerSlot, rightSlot }: CustomHeaderProps) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.headerContainer}>
-        {children}
+        <View style={styles.sideSlot}>{leftSlot}</View>
+        <View pointerEvents="none" style={styles.centerSlot}>
+          {typeof centerSlot === 'string' ? <Text style={styles.title}>{centerSlot}</Text> : centerSlot}
+        </View>
+        <View style={styles.rightSlot}>{children ?? rightSlot}</View>
       </View>
     </SafeAreaView>
   );
@@ -18,16 +25,33 @@ export default function CustomHeader({ children }: CustomHeaderProps) {
 
 const styles = StyleSheet.create({
   safeArea: {
-    backgroundColor: '#fff', 
+    backgroundColor: '#f5e9dc',
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
   },
   headerContainer: {
-    height: 60, 
+    height: 52,
+    justifyContent: 'center',
+    paddingHorizontal: 14,
+  },
+  sideSlot: {
+    position: 'absolute',
+    left: 14,
+    height: 52,
+    justifyContent: 'center',
+  },
+  centerSlot: { alignItems: 'center' },
+  rightSlot: {
+    position: 'absolute',
+    right: 14,
+    height: 52,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-end', // Stacks everything strictly to the right side
-    paddingHorizontal: 15, 
+    gap: 14,
+  },
+  title: {
+    color: '#082d70',
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
+    fontSize: 16,
+    fontStyle: 'italic',
   },
 });
