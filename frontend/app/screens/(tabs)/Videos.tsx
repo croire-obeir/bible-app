@@ -1,7 +1,8 @@
-import React, { useCallback, useMemo } from 'react';
-import { View, Text, StyleSheet, ImageBackground, SafeAreaView, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import { View, Text, StyleSheet, ImageBackground, SafeAreaView, ScrollView, TouchableOpacity, Alert, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
+import AppDrawer from '../../../components/AppDrawer';
 
 type VideoItem = {
   id: string;
@@ -12,6 +13,7 @@ type VideoItem = {
 };
 
 export default function VideosScreen() {
+  const [drawerVisible, setDrawerVisible] = useState(false);
   const videos: VideoItem[] = useMemo(
     () => [
       {
@@ -42,20 +44,32 @@ export default function VideosScreen() {
 
   return (
     <View style={styles.container}>
-      <ImageBackground source={require('../../../assets/enregistrement.png')} style={styles.bg} imageStyle={{ opacity: 0.05 }}>
+      <ImageBackground source={require('../../../assets/enregistrement.png')} style={styles.bg} imageStyle={{ opacity: 0.04 }}>
         <SafeAreaView style={styles.header}>
-          <Text style={styles.headerTitle}>Enseignements</Text>
+          <TouchableOpacity onPress={() => setDrawerVisible(true)}><Ionicons name="menu" size={20} color="#0a2d55" /></TouchableOpacity>
+          <Text style={styles.headerTitle}>Croire & Obéir</Text>
+          <Ionicons name="search" size={19} color="#0a2d55" />
         </SafeAreaView>
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          <Text style={styles.sectionTitle}>Vidéos</Text>
+          <Text style={styles.pageTitle}>Vidéos Sacrées</Text>
+          <Text style={styles.intro}>Une collection éditoriale d'enseignements visuels et de séries documentaires pour approfondir votre foi.</Text>
+          <View style={styles.searchBox}><Ionicons name="search" size={15} color="#8a99ad" /><TextInput placeholder="Rechercher une vidéo..." placeholderTextColor="#9aa3b3" style={styles.searchInput} /></View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>
+            {['Tout Parcourir', 'Nouve', 'Série', 'Enseign'].map((filter, index) => <View key={filter} style={[styles.filter, index === 0 && styles.activeFilter]}><Text style={[styles.filterText, index === 0 && styles.activeFilterText]}>{filter}</Text></View>)}
+          </ScrollView>
+
+          <TouchableOpacity style={styles.featuredCard} activeOpacity={0.9} onPress={() => openVideo(videos[0])}>
+            <ImageBackground source={require('../../../assets/bible.jpg')} style={styles.featuredImage} imageStyle={styles.roundedImage}>
+              <View style={styles.featuredOverlay}><Text style={styles.featuredTitle}>Psaumes: Un Voyage{`\n`}Poétique</Text><View style={styles.playRow}><View style={styles.playButton}><Ionicons name="play" size={17} color="#0a2d55" /></View><View><Text style={styles.watchText}>Regarder maintenant</Text><Text style={styles.metaText}>45 min • Documentaire</Text></View></View></View>
+            </ImageBackground>
+          </TouchableOpacity>
+          <View style={styles.sectionRow}><Text style={styles.sectionTitle}>Ajouts Récents</Text><Text style={styles.seeAll}>Voir tout →</Text></View>
 
           {videos.map((v) => (
             <TouchableOpacity key={v.id} style={styles.itemCard} activeOpacity={0.85} onPress={() => openVideo(v)}>
               <View style={styles.left}>
-                <View style={styles.iconWrap}>
-                  <Ionicons name="play-circle-outline" size={24} color="#0a2d55" />
-                </View>
+                <ImageBackground source={require('../../../assets/pimage.jpg')} style={styles.thumb} imageStyle={styles.thumbImage}><View style={styles.thumbPlay}><Ionicons name="play" size={11} color="#fff" /></View></ImageBackground>
                 <View style={styles.textWrap}>
                   <Text style={styles.itemTitle}>{v.title}</Text>
                   <Text style={styles.itemMeta}>{[v.speaker, v.duration].filter(Boolean).join(' • ')}</Text>
@@ -65,16 +79,10 @@ export default function VideosScreen() {
             </TouchableOpacity>
           ))}
 
-          <View style={styles.tipCard}>
-            <Ionicons name="information-circle-outline" size={18} color="#D4AF37" />
-            <Text style={styles.tipText}>
-              Pour le moment, les vidéos sont temporaires et s’ouvrent dans le navigateur pour tester la lecture.
-            </Text>
-          </View>
-
           <View style={styles.bottomPadding} />
         </ScrollView>
       </ImageBackground>
+      <AppDrawer visible={drawerVisible} onClose={() => setDrawerVisible(false)} />
     </View>
   );
 }
@@ -82,48 +90,21 @@ export default function VideosScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
   bg: { flex: 1 },
-  header: { backgroundColor: '#f8f3e7', paddingVertical: 16, alignItems: 'center' },
-  headerTitle: { color: '#0a2d55', fontFamily: 'serif', fontStyle: 'italic', fontSize: 20, fontWeight: '700' },
-  scrollContent: { padding: 14, paddingBottom: 100 },
-  sectionTitle: { fontFamily: 'serif', fontSize: 22, fontWeight: '700', color: '#0a2d55', marginBottom: 12 },
-  itemCard: {
-    backgroundColor: '#fff5df',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    borderLeftWidth: 0,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 2,
-  },
+  header: { height: 100, backgroundColor: '#c7ba9d', paddingHorizontal: 14, paddingTop: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  headerTitle: { color: '#233A59', fontFamily: 'serif', fontStyle: 'italic', fontSize: 25, fontWeight: '400' },
+  scrollContent: { paddingHorizontal: 12, paddingTop: 13, paddingBottom: 160 },
+  pageTitle: { fontFamily: 'serif', fontSize: 30, color: '#0a2d55', marginTop: 10, marginBottom: 8 },
+  intro: { color: '#687080', fontSize: 13, lineHeight: 19, marginBottom: 16 },
+  searchBox: { height: 46, borderRadius: 23, backgroundColor: '#f7f7f8', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 15, gap: 9 },
+  searchInput: { flex: 1, fontSize: 13, color: '#334155' },
+  filters: { gap: 8, paddingVertical: 14 },
+  filter: { paddingHorizontal: 16, height: 32, borderRadius: 16, justifyContent: 'center', backgroundColor: '#fff' },
+  activeFilter: { backgroundColor: '#092d6b', elevation: 2 }, filterText: { fontSize: 11, color: '#727887' }, activeFilterText: { color: '#fff' },
+  featuredCard: { height: 260, borderRadius: 18, overflow: 'hidden', marginBottom: 23 }, featuredImage: { flex: 1 }, roundedImage: { borderRadius: 18 }, featuredOverlay: { flex: 1, padding: 21, justifyContent: 'space-between', backgroundColor: 'rgba(4,28,65,.30)' }, featuredTitle: { color: '#fff', fontFamily: 'serif', fontSize: 25, lineHeight: 30, fontWeight: '700' }, playRow: { flexDirection: 'row', alignItems: 'center', gap: 12 }, playButton: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#e0bc00', alignItems: 'center', justifyContent: 'center' }, watchText: { color: '#fff', fontWeight: '700', fontSize: 14 }, metaText: { color: '#d7deea', fontSize: 11, marginTop: 3 },
+  sectionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, sectionTitle: { fontFamily: 'serif', fontSize: 20, color: '#0a2d55', marginBottom: 14 }, seeAll: { color: '#71809a', fontSize: 11 },
+  itemCard: { backgroundColor: '#fff', borderRadius: 18, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: '#edf0f4', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', elevation: 1 },
   left: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1, paddingRight: 10 },
-  iconWrap: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    backgroundColor: 'rgba(10,45,85,0.10)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+  thumb: { width: 64, height: 46, borderRadius: 6, overflow: 'hidden', justifyContent: 'center', alignItems: 'center' }, thumbImage: { borderRadius: 6 }, thumbPlay: { width: 24, height: 24, borderRadius: 12, backgroundColor: '#092d6b', alignItems: 'center', justifyContent: 'center' },
   textWrap: { flex: 1 },
-  itemTitle: { fontSize: 14, fontWeight: '800', color: '#0a2d55' },
-  itemMeta: { marginTop: 4, fontSize: 12, color: '#777', fontWeight: '600' },
-  tipCard: {
-    marginTop: 8,
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    padding: 14,
-    flexDirection: 'row',
-    gap: 10,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(212,175,55,0.25)',
-  },
-  tipText: { flex: 1, color: '#333', fontWeight: '500', lineHeight: 18 },
-  bottomPadding: { height: 20 },
+  itemTitle: { fontSize: 14, fontWeight: '700', color: '#0a2d55' }, itemMeta: { marginTop: 4, fontSize: 11, color: '#8a92a1' }, bottomPadding: { height: 20 },
 });
