@@ -190,7 +190,7 @@ const onGoggleLoginPressed=async(idToken:string)=>{
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.button} onPress={onLoginPressed}>
-              <LinearGradient colors={['#D4AF37', '#0a2d55']} style={styles.gradient}>
+              <LinearGradient colors={['#0a2d55', '#103b92']} style={styles.gradient}>
                 <Text style={styles.btnText}>SE CONNECTER</Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -202,7 +202,7 @@ const onGoggleLoginPressed=async(idToken:string)=>{
 
             <TouchableOpacity onPress={() => router.push('/screens/Register')}>
               <Text style={styles.link}>
-                Pas encore de compte ? <Text style={styles.bold}>S'inscrire</Text>
+                Pas encore de compte ? <Text style={styles.bold}>S’inscrire</Text>
               </Text>
             </TouchableOpacity>
           </View>
@@ -216,16 +216,16 @@ const onGoggleLoginPressed=async(idToken:string)=>{
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
   bg: { flex: 1 },
-  content: { flex: 1, paddingHorizontal: 30 },
-  backButton: { marginTop: 10, color: '#1565c0', fontSize: 16, fontWeight: 'bold' },
-  logo: { marginTop: 40, alignItems: 'center', marginBottom: 40 },
-  title: { fontSize: 24, fontWeight: 'bold', letterSpacing: 3, color: '#0a2d55' },
+  content: { flex: 1, paddingHorizontal: 26, backgroundColor: '#fff' },
+  backButton: { marginTop: 10, color: '#0a2d55', fontSize: 15, fontWeight: 'bold' },
+  logo: { marginTop: 35, alignItems: 'center', marginBottom: 35 },
+  title: { fontFamily: 'serif', fontStyle: 'italic', fontSize: 24, fontWeight: 'bold', letterSpacing: 1, color: '#0a2d55' },
   line: { width: 40, height: 3, backgroundColor: '#AA8418', marginTop: 5 },
   card: { flex: 1 },
-  heading: { fontSize: 28, fontWeight: '800', marginBottom: 30 },
+  heading: { fontFamily: 'serif', fontSize: 28, fontWeight: '800', color: '#0a2d55', marginBottom: 30 },
   forgot: { alignSelf: 'flex-end', marginBottom: 20 },
   forgotText: { color: '#1565c0', fontSize: 13, textDecorationLine: 'underline' },
-  button: { height: 55, borderRadius: 15, overflow: 'hidden', marginTop: 20 },
+  button: { height: 52, borderRadius: 18, overflow: 'hidden', marginTop: 20 },
   gradient: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   btnText: { color: '#fff', fontWeight: 'bold', letterSpacing: 1 },
   googleButton: {

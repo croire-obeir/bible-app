@@ -66,7 +66,7 @@ export default function DocumentsScreen() {
 
           <View style={styles.tipCard}>
             <Ionicons name="information-circle-outline" size={18} color="#D4AF37" />
-            <Text style={styles.tipText}>Pour le moment, les PDF s'ouvrent dans le navigateur pour tester la lecture.</Text>
+            <Text style={styles.tipText}>Pour le moment, les PDF s’ouvrent dans le navigateur pour tester la lecture.</Text>
           </View>
 
           <View style={styles.bottomPadding} />
@@ -77,19 +77,18 @@ export default function DocumentsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
+  container: { flex: 1, backgroundColor: '#fff' },
   bg: { flex: 1 },
-  header: { backgroundColor: '#0a2d55', paddingVertical: 20, alignItems: 'center' },
-  headerTitle: { color: '#fff', fontSize: 20, fontWeight: '700', letterSpacing: 1 },
-  scrollContent: { padding: 20 },
-  sectionTitle: { fontSize: 16, fontWeight: '800', color: '#0a2d55', marginBottom: 12 },
+  header: { backgroundColor: '#f8f3e7', paddingVertical: 16, alignItems: 'center' },
+  headerTitle: { color: '#0a2d55', fontFamily: 'serif', fontStyle: 'italic', fontSize: 20, fontWeight: '700' },
+  scrollContent: { padding: 14, paddingBottom: 100 },
+  sectionTitle: { fontFamily: 'serif', fontSize: 22, fontWeight: '700', color: '#0a2d55', marginBottom: 12 },
   itemCard: {
-    backgroundColor: '#fff',
-    borderRadius: 14,
+    backgroundColor: '#f4efe4',
+    borderRadius: 12,
     padding: 16,
     marginBottom: 12,
-    borderLeftWidth: 4,
-    borderLeftColor: '#AA8418',
+    borderLeftWidth: 0,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',

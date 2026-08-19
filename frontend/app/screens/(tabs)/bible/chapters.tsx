@@ -9,8 +9,8 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import CustomHeader from '../../../../components/CustomHeader';
 import { useSQLiteContext } from 'expo-sqlite';
+import AppDrawer from '../../../../components/AppDrawer';
 
 // Structure for our verse elements
 interface Verse {
@@ -33,6 +33,7 @@ export default function ChaptersScreen() {
   const [activeChapter, setActiveChapter] = useState<number>(1);
   const [loadingVerses, setLoadingVerses] = useState<boolean>(true);
   const [verses, setVerses] = useState<Verse[]>([]);
+  const [drawerVisible, setDrawerVisible] = useState(false);
 
   // Generate an array containing indices from 1 up to total chapters count
   const totalChapters = chapterCount ? parseInt(chapterCount, 10) : 0;
@@ -88,18 +89,10 @@ export default function ChaptersScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Universal Shared Layout Header navigation bar */}
-      <CustomHeader>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color="#0a2d55" />
-          <Text style={styles.backText}>Livres</Text>
-        </TouchableOpacity>
-      </CustomHeader>
-
-      {/* Book Metadata Display Banner */}
-      <View style={styles.titleBanner}>
+      <View style={styles.topHeader}>
+        <TouchableOpacity style={styles.headerAction} onPress={() => setDrawerVisible(true)}><Ionicons name="menu" size={20} color="#0a2d55" /></TouchableOpacity>
         <Text style={styles.bookTitle}>{bookName || 'Livre'}</Text>
-        <Text style={styles.subTitle}>Chapitre {activeChapter}</Text>
+        <TouchableOpacity style={styles.headerAction} onPress={() => router.push('/screens/ShareVerse')}><Text style={styles.chapterHeader}>Ch. {activeChapter}</Text></TouchableOpacity>
       </View>
 
       {/* HORIZONTAL SCROLLING CHAPTER SELECTOR TABS */}
@@ -109,6 +102,7 @@ export default function ChaptersScreen() {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.horizontalScrollPadding}
         >
+          <Text style={styles.introTab}>Intro</Text>
           {chaptersArray.map((chap) => {
             const isSelected = chap === activeChapter;
             return (
@@ -119,7 +113,7 @@ export default function ChaptersScreen() {
                 activeOpacity={0.8}
               >
                 <Text style={[styles.chapterPillText, isSelected && styles.activeChapterPillText]}>
-                  {chap}
+                  {chap.toString().padStart(2, '0')}
                 </Text>
               </TouchableOpacity>
             );
@@ -139,10 +133,8 @@ export default function ChaptersScreen() {
         >
           {verses.map((verse) => (
             <View key={verse.number} style={styles.verseRow}>
-              {/* Verse Numeric Identifier Marker */}
               <Text style={styles.verseNumber}>{verse.number}</Text>
-              {/* Verse Text Payload Block */}
-              <Text style={styles.verseText}>{verse.text}</Text>
+              <View style={[styles.verseCard, verse.number === 3 && styles.activeVerseCard]}><Text style={styles.verseText}>{verse.text}</Text></View>
             </View>
           ))}
           <View style={styles.bottomSpacer} />
@@ -154,6 +146,7 @@ export default function ChaptersScreen() {
           <Text style={styles.emptyText}>Contenu vide</Text>
         </View>
       )}
+      <AppDrawer visible={drawerVisible} onClose={() => setDrawerVisible(false)} />
     </View>
   );
 }
@@ -161,69 +154,40 @@ export default function ChaptersScreen() {
 const styles = StyleSheet.create({
   container: { 
     flex: 1, 
-    backgroundColor: '#f8fafc' 
+    backgroundColor: '#fff'
   },
-  backButton: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    marginRight: 'auto' 
-  },
-  backText: { 
-    fontSize: 16, 
-    fontWeight: '600', 
-    color: '#0a2d55', 
-    marginLeft: 5 
-  },
-  titleBanner: {
-    paddingHorizontal: 20,
-    paddingTop: 15,
-    paddingBottom: 5,
-  },
+  topHeader: { height: 54, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  headerAction: { width: 42, alignItems: 'center' },
   bookTitle: { 
-    fontSize: 24, 
-    fontWeight: '800', 
-    color: '#0a2d55' 
+    fontFamily: 'serif', fontStyle: 'italic', fontSize: 15, fontWeight: '700', color: '#0a2d55'
   },
-  subTitle: { 
-    fontSize: 14, 
-    color: '#64748b', 
-    fontWeight: '600',
-    marginTop: 2 
-  },
+  chapterHeader: { fontFamily: 'serif', fontStyle: 'italic', color: '#0a2d55', fontSize: 15 },
 
   // Horizontal Scrolling Chapter Track
   chapterTrackContainer: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#edf2f7',
-    paddingVertical: 12,
+    borderBottomWidth: 0,
+    paddingVertical: 4,
   },
   horizontalScrollPadding: {
-    paddingHorizontal: 16,
-    gap: 8,
+    paddingHorizontal: 22,
+    gap: 16,
+    alignItems: 'center',
   },
   chapterPill: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#fff',
+    width: 28,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'transparent',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    // Material Shadow definitions
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 1,
   },
   activeChapterPill: {
     backgroundColor: '#0a2d55',
     borderColor: '#0a2d55',
   },
   chapterPillText: {
-    fontSize: 15,
-    fontWeight: '700',
+    fontSize: 10,
+    fontWeight: '500',
     color: '#64748b',
   },
   activeChapterPillText: {
@@ -232,28 +196,24 @@ const styles = StyleSheet.create({
 
   // Vertical Verses Stream Layout
   verseScrollContent: {
-    padding: 20,
-    gap: 16,
+    paddingTop: 14,
+    paddingBottom: 104,
+    paddingLeft: 4,
+    paddingRight: 20,
+    gap: 10,
   },
   verseRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+    flexDirection: 'row', alignItems: 'stretch',
   },
   verseNumber: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: '#D4AF37', // Gold standard script detailing accent
-    width: 28,
-    paddingTop: 2,
-    textAlign: 'left',
+    fontSize: 9, fontWeight: '700', color: '#746422', width: 37, textAlign: 'center', paddingTop: 14,
   },
   verseText: {
-    flex: 1,
-    fontSize: 15,
-    color: '#334155',
-    lineHeight: 24,
-    fontWeight: '500',
+    fontFamily: 'serif', flex: 1, fontSize: 14, color: '#202020', lineHeight: 22, fontWeight: '400',
   },
+  verseCard: { flex: 1, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 9, backgroundColor: '#f1f1f1', minHeight: 72 },
+  activeVerseCard: { backgroundColor: '#bbb38d' },
+  introTab: { color: '#777e8b', fontSize: 10, marginRight: 2 },
 
   // Fallback / Loading structural frameworks
   centeredState: {

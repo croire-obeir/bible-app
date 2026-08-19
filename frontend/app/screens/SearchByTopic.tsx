@@ -6,11 +6,13 @@ import {
   TextInput, 
   TouchableOpacity, 
   ScrollView, 
-  ActivityIndicator 
+  ActivityIndicator,
+  ImageBackground
 } from 'react-native';
-import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSQLiteContext } from 'expo-sqlite';
+import { useRouter } from 'expo-router';
+import AppDrawer from '../../components/AppDrawer';
 
 // Define structures matching your existing queries
 interface SuggestionResult {
@@ -34,6 +36,7 @@ export default function SearchByTopicScreen() {
   const [suggestions, setSuggestions] = useState<SuggestionResult[]>([]);
   const [verses, setVerses] = useState<VerseResult[]>([]);
   const [loading, setLoading] = useState(false);
+  const [drawerVisible, setDrawerVisible] = useState(false);
   
   // Controls display logic: 'suggestions' or 'results'
   const [searchPhase, setSearchPhase] = useState<'suggestions' | 'results'>('suggestions');
@@ -110,12 +113,16 @@ export default function SearchByTopicScreen() {
 
   return (
     <View style={styles.container}>
-      {/* HEADER INPUT ROW */}
+      <View style={styles.appHeader}>
+        <TouchableOpacity onPress={() => setDrawerVisible(true)}><Ionicons name="menu" size={20} color="#0a2d55" /></TouchableOpacity>
+        <Text style={styles.appTitle}>Croire & Obéir</Text>
+        <Ionicons name="search" size={20} color="#0a2d55" />
+      </View>
+      <View style={styles.heroContent}>
+        <Text style={styles.pageTitle}>Explorer</Text>
+        <Text style={styles.intro}>Que cherchez-vous dans Sa Parole{`\n`}aujourd’hui?</Text>
+      </View>
       <View style={styles.searchHeader}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="#0a2d55" />
-        </TouchableOpacity>
-        
         <View style={styles.inputWrapper}>
           <Ionicons name="search" size={18} color="#94a3b8" style={styles.searchIcon} />
           <TextInput
@@ -124,7 +131,6 @@ export default function SearchByTopicScreen() {
             value={searchQuery}
             onChangeText={handleTextChange}
             style={styles.textInput}
-            autoFocus
             returnKeyType="search"
             onSubmitEditing={() => handleSelectSuggestion(searchQuery)}
           />
@@ -133,6 +139,7 @@ export default function SearchByTopicScreen() {
               <Ionicons name="close-circle" size={18} color="#94a3b8" />
             </TouchableOpacity>
           )}
+          {searchQuery.length === 0 && <Ionicons name="options-outline" size={18} color="#35629b" />}
         </View>
       </View>
 
@@ -144,6 +151,29 @@ export default function SearchByTopicScreen() {
       ) : searchPhase === 'suggestions' ? (
         /* PHASE 1 VIEW: SUGGESTIONS DROPDOWN LIST */
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+          {searchQuery.length === 0 && (
+            <>
+              <Text style={styles.themeTitle}>Thèmes Sacrés</Text>
+              <TouchableOpacity style={styles.themeCard} activeOpacity={0.9} onPress={() => handleSelectSuggestion('amour')}>
+                <ImageBackground source={require('../../assets/Timage.jpg')} style={styles.themeImage} imageStyle={styles.themeImageRadius}>
+                  <View style={styles.themeOverlay}>
+                    <Text style={styles.themeName}>Amour</Text>
+                    <Ionicons name="heart" size={17} color="#5f5720" />
+                    <Text style={styles.themeCount}>124 VERSETS</Text>
+                  </View>
+                </ImageBackground>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.themeCard} activeOpacity={0.9} onPress={() => handleSelectSuggestion('foi')}>
+                <ImageBackground source={require('../../assets/Dimage.jpg')} style={styles.themeImage} imageStyle={styles.themeImageRadius}>
+                  <View style={styles.themeOverlay}>
+                    <Text style={styles.themeName}>Foi</Text>
+                    <Ionicons name="flame" size={17} color="#5f5720" />
+                    <Text style={styles.themeCount}>89 VERSETS</Text>
+                  </View>
+                </ImageBackground>
+              </TouchableOpacity>
+            </>
+          )}
           {suggestions.map((item, index) => (
             <TouchableOpacity 
               key={index} 
@@ -184,26 +214,31 @@ export default function SearchByTopicScreen() {
           <View style={styles.bottomSpacer} />
         </ScrollView>
       )}
+      <View style={styles.bottomNav}>
+        <TouchableOpacity style={styles.navItem} onPress={() => router.replace('/screens/(tabs)/Home')}><Ionicons name="book-outline" size={18} color="#0a2d55" /><Text style={styles.activeNavText}>HOME</Text><View style={styles.navDot} /></TouchableOpacity>
+        <TouchableOpacity style={styles.navItem} onPress={() => router.replace('/screens/(tabs)/bible')}><Ionicons name="book-outline" size={18} color="#8da0ba" /><Text style={styles.navText}>BIBLE</Text></TouchableOpacity>
+        <TouchableOpacity style={styles.navItem} onPress={() => router.replace('/screens/(tabs)/Documents')}><Ionicons name="library-outline" size={18} color="#8da0ba" /><Text style={styles.navText}>LIBRARY</Text></TouchableOpacity>
+        <TouchableOpacity style={styles.navItem} onPress={() => router.replace('/screens/(tabs)/Profile')}><Ionicons name="person-outline" size={18} color="#8da0ba" /><Text style={styles.navText}>PROFILE</Text></TouchableOpacity>
+      </View>
+      <AppDrawer visible={drawerVisible} onClose={() => setDrawerVisible(false)} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: '#f8fafc' 
-  },
+  container: { flex: 1, backgroundColor: '#fff' },
+  appHeader: { height: 53, backgroundColor: '#f8f3e7', paddingHorizontal: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  appTitle: { fontFamily: 'serif', fontStyle: 'italic', fontSize: 16, color: '#0a2d55' },
+  heroContent: { paddingHorizontal: 27, paddingTop: 14, paddingBottom: 12 },
+  pageTitle: { fontFamily: 'serif', color: '#092d70', fontWeight: '700', fontSize: 28 },
+  intro: { color: '#555b68', fontSize: 12, lineHeight: 16, marginTop: 6 },
   // Search bar area setup
   searchHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff',
-    paddingTop: 50, // Pushes elements safely under device hardware status notches
-    paddingBottom: 12,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#edf2f7',
-    gap: 12,
+    paddingBottom: 9,
+    paddingHorizontal: 27,
   },
   backButton: {
     padding: 4,
@@ -212,10 +247,15 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f1f5f9',
-    borderRadius: 24,
+    backgroundColor: '#fff',
+    borderRadius: 20,
     paddingHorizontal: 12,
-    height: 40,
+    height: 39,
+    shadowColor: '#b6b9c4',
+    shadowOpacity: 0.16,
+    shadowOffset: { width: 0, height: 5 },
+    shadowRadius: 12,
+    elevation: 3,
   },
   searchIcon: {
     marginRight: 8,
@@ -232,9 +272,15 @@ const styles = StyleSheet.create({
   },
 
   // Layout Streams
-  scrollContent: {
-    padding: 16,
-  },
+  scrollContent: { paddingHorizontal: 15, paddingTop: 4, paddingBottom: 95 },
+  themeTitle: { color: '#092d70', fontFamily: 'serif', fontStyle: 'italic', fontWeight: '700', fontSize: 17, marginLeft: 18, marginBottom: 20 },
+  themeCard: { height: 126, marginBottom: 13, borderRadius: 6, overflow: 'hidden' },
+  themeImage: { flex: 1 },
+  themeImageRadius: { borderRadius: 6 },
+  themeOverlay: { flex: 1, padding: 13, justifyContent: 'space-between', backgroundColor: 'rgba(10,45,85,.28)' },
+  themeName: { color: '#fff', fontFamily: 'serif', fontSize: 18, fontWeight: '700' },
+  themeCount: { color: '#082d70', fontSize: 8, fontWeight: '700', opacity: .5 },
+  bottomNav: { position: 'absolute', left: 16, right: 16, bottom: 12, height: 48, backgroundColor: '#fff', borderRadius: 24, flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', shadowColor: '#adb2bf', shadowOpacity: .1, shadowRadius: 14, shadowOffset: { width: 0, height: 3 }, elevation: 2 }, navItem: { width: 45, alignItems: 'center' }, navText: { color: '#8da0ba', fontSize: 7, marginTop: 1 }, activeNavText: { color: '#0a2d55', fontSize: 7, marginTop: 1 }, navDot: { width: 3, height: 3, borderRadius: 2, backgroundColor: '#d4af37', marginTop: 2 },
   bottomSpacer: {
     height: 40,
   },

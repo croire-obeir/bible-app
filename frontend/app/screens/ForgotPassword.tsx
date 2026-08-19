@@ -50,7 +50,7 @@ export default function ForgotPasswordScreen() {
           
           {/* Header avec bouton retour */}
           <TouchableOpacity onPress={() => router.back()} style={{ alignSelf: 'flex-start' }}>
-            <Ionicons name="arrow-back" size={24} color="#1565c0" />
+            <Ionicons name="arrow-back" size={24} color="#0a2d55" />
           </TouchableOpacity>
 
           <Text style={styles.brand}>CROIRE & OBÉIR</Text>
@@ -67,7 +67,7 @@ export default function ForgotPasswordScreen() {
                 />
                { emailSent ? <Text style={{ marginTop: 20, color:'#AA8418' }}>{emailSent}</Text> : null}
             <TouchableOpacity style={styles.button} onPress={onForgotPasswordPressed}>
-              <LinearGradient colors={['#D4AF37', '#AA8418']} style={styles.gradient}>
+              <LinearGradient colors={['#0a2d55', '#103b92']} style={styles.gradient}>
                 <Text style={styles.btnText}>ENVOYER EMAIL</Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -86,10 +86,10 @@ export default function ForgotPasswordScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
   bg: { flex: 1 },
-  content: { flex: 1, padding: 30 },
-  brand: { textAlign: 'center', marginVertical: 20, fontWeight: 'bold', letterSpacing: 2 },
-  heading: { fontSize: 26, fontWeight: '800', marginBottom: 30 },
-  button: { height: 55, borderRadius: 15, overflow: 'hidden', marginTop: 30 },
+  content: { flex: 1, padding: 26, backgroundColor: '#fff' },
+  brand: { textAlign: 'center', marginVertical: 20, fontFamily: 'serif', fontStyle: 'italic', color: '#0a2d55', fontWeight: 'bold', letterSpacing: 1 },
+  heading: { fontFamily: 'serif', color: '#0a2d55', fontSize: 26, fontWeight: '800', marginBottom: 30 },
+  button: { height: 52, borderRadius: 18, overflow: 'hidden', marginTop: 30 },
   gradient: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   btnText: { color: '#fff', fontWeight: 'bold' },
   link: { marginTop: 25, textAlign: 'center', color: '#666' },

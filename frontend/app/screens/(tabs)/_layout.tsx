@@ -6,29 +6,38 @@ import type { ComponentProps } from 'react';
 export default function TabsLayout() {
   return (
     <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: '#D4AF37', // Or
-        tabBarInactiveTintColor: '#8da0ba',
-        tabBarStyle: {
-          backgroundColor: '#ffffff', // Bleu foncé
-          borderTopWidth: 0,
-          height: 64,
-          position: 'absolute',
-          left: 14,
-          right: 14,
-          bottom: 55,
-          borderRadius: 50,
-          paddingBottom: 7,
-          paddingTop: 7,
-          elevation: 0,
-          shadowColor: '#88500b',
-          shadowOpacity: 0.12,
-          shadowOffset: { width: 0, height: 2 },
-          shadowRadius: 12,
-        },
-        tabBarLabelStyle: { fontSize: 15, fontWeight: '600' },
-      }}
+  screenOptions={{
+    headerShown: false,
+
+    tabBarActiveTintColor: '#D4AF37',
+    tabBarInactiveTintColor: '#8da0ba',
+
+    tabBarStyle: {
+      backgroundColor: '#f6f4f3',
+      borderTopWidth: 0,
+      height: 65,
+      position: 'absolute',
+      
+       left: '11%',
+      bottom: 60,
+      borderRadius: 60,
+      paddingBottom: 10,
+      paddingTop: 7,
+      elevation: 0,
+      shadowColor: '#88500b',
+      shadowOpacity: 0.12,
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowRadius: 12,
+    },
+
+    tabBarLabelStyle: {
+      fontSize: 15,
+      fontWeight: '600',
+    },
+  }}
     >
       <Tabs.Screen
         name="Home"

@@ -98,9 +98,7 @@ export default function HomeScreen() {
         <TouchableOpacity
           style={styles.headerButton}
           activeOpacity={0.7}
-          onPress={() => {
-            console.log('Search');
-          }}
+          onPress={() => router.push('/screens/SearchByTopic')}
         >
           <Ionicons
             name="search"
@@ -237,11 +235,12 @@ const styles = StyleSheet.create({
   header: {
     height: 100,
     width: '100%',
-    backgroundColor: '#F8F3E7',
+    backgroundColor: '#c7ba9d',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 14,
+    paddingTop: 20,
   },
 
   headerButton: {
@@ -254,10 +253,10 @@ const styles = StyleSheet.create({
   logo: {
     fontFamily: 'serif',
     fontStyle: 'italic',
-    fontSize: 16,
+    fontSize: 25,
     fontWeight: '400',
     color: '#233A59',
-    marginTop: 20,
+    marginTop: 1,
   },
 
   // ======================================================
@@ -285,6 +284,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     overflow: 'hidden',
     marginBottom: 23,
+    marginTop: 10,
   },
 
   verseBackground: {

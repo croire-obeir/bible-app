@@ -219,7 +219,7 @@ export default function ProfileScreen() {
       >
         <SafeAreaView style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color="#fff" />
+            <Ionicons name="arrow-back" size={24} color="#0a2d55" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Profil Utilisateur</Text>
           <View style={styles.placeholder} />
@@ -227,7 +227,7 @@ export default function ProfileScreen() {
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
           
-          <LinearGradient colors={['#0a2d55', '#1565c0']} style={styles.profileCard}>
+          <LinearGradient colors={['#f4efe4', '#e7dcc6']} style={styles.profileCard}>
             <View style={styles.avatarContainer}>
               <TouchableOpacity onPress={() => Alert.alert("Fonctionnalité à venir", "La modification de l'avatar sera disponible dans une future mise à jour.")}>
                 <View style={styles.avatar}>
@@ -314,7 +314,7 @@ export default function ProfileScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>À propos</Text>
             <TouchableOpacity style={styles.aboutItem}><Text style={styles.aboutText}>Version 1.0.0</Text></TouchableOpacity>
-            <TouchableOpacity style={styles.aboutItem}><Text style={styles.aboutText}>Conditions d'utilisation</Text></TouchableOpacity>
+            <TouchableOpacity style={styles.aboutItem}><Text style={styles.aboutText}>Conditions d’utilisation</Text></TouchableOpacity>
           </View>
 
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
@@ -332,14 +332,14 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
+  container: { flex: 1, backgroundColor: '#fff' },
   bg: { flex: 1 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 15, backgroundColor: '#0a2d55' },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 15, backgroundColor: '#f8f3e7' },
   backButton: { padding: 5 },
-  headerTitle: { color: '#fff', fontSize: 18, fontWeight: '700' },
+  headerTitle: { color: '#0a2d55', fontFamily: 'serif', fontStyle: 'italic', fontSize: 18, fontWeight: '700' },
   placeholder: { width: 34 },
-  scrollContent: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 30 },
-  profileCard: { borderRadius: 16, padding: 25, alignItems: 'center', marginBottom: 25 },
+  scrollContent: { paddingHorizontal: 14, paddingTop: 16, paddingBottom: 100 },
+  profileCard: { borderRadius: 18, padding: 25, alignItems: 'center', marginBottom: 20 },
   avatarContainer: { position: 'relative', marginBottom: 15 },
   avatar: { width: 100, height: 100, borderRadius: 50, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center', borderWidth: 3, borderColor: '#D4AF37', overflow: 'hidden' },
   avatarImage: { width: '100%', height: '100%' },
@@ -354,13 +354,13 @@ const styles = StyleSheet.create({
   actionButtonText: { color: '#fff', fontWeight: '600' },
   section: { marginBottom: 20 },
   sectionTitle: { fontSize: 14, fontWeight: '700', color: '#0a2d55', marginBottom: 12 },
-  infoItem: { flexDirection: 'row', backgroundColor: '#fff', padding: 16, borderRadius: 12, marginBottom: 10, borderLeftWidth: 4, borderLeftColor: '#D4AF37' },
+  infoItem: { flexDirection: 'row', backgroundColor: '#fff5df', padding: 16, borderRadius: 12, marginBottom: 10, borderLeftWidth: 0 },
   infoContent: { flexDirection: 'row', alignItems: 'center', flex: 1 },
   infoText: { marginLeft: 15, flex: 1 },
   infoLabel: { fontSize: 12, color: '#999' },
   infoValue: { fontSize: 14, color: '#0a2d55', fontWeight: '600' },
   inputField: { fontSize: 14, color: '#0a2d55', borderBottomWidth: 1, borderBottomColor: '#D4AF37' },
-  menuItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#fff', padding: 16, borderRadius: 12, marginBottom: 10 },
+  menuItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f4efe4', padding: 16, borderRadius: 12, marginBottom: 10 },
   menuContent: { flexDirection: 'row', alignItems: 'center' },
   menuText: { fontSize: 14, color: '#0a2d55', fontWeight: '600', marginLeft: 15 },
   aboutItem: { backgroundColor: '#fff', padding: 14, borderRadius: 12, marginBottom: 10 },
