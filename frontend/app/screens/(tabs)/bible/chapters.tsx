@@ -5,7 +5,8 @@ import {
   StyleSheet, 
   ScrollView, 
   TouchableOpacity, 
-  ActivityIndicator 
+  ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -87,17 +88,27 @@ export default function ChaptersScreen() {
     setActiveChapter(chapterNumber);
   };
 
+  const handleVerseLongPress = (verse: Verse) => {
+    router.push({
+      pathname: '/screens/ShareVerse',
+      params: {
+        verseText: verse.text,
+        reference: `${bookName || 'Livre'} ${activeChapter}:${verse.number}`,
+      },
+    });
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.topHeader}>
-        <TouchableOpacity style={styles.headerAction} onPress={() => setDrawerVisible(true)}><Ionicons name="menu" size={20} color="#0a2d55" /></TouchableOpacity>
+        <TouchableOpacity style={styles.headerAction} onPress={() => setDrawerVisible(true)}><Ionicons name="menu" size={21} color="#0a2d55" /></TouchableOpacity>
         <Text style={styles.bookTitle}>{bookName || 'Livre'}</Text>
-        <TouchableOpacity style={styles.headerAction} onPress={() => router.push('/screens/ShareVerse')}><Text style={styles.chapterHeader}>Ch. {activeChapter}</Text></TouchableOpacity>
+        <View style={styles.headerAction}><Text style={styles.chapterHeader}>Ch. {activeChapter}</Text></View>
       </View>
 
       {/* HORIZONTAL SCROLLING CHAPTER SELECTOR TABS */}
       <View style={styles.chapterTrackContainer}>
-        <ScrollView 
+        <ScrollView
           horizontal 
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.horizontalScrollPadding}
@@ -131,12 +142,23 @@ export default function ChaptersScreen() {
           contentContainerStyle={styles.verseScrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {verses.map((verse) => (
+          <View style={styles.verseGuide}>
+            {verses.map((verse) => (
             <View key={verse.number} style={styles.verseRow}>
-              <Text style={styles.verseNumber}>{verse.number}</Text>
-              <View style={[styles.verseCard, verse.number === 3 && styles.activeVerseCard]}><Text style={styles.verseText}>{verse.text}</Text></View>
+              <View style={styles.verseNumber}>
+                <Text style={styles.verseNumberText}>{verse.number}</Text>
+              </View>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                style={styles.verseCard}
+                onLongPress={() => handleVerseLongPress(verse)}
+                delayLongPress={500}
+              >
+                <Text style={styles.verseText}>{verse.text}</Text>
+              </TouchableOpacity>
             </View>
-          ))}
+            ))}
+          </View>
           <View style={styles.bottomSpacer} />
         </ScrollView>
       ) : (
@@ -156,7 +178,14 @@ const styles = StyleSheet.create({
     flex: 1, 
     backgroundColor: '#fff'
   },
-  topHeader: { height: 54, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  topHeader: {
+    height: 58 + (Platform.OS === 'android' ? 24 : 0),
+    paddingTop: Platform.OS === 'android' ? 24 : 0,
+    paddingHorizontal: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   headerAction: { width: 42, alignItems: 'center' },
   bookTitle: { 
     fontFamily: 'serif', fontStyle: 'italic', fontSize: 15, fontWeight: '700', color: '#0a2d55'
@@ -165,28 +194,33 @@ const styles = StyleSheet.create({
 
   // Horizontal Scrolling Chapter Track
   chapterTrackContainer: {
-    borderBottomWidth: 0,
-    paddingVertical: 4,
+    height: 48,
+    paddingVertical: 0,
+    justifyContent: 'center',
   },
   horizontalScrollPadding: {
     paddingHorizontal: 22,
-    gap: 16,
+    gap: 14,
     alignItems: 'center',
   },
   chapterPill: {
-    width: 28,
-    height: 24,
-    borderRadius: 12,
+    width: 36,
+    height: 30,
+    borderRadius: 15,
     backgroundColor: 'transparent',
     justifyContent: 'center',
     alignItems: 'center',
   },
   activeChapterPill: {
-    backgroundColor: '#0a2d55',
-    borderColor: '#0a2d55',
+    backgroundColor: '#092d6b',
+    shadowColor: '#092d6b',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    elevation: 3,
   },
   chapterPillText: {
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: '500',
     color: '#64748b',
   },
@@ -196,24 +230,34 @@ const styles = StyleSheet.create({
 
   // Vertical Verses Stream Layout
   verseScrollContent: {
-    paddingTop: 14,
+    paddingTop: 12,
     paddingBottom: 104,
-    paddingLeft: 4,
-    paddingRight: 20,
+    paddingLeft: 0,
+    paddingRight: 16,
+    gap: 10,
+  },
+  verseGuide: {
+    marginLeft: 35,
+    borderLeftWidth: 2,
+    borderLeftColor: '#e5e5e5',
     gap: 10,
   },
   verseRow: {
-    flexDirection: 'row', alignItems: 'stretch',
+    flexDirection: 'row', alignItems: 'stretch', marginLeft: -30,
   },
   verseNumber: {
-    fontSize: 9, fontWeight: '700', color: '#746422', width: 37, textAlign: 'center', paddingTop: 14,
+    width: 40, height: 23, marginTop: 14, marginRight: 10,
+    borderRadius: 12, borderWidth: 2, borderColor: '#e7e7e7',
+    backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center',
+  },
+  verseNumberText: {
+    fontSize: 10, fontWeight: '700', color: '#746422',
   },
   verseText: {
-    fontFamily: 'serif', flex: 1, fontSize: 14, color: '#202020', lineHeight: 22, fontWeight: '400',
+    fontFamily: 'serif', flex: 1, fontSize: 18, color: '#202020', lineHeight: 30, fontWeight: '400',
   },
-  verseCard: { flex: 1, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 9, backgroundColor: '#f1f1f1', minHeight: 72 },
-  activeVerseCard: { backgroundColor: '#bbb38d' },
-  introTab: { color: '#777e8b', fontSize: 10, marginRight: 2 },
+  verseCard: { flex: 1, paddingHorizontal: 22, paddingVertical: 12, borderRadius: 12, backgroundColor: '#f1f1f1', minHeight: 72 },
+  introTab: { color: '#777e8b', fontSize: 13, marginRight: 2 },
 
   // Fallback / Loading structural frameworks
   centeredState: {

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ImageBackground, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 
 const backgrounds = [
   require('../../assets/bible.jpg'),
@@ -12,11 +12,18 @@ const backgrounds = [
 
 export default function ShareVerseScreen() {
   const router = useRouter();
+  const { verseText, reference } = useLocalSearchParams<{
+    verseText?: string;
+    reference?: string;
+  }>();
   const [background, setBackground] = useState(0);
   const [alignment, setAlignment] = useState<'left' | 'center' | 'right'>('center');
 
+  const selectedVerse = verseText || 'For I know the plans I have for you, declares the LORD, plans to prosper you and not to harm you, plans to give you hope and a future.';
+  const selectedReference = reference || 'Jeremiah 29:11';
+
   const shareVerse = async () => {
-    await Share.share({ message: '“For I know the plans I have for you,” declares the LORD. — Jeremiah 29:11' });
+    await Share.share({ message: `“${selectedVerse}” — ${selectedReference}` });
   };
 
   return (
@@ -29,8 +36,8 @@ export default function ShareVerseScreen() {
       <View style={styles.content}>
         <ImageBackground source={backgrounds[background]} style={styles.verseCard} imageStyle={styles.verseImage}>
           <LinearGradient colors={['rgba(117,82,28,.30)', 'rgba(4,39,69,.97)']} style={styles.overlay}>
-            <Text style={[styles.verse, alignment === 'left' && styles.left, alignment === 'right' && styles.right]}>“For I know the plans I{`\n`}have for you,” declares{`\n`}the LORD, “plans to{`\n`}prosper you and not to{`\n`}harm you, plans to give{`\n`}you hope and a future.”</Text>
-            <Text style={styles.reference}>JEREMIAH 29:11</Text>
+            <Text style={[styles.verse, alignment === 'left' && styles.left, alignment === 'right' && styles.right]}>“{selectedVerse}”</Text>
+            <Text style={styles.reference}>{selectedReference.toUpperCase()}</Text>
           </LinearGradient>
         </ImageBackground>
         <View style={styles.controls}>
@@ -52,13 +59,13 @@ export default function ShareVerseScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
-  header: { height: 54, backgroundColor: '#cdd073', paddingHorizontal: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  header: { height: 41, backgroundColor: '#cdd073', paddingHorizontal: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   headerTitle: { color: '#0a2d55', fontFamily: 'serif', fontStyle: 'italic', fontSize: 14 },
-  content: { padding: 17, paddingBottom: 78 },
-  verseCard: { height: 299, borderRadius: 8, overflow: 'hidden' }, verseImage: { borderRadius: 8 }, overlay: { flex: 1, paddingHorizontal: 17, paddingBottom: 58, justifyContent: 'flex-end' },
-  verse: { color: '#fff', fontFamily: 'serif', fontSize: 22, lineHeight: 25, textAlign: 'center' }, left: { textAlign: 'left' }, right: { textAlign: 'right' }, reference: { color: '#ebde51', fontSize: 9, letterSpacing: 1, fontWeight: '800', textAlign: 'center', marginTop: 22 },
+  content: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 78 },
+  verseCard: { height: 415, borderRadius: 10, overflow: 'hidden' }, verseImage: { borderRadius: 10 }, overlay: { flex: 1, paddingHorizontal: 17, paddingBottom: 78, justifyContent: 'flex-end' },
+  verse: { color: '#fff', fontFamily: 'serif', fontSize: 26, lineHeight: 34, textAlign: 'center' }, left: { textAlign: 'left' }, right: { textAlign: 'right' }, reference: { color: '#ebde51', fontSize: 10, letterSpacing: 1, fontWeight: '800', textAlign: 'center', marginTop: 22 },
   controls: { marginTop: 15, borderRadius: 7, backgroundColor: '#fff', padding: 12, shadowColor: '#b6bac6', shadowOpacity: .12, shadowRadius: 16, shadowOffset: { width: 0, height: 5 }, elevation: 2 }, controlLabel: { color: '#8c92a1', fontSize: 8, marginBottom: 7 }, backgrounds: { flexDirection: 'row', alignItems: 'center', gap: 10 }, backgroundChoice: { width: 32, height: 32, borderRadius: 17, overflow: 'hidden' }, selected: { borderWidth: 2, borderColor: '#103b92' }, backgroundImage: { flex: 1 }, backgroundImageRadius: { borderRadius: 17 }, solidChoice: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#1f3b8f' }, addChoice: { width: 32, height: 32, borderRadius: 16, borderWidth: 1, borderColor: '#e1e2e6', alignItems: 'center', justifyContent: 'center' },
   optionsRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 }, optionButtons: { flexDirection: 'row', gap: 5 }, option: { width: 42, height: 31, borderRadius: 6, backgroundColor: '#f3f3f3', alignItems: 'center', justifyContent: 'center' }, serif: { fontFamily: 'serif', fontSize: 14 }, sans: { fontSize: 14 },
   shareButton: { alignSelf: 'center', marginTop: 9, width: 144, height: 35, borderRadius: 20, backgroundColor: '#103b92', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 7, elevation: 3 }, shareText: { color: '#fff', fontSize: 10, fontWeight: '700' },
-  bottomNav: { position: 'absolute', left: 16, right: 16, bottom: 12, height: 48, backgroundColor: '#fff', borderRadius: 24, flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', shadowColor: '#adb2bf', shadowOpacity: .1, shadowRadius: 14, shadowOffset: { width: 0, height: 3 }, elevation: 2 }, navItem: { width: 45, alignItems: 'center' }, navText: { color: '#8da0ba', fontSize: 7, marginTop: 1 }, activeNavText: { color: '#0a2d55', fontSize: 7, marginTop: 1 }, navDot: { width: 3, height: 3, borderRadius: 2, backgroundColor: '#d4af37', marginTop: 2 },
+  bottomNav: { position: 'absolute', left: 20, right: 20, bottom: 70, height: 58, backgroundColor: '#fff', borderRadius: 30, flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', shadowColor: '#a0a0a0', shadowOpacity: 0.15, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 4 }, navItem: { width: 50, alignItems: 'center' }, navText: { color: '#8da0ba', fontSize: 9, marginTop: 2, fontWeight: '600' }, activeNavText: { color: '#0a2d55', fontSize: 9, marginTop: 2, fontWeight: '700' }, navDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: '#d4af37', marginTop: 3 },
 });

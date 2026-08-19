@@ -9,47 +9,48 @@ export default function TabsLayout() {
   screenOptions={{
     headerShown: false,
 
-    tabBarActiveTintColor: '#D4AF37',
+    tabBarActiveTintColor: '#0a2d55',
     tabBarInactiveTintColor: '#8da0ba',
 
     tabBarStyle: {
-      backgroundColor: '#f6f4f3',
+      backgroundColor: '#fff',
       borderTopWidth: 0,
-      height: 65,
+      height: 58,
       position: 'absolute',
-      
-       left: '11%',
-      bottom: 60,
-      borderRadius: 60,
-      paddingBottom: 10,
-      paddingTop: 7,
-      elevation: 0,
-      shadowColor: '#88500b',
-      shadowOpacity: 0.12,
+      left: 20,
+      right: 20,
+      bottom: 70,
+      borderRadius: 30,
+      paddingBottom: 8,
+      paddingTop: 5,
+      elevation: 4,
+      shadowColor: '#a0a0a0',
+      shadowOpacity: 0.15,
       shadowOffset: {
         width: 0,
-        height: 2,
+        height: 4,
       },
       shadowRadius: 12,
     },
 
     tabBarLabelStyle: {
-      fontSize: 15,
+      fontSize: 9,
       fontWeight: '600',
+      marginTop: 2,
     },
   }}
     >
       <Tabs.Screen
         name="Home"
         options={{
-          title: 'Accueil',
+          title: 'HOME',
           tabBarIcon: ({ color, size, focused }) => <TabIcon name="book-outline" color={color} size={size} focused={focused} />,
         }}
       />
        <Tabs.Screen
         name="bible" // Points to app/screens/(tabs)/bible.tsx
         options={{
-          title: 'Bible',
+          title: 'BIBLE',
           tabBarIcon: ({ color, size, focused }) => <TabIcon name="book-outline" color={color} size={size} focused={focused} />,
         }}
         />
@@ -72,14 +73,14 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="Documents" // Points to app/screens/(tabs)/documents.tsx
         options={{
-          title: 'Bibliothèque',
+          title: 'LIBRARY',
           tabBarIcon: ({ color, size, focused }) => <TabIcon name="library-outline" color={color} size={size} focused={focused} />,
         }}
         />
       <Tabs.Screen
         name="Profile"
         options={{
-          title: 'Profil',
+          title: 'PROFILE',
           tabBarIcon: ({ color, size, focused }) => <TabIcon name="person-outline" color={color} size={size} focused={focused} />,
         }}
       />
