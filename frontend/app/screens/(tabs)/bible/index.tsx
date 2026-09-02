@@ -19,15 +19,21 @@ export default function BibleScreen() {
   const params = useLocalSearchParams(); 
   const db = useSQLiteContext();
 
-  const [currentVersion, setCurrentVersion] = useState('LSG 1910');
+  const [currentVersion, setCurrentVersion] = useState('Louis Segond');
   const [books, setBooks] = useState<BibleBook[]>([]);
   const [activeTestament, setActiveTestament] = useState<'OT' | 'NT'>('OT');
   const [loading, setLoading] = useState<boolean>(true);
   const [drawerVisible, setDrawerVisible] = useState(false);
+
+  const isAvailableVersion = currentVersion === 'Louis Segond' || currentVersion === 'LSG 1910';
   
   useEffect(() => {
     if (params.selectedVersion) {
-      setCurrentVersion(params.selectedVersion as string);
+      const selectedVersion = Array.isArray(params.selectedVersion)
+        ? params.selectedVersion[0]
+        : params.selectedVersion;
+
+      setCurrentVersion(selectedVersion || 'Louis Segond');
     }
   }, [params.selectedVersion]);
 
@@ -87,7 +93,7 @@ export default function BibleScreen() {
             <ActivityIndicator size="large" color="#0a2d55" />
             <Text style={styles.loadingText}>Chargement des livres...</Text>
           </View>
-        ) : currentVersion !== 'LSG 1910' ? (
+        ) : !isAvailableVersion ? (
           <View style={styles.centeredState}>
             <Ionicons name="cloud-download-outline" size={48} color="#8a99ad" style={{ marginBottom: 12 }} />
             <Text style={styles.comingSoonTitle}>Bientôt disponible</Text>

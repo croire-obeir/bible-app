@@ -13,19 +13,33 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import AppDrawer from '../../../components/AppDrawer';
 
-type AppRoute = `/${string}`;
+type AppRoute =
+  | '/screens/VersionSelect'
+  | '/screens/(tabs)/Audios'
+  | '/screens/(tabs)/Videos'
+  | '/screens/(tabs)/Documents';
 
 export default function HomeScreen() {
   const router = useRouter();
   const [drawerVisible, setDrawerVisible] = useState(false);
 
-  const features = [
+  const features: Array<{
+    id: string;
+    title: string;
+    subtitle: string;
+    icon: string;
+    route: AppRoute;
+    backgroundColor: string;
+    iconBackground: string;
+    iconColor: string;
+    titleColor: string;
+  }> = [
     {
       id: '1',
       title: 'La Bible',
       subtitle: '',
       icon: 'book',
-      route: '/screens/(tabs)/bible' as AppRoute,
+      route: '/screens/VersionSelect',
       backgroundColor: '#EDE8D3',
       iconBackground: '#FFFFFF',
       iconColor: '#0A2D55',
@@ -36,7 +50,7 @@ export default function HomeScreen() {
       title: 'Enseignements\nAudio',
       subtitle: '',
       icon: 'headset',
-      route: '/screens/(tabs)/Audios' as AppRoute,
+      route: '/screens/(tabs)/Audios',
       backgroundColor: '#B7B190',
       iconBackground: '#FFFFFF',
       iconColor: '#0A2D55',
@@ -47,7 +61,7 @@ export default function HomeScreen() {
       title: 'Vidéos\nSacrées',
       subtitle: '',
       icon: 'play-circle',
-      route: '/screens/(tabs)/Videos' as AppRoute,
+      route: '/screens/(tabs)/Videos',
       backgroundColor: '#B7B190',
       iconBackground: '#FFFFFF',
       iconColor: '#0A2D55',
@@ -58,7 +72,7 @@ export default function HomeScreen() {
       title: 'Documents',
       subtitle: '',
       icon: 'folder-open-outline',
-      route: '/screens/(tabs)/Documents' as AppRoute,
+      route: '/screens/(tabs)/Documents',
       backgroundColor: '#EDE8D3',
       iconBackground: '#FFFFFF',
       iconColor: '#0A2D55',

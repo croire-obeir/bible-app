@@ -7,7 +7,7 @@ const getApiUrl = () => {
       return 'http://localhost:3000';
     } else if (Platform.OS === 'android') {
       // http://192.168.178.100:3000
-      return 'http://192.168.2.55:3000';
+      return 'http://172.19.176.1s:3000';
     } else {
       // iOS Simulator or Physical Device
       return 'http://192.168.1.XX:3000'; // Replace with your IP
