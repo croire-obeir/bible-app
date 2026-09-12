@@ -24,8 +24,11 @@ export default function BibleScreen() {
   const [activeTestament, setActiveTestament] = useState<'OT' | 'NT'>('OT');
   const [loading, setLoading] = useState<boolean>(true);
   const [drawerVisible, setDrawerVisible] = useState(false);
-
+  const [selectedVersion, setSelectedVersion] = useState('LSG');
+  
   const isAvailableVersion = currentVersion === 'Louis Segond' || currentVersion === 'LSG 1910';
+
+  console.log('Current Version:', selectedVersion);
   
   useEffect(() => {
     if (params.selectedVersion) {
@@ -87,7 +90,7 @@ export default function BibleScreen() {
           centerSlot="Croire & Obéir"
           rightSlot={<TouchableOpacity onPress={() => router.push('/screens/SearchByTopic')}><Ionicons name="search" size={24} color="#0a2d55" /></TouchableOpacity>}
         />   */}
-
+        {/* HEADER START */}
         <View style={styles.header}>
           <TouchableOpacity
             style={styles.headerButton}
@@ -95,11 +98,11 @@ export default function BibleScreen() {
             onPress={() => setDrawerVisible(true)}
           >
             <Ionicons
-              name="menu"
+              name="globe-outline"
               size={21}
               color="#0A2D55"
             />
-          </TouchableOpacity>
+          </TouchableOpacity> 
 
           <Text style={styles.logo}>
             Croire & Obéir
@@ -123,7 +126,7 @@ export default function BibleScreen() {
             <ActivityIndicator size="large" color="#0a2d55" />
             <Text style={styles.loadingText}>Chargement des livres...</Text>
           </View>
-        ) : !isAvailableVersion ? (
+        ) : selectedVersion === 'LA_SEMEUR' ? (
           <View style={styles.centeredState}>
             <Ionicons name="cloud-download-outline" size={48} color="#8a99ad" style={{ marginBottom: 12 }} />
             <Text style={styles.comingSoonTitle}>Bientôt disponible</Text>
@@ -205,7 +208,12 @@ export default function BibleScreen() {
         )}
       
       </ImageBackground>
-      <AppDrawer visible={drawerVisible} onClose={() => setDrawerVisible(false)} />
+      <AppDrawer 
+      visible={drawerVisible} 
+      onClose={() => setDrawerVisible(false)} 
+      selectedVersion={selectedVersion}
+      setSelectedVersion={setSelectedVersion}
+      />
     </View>
   );
 }

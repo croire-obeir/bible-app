@@ -39,7 +39,7 @@ export default function HomeScreen() {
       title: 'La Bible',
       subtitle: '',
       icon: 'book',
-      route: '/screens/VersionSelect',
+      route: '/screens/(tabs)/bible',
       backgroundColor: '#EDE8D3',
       iconBackground: '#FFFFFF',
       iconColor: '#0A2D55',
