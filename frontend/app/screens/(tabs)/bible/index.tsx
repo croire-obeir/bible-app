@@ -76,11 +76,41 @@ export default function BibleScreen() {
     <View style={styles.container}>
       <ImageBackground source={require('../../../../assets/enregistrement.png')} style={styles.bg} imageStyle={{ opacity: 0.05 }}>
       
-        <CustomHeader
+        {/* <CustomHeader
           leftSlot={<TouchableOpacity onPress={() => setDrawerVisible(true)}><Ionicons name="menu" size={24} color="#0a2d55" /></TouchableOpacity>}
           centerSlot="Croire & Obéir"
           rightSlot={<TouchableOpacity onPress={() => router.push('/screens/SearchByTopic')}><Ionicons name="search" size={24} color="#0a2d55" /></TouchableOpacity>}
-        />
+        />   */}
+
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.headerButton}
+            activeOpacity={0.7}
+            onPress={() => setDrawerVisible(true)}
+          >
+            <Ionicons
+              name="menu"
+              size={21}
+              color="#0A2D55"
+            />
+          </TouchableOpacity>
+
+          <Text style={styles.logo}>
+            Croire & Obéir
+          </Text>
+
+          <TouchableOpacity
+            style={styles.headerButton}
+            activeOpacity={0.7}
+            onPress={() => router.push('/screens/SearchByTopic')}
+          >
+            <Ionicons
+              name="search"
+              size={21}
+              color="#0A2D55"
+            />
+          </TouchableOpacity>
+        </View>
 
         {loading ? (
           <View style={styles.centeredState}>
@@ -323,5 +353,35 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingHorizontal: 40,
     lineHeight: 22,
+  },
+  // ======================================================
+  // HEADER
+  // ======================================================
+
+  header: {
+    height: 100,
+    width: '100%',
+    backgroundColor: '#c7ba9d',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 14,
+    paddingTop: 20,
+  },
+
+  headerButton: {
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  logo: {
+    fontFamily: 'serif',
+    fontStyle: 'italic',
+    fontSize: 25,
+    fontWeight: '400',
+    color: '#233A59',
+    marginTop: 1,
   },
 });

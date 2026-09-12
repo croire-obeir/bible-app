@@ -95,17 +95,7 @@ export default function HomeScreen() {
           Croire & Obéir
         </Text>
 
-        <TouchableOpacity
-          style={styles.headerButton}
-          activeOpacity={0.7}
-          onPress={() => router.push('/screens/SearchByTopic')}
-        >
-          <Ionicons
-            name="search"
-            size={21}
-            color="#0A2D55"
-          />
-        </TouchableOpacity>
+        <View style={styles.headerButton} />
       </View>
 
       {/* ==================================================
