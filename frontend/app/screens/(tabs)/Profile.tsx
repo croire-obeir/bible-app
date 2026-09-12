@@ -72,7 +72,8 @@ export default function ProfileScreen() {
   const handleLogout =async () => {
     try {
       // 1. Remove the JWT from the encrypted hardware storage
-      await SecureStore.deleteItemAsync('userToken');
+      await SecureStore.deleteItemAsync('accessToken');
+      await SecureStore.deleteItemAsync('refreshToken');
       // 2. Remove the user profile from standard storage
       await AsyncStorage.removeItem('userprofile');
       // 4. Trigger the Alert now that storage is empty

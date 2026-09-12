@@ -26,7 +26,8 @@ export const handleDeleteAccount=async(userId:string)=>{
     try{
         const response = await apiClient.delete(`/api/user/delete/${userId}`);
         if (response.status === 200) {
-            await SecureStore.deleteItemAsync('userToken');
+            await SecureStore.deleteItemAsync('accessToken');
+            await SecureStore.deleteItemAsync('refreshToken');
             await AsyncStorage.removeItem('userprofile');
             return { success: true, data: response.data };
         }

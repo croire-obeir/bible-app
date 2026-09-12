@@ -3,6 +3,9 @@ import jwt from 'jsonwebtoken';
 import db from '../config/db.js';
 import { z } from 'zod';
 import { OAuth2Client } from 'google-auth-library';
+import crypto from 'node:crypto';
+
+
 const googleClient = new OAuth2Client(process.env.GOOGLE_OAUTH_CLIENT_ID);
 
 const signupSchema = z.object({
@@ -73,8 +76,7 @@ export const signup=async(req,res)=>{
 
 export const login = async (req, res) => {
     const { email, password } = req.body;
-   
-
+  
     try {
         const [rows] = await db.execute('SELECT * FROM users WHERE email = ?', [email]);
         
@@ -92,10 +94,27 @@ export const login = async (req, res) => {
         const token = jwt.sign(
             { userId: user.id },
             process.env.JWT_SECRET,
-            { expiresIn: '1h' }
+            { expiresIn: '30d' }
         );
 
-        res.json({ token, 
+       
+
+         // Generate a cryptographically secure random refresh token
+        const refreshToken = crypto.randomBytes(64).toString('hex');
+        const expiresAt = new Date(
+            Date.now() + 365 * 24 * 60 * 60 * 1000
+        );
+
+       await db.execute(
+            `INSERT INTO refresh_tokens 
+                (user_id, token, expires_at)
+            VALUES (?, ?, ?)`,
+            [user.id, refreshToken, expiresAt]
+        );
+
+        res.json({ 
+            accessToken: token,
+            refreshToken,
             id: user.id, 
             username:user.username,
             email: user.email
@@ -152,20 +171,27 @@ export const googleLogin = async (req, res) => {
         const token = jwt.sign(
             { userId: user.id },
             process.env.JWT_SECRET,
-            { expiresIn: '1h' }
+            { expiresIn: '30d' }
         );
 
-        // res.json({ 
-        //     token, 
-        //     userId: user.id, 
-        //     user: { 
-        //         username: user.username, 
-        //         email: user.email, 
-        //         avatar: user.avatar 
-        //     } 
-        // });
+         // Generate a cryptographically secure random refresh token
+        const refreshToken = crypto.randomBytes(64).toString('hex');
+        const expiresAt = new Date(
+            Date.now() + 365 * 24 * 60 * 60 * 1000
+        );
 
-         res.json({ token, 
+       await db.execute(
+            `INSERT INTO refresh_tokens 
+                (user_id, token, expires_at)
+            VALUES (?, ?, ?)`,
+            [user.id, refreshToken, expiresAt]
+        );
+
+       
+
+         res.json({ 
+             accessToken: token, 
+            refreshToken,
             id: user.id, 
             username:user.username,
             email: user.email,

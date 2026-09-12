@@ -36,7 +36,7 @@ apiClient.interceptors.request.use(
     if (publicEndpoints.includes(config.url || '')) {
       return config;
     }
-    const token = await SecureStore.getItemAsync('userToken');
+    const token = await SecureStore.getItemAsync('accessToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

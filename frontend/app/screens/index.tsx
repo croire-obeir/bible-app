@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import  { useRef, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width, height } = Dimensions.get('window');
 
@@ -41,6 +42,7 @@ export default function OnboardingScreen() {
   const router = useRouter();
   const scrollX = useRef(new Animated.Value(0)).current;
   const flatListRef = useRef<any>(null);
+  // const [checkingOnboarding, setCheckingOnboarding] = useState(true);
 
   const handleNext = (index: number) => {
     if (index < slides.length - 1) {
@@ -51,9 +53,17 @@ export default function OnboardingScreen() {
     }
   };
 
-  const handleStart = () => {
-    router.push('/screens/Login');
-  };
+  const handleStart = async () => {
+      try {
+        await AsyncStorage.setItem('hasCompletedOnboarding', 'true');
+
+        router.replace('/screens/Login');
+      } catch (error) {
+        console.error('Error saving onboarding status:', error);
+      }
+    };
+
+
 
   const renderPaginationDots = () => {
     return (
@@ -81,6 +91,8 @@ export default function OnboardingScreen() {
       </View>
     );
   };
+
+  
 
   return (
     <View style={styles.container}>
