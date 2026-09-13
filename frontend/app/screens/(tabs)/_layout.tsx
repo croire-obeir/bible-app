@@ -1,7 +1,8 @@
-import { Tabs } from 'expo-router';
+import { Tabs, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import type { ComponentProps } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function TabsLayout() {
   return (
@@ -82,6 +83,22 @@ export default function TabsLayout() {
         options={{
           title: 'PROFILE',
           tabBarIcon: ({ color, size, focused }) => <TabIcon name="person-outline" color={color} size={size} focused={focused} />,
+          tabBarButton: (props) => {
+            const { onPress, ...rest } = props;
+            return (
+              <TouchableOpacity
+                {...rest}
+                onPress={async () => {
+                  const storedData = await AsyncStorage.getItem('userprofile');
+                  if (!storedData) {
+                    router.push('/screens/Login?returnTo=/screens/Home');
+                    return;
+                  }
+                  onPress?.();
+                }}
+              />
+            );
+          },
         }}
       />
     </Tabs>

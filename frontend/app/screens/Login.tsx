@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ImageBackground, SafeAreaView, StyleSheet, Alert, Platform } from 'react-native';
-import { useRouter } from 'expo-router';
+import { View, Text, TouchableOpacity, ImageBackground, SafeAreaView, StyleSheet, Alert, Platform, BackHandler } from 'react-native';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import CustomInput from '../../components/CustomInput';
@@ -18,6 +18,15 @@ WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { returnTo } = useLocalSearchParams<{ returnTo?: string }>();
+
+  const handleBack = () => {
+    if (returnTo) {
+      router.replace(returnTo);
+    } else {
+      router.back();
+    }
+  };
    // Initialize state as an object
   const [userLoginData, setUserLoginData] = useState({
     email: '',
@@ -137,6 +146,15 @@ const onGoggleLoginPressed=async(idToken:string)=>{
 
     
     useEffect(() => {
+      const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+        handleBack();
+        return true;
+      });
+
+      return () => subscription.remove();
+    }, [returnTo]);
+
+    useEffect(() => {
       const checkExistingUser = async () => {
         try {
           const savedProfile = await AsyncStorage.getItem('userprofile');
@@ -165,7 +183,7 @@ const onGoggleLoginPressed=async(idToken:string)=>{
     <View style={styles.container}>
       <ImageBackground source={require('../../assets/enregistrement.png')} style={styles.bg} imageStyle={{ opacity: 0.05 }}>
         <SafeAreaView style={styles.content}>
-          <TouchableOpacity onPress={() => router.back()}>
+          <TouchableOpacity onPress={handleBack}>
             <Text style={styles.backButton}>← Retour</Text>
           </TouchableOpacity>
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
@@ -45,27 +46,35 @@ export default function ProfileScreen() {
 
   // --- Chargement des données au montage ---
 
-  const loadProfileData = async () => {
-    try {
-      
-      const storedData = await AsyncStorage.getItem('userprofile');
-      if (storedData) {
-        const parsedData = JSON.parse(storedData);
-        setUserData(parsedData);
-      } else {
-        Alert.alert("Aucun profil trouvé", "Veuillez vous connecter pour voir votre profil.");
-        router.push('/screens/Login');
-      }
-    } catch (error) {
-      console.error("Erreur chargement profil", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      setIsLoading(true);
 
-   useEffect(() => {
-    loadProfileData();
-   }, []);
+      const loadProfileData = async () => {
+        try {
+          const storedData = await AsyncStorage.getItem('userprofile');
+          if (!active) return;
+
+          if (!storedData) {
+            router.replace('/screens/Login?returnTo=/screens/Home');
+            return;
+          }
+
+          setUserData(JSON.parse(storedData));
+        } catch (error) {
+          console.error("Erreur chargement profil", error);
+        } finally {
+          if (active) setIsLoading(false);
+        }
+      };
+
+      loadProfileData();
+      return () => {
+        active = false;
+      };
+    }, [router])
+  );
 
   // --- Fonctions de gestion ---
 
@@ -203,7 +212,7 @@ export default function ProfileScreen() {
 
   const currentAvatar =  userData.avatar;
 
-  if (isLoading) {
+  if (isLoading || !userData.email) {
     return (
       <View style={[styles.container, { justifyContent: 'center' }]}>
         <ActivityIndicator size="large" color="#D4AF37" />
