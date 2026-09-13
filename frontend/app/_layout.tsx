@@ -43,7 +43,7 @@ function StartupAuth() {
         if (authenticated) {
           router.replace('/screens/(tabs)/Home');
         } else {
-          router.replace('/screens/Login');
+          router.replace('/screens/AccountChoice');
         }
 
       } catch (error) {
@@ -52,7 +52,7 @@ function StartupAuth() {
           error
         );
 
-        router.replace('/screens/Login');
+        router.replace('/screens/AccountChoice');
 
       } finally {
         setInitialized(true);
@@ -105,6 +105,8 @@ export default function RootLayout() {
             }}
           >
             <Stack.Screen name="screens/index" />
+
+            <Stack.Screen name="screens/AccountChoice" />
 
             <Stack.Screen name="screens/Login" />
 
