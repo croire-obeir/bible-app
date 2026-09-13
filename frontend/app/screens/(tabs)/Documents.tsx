@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ImageBackground, SafeAreaView, ScrollView, Touc
 import { Ionicons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
 import AppDrawer from '../../../components/AppDrawer';
+import Header from '../../../components/CustomHeader';
 
 type PdfItem = {
   id: string;
@@ -42,11 +43,14 @@ export default function DocumentsScreen() {
   return (
     <View style={styles.container}>
       <ImageBackground source={require('../../../assets/enregistrement.png')} style={styles.bg} imageStyle={{ opacity: 0.05 }}>
-        <SafeAreaView style={styles.header}>
+        {/* <SafeAreaView style={styles.header}>
           <TouchableOpacity onPress={() => setDrawerVisible(true)}><Ionicons name="menu" size={20} color="#0a2d55" /></TouchableOpacity>
           <Text style={styles.headerTitle}>Croire & Obéir</Text>
           <Ionicons name="search" size={19} color="#0a2d55" />
-        </SafeAreaView>
+        </SafeAreaView> */}
+        <Header
+          title="Documents"
+        />
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           <Text style={styles.pageTitle}>Bibliothèque de{`\n`}Documents</Text>

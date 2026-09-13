@@ -5,6 +5,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import CustomHeader from '../../../../components/CustomHeader';
 import { useSQLiteContext } from 'expo-sqlite';
 import AppDrawer from '../../../../components/AppDrawer';
+import Header from '../../../../components/CustomHeader';
 
 interface BibleBook {
   id: number;
@@ -91,7 +92,7 @@ export default function BibleScreen() {
           rightSlot={<TouchableOpacity onPress={() => router.push('/screens/SearchByTopic')}><Ionicons name="search" size={24} color="#0a2d55" /></TouchableOpacity>}
         />   */}
         {/* HEADER START */}
-        <View style={styles.header}>
+        {/* <View style={styles.header}>
           <TouchableOpacity
             style={styles.headerButton}
             activeOpacity={0.7}
@@ -119,7 +120,15 @@ export default function BibleScreen() {
               color="#0A2D55"
             />
           </TouchableOpacity>
-        </View>
+        </View> */}
+
+        <Header
+          leftIcon="globe-outline"
+          leftOnPress={() => setDrawerVisible(true)}
+          title={selectedVersion === 'LSG' ? 'LSG 1910' : selectedVersion === 'LA_SEMEUR' ? 'La Semeur' : selectedVersion}
+          rightIcon="search"
+          rightOnPress={() => router.push('/screens/SearchByTopic')}
+        />
 
         {loading ? (
           <View style={styles.centeredState}>
@@ -368,34 +377,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
     lineHeight: 22,
   },
-  // ======================================================
-  // HEADER
-  // ======================================================
-
-  header: {
-    height: 100,
-    width: '100%',
-    backgroundColor: '#c7ba9d',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 14,
-    paddingTop: 20,
-  },
-
-  headerButton: {
-    width: 32,
-    height: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  logo: {
-    fontFamily: 'serif',
-    fontStyle: 'italic',
-    fontSize: 25,
-    fontWeight: '400',
-    color: '#233A59',
-    marginTop: 1,
-  },
+  
 });
