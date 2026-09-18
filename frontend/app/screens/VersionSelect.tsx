@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
     height: 130,
     backgroundColor: '#f8f2e7',
     paddingHorizontal: 20,
-    paddingTop: 15,
+    paddingTop: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 20,
-    paddingTop: 22,
+    paddingTop: 20,
   },
   heroContent: {
     marginBottom: 20,

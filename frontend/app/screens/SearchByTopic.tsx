@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff' 
   },
   appHeader: { 
-    height: 60, 
+    height: 130,
     backgroundColor: '#f8f2e7', 
     paddingHorizontal: 20, 
     flexDirection: 'row', 
@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
   heroContent: { 
     paddingHorizontal: 6, 
     paddingTop: 16, 
-    paddingBottom: 16 
+    paddingBottom: 10
   },
   pageTitle: { 
     fontFamily: 'serif', 
