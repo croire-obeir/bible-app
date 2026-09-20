@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ImageBackground, SafeAreaView, ScrollView, TouchableOpacity, Alert, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTabBarScroll } from '../../../components/tab-bar-visibility';
 import * as WebBrowser from 'expo-web-browser';
 import AppDrawer from '../../../components/AppDrawer';
 import Header from '../../../components/CustomHeader';
@@ -13,6 +14,7 @@ type PdfItem = {
 };
 
 export default function DocumentsScreen() {
+  const handleTabBarScroll = useTabBarScroll();
   const [drawerVisible, setDrawerVisible] = useState(false);
   const pdfs: PdfItem[] = useMemo(
     () => [
@@ -52,7 +54,7 @@ export default function DocumentsScreen() {
           title="Documents"
         />
 
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} onScroll={handleTabBarScroll} scrollEventThrottle={16}>
           <Text style={styles.pageTitle}>Bibliothèque de{`\n`}Documents</Text>
           <Text style={styles.intro}>Explorez notre collection de ressources, études et ouvrages pour approfondir votre foi.</Text>
           <View style={styles.searchBox}><Ionicons name="search" size={15} color="#8a99ad" /><TextInput placeholder="Rechercher un document, auteur..." placeholderTextColor="#9aa3b3" style={styles.searchInput} /></View>

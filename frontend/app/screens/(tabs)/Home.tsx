@@ -12,6 +12,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import AppDrawer from '../../../components/AppDrawer';
+import { useTabBarScroll } from '../../../components/tab-bar-visibility';
 
 type AppRoute =
   | '/screens/VersionSelect'
@@ -23,6 +24,7 @@ type AppRoute =
 export default function HomeScreen() {
   const router = useRouter();
   const [drawerVisible, setDrawerVisible] = useState(false);
+  const handleTabBarScroll = useTabBarScroll();
 
   const features: Array<{
     id: string;
@@ -122,6 +124,8 @@ export default function HomeScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         bounces={false}
+        onScroll={handleTabBarScroll}
+        scrollEventThrottle={16}
       >
 
         {/* ==================================================

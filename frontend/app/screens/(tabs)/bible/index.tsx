@@ -6,6 +6,7 @@ import CustomHeader from '../../../../components/CustomHeader';
 import { useSQLiteContext } from 'expo-sqlite';
 import AppDrawer from '../../../../components/AppDrawer';
 import Header from '../../../../components/CustomHeader';
+import { useTabBarScroll } from '../../../../components/tab-bar-visibility';
 
 interface BibleBook {
   id: number;
@@ -26,6 +27,7 @@ export default function BibleScreen() {
   const [loading, setLoading] = useState<boolean>(true);
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [selectedVersion, setSelectedVersion] = useState('LSG');
+  const handleTabBarScroll = useTabBarScroll();
   
   const isAvailableVersion = currentVersion === 'Louis Segond' || currentVersion === 'LSG 1910';
 
@@ -147,6 +149,8 @@ export default function BibleScreen() {
           <ScrollView
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
+            onScroll={handleTabBarScroll}
+            scrollEventThrottle={16}
           >
             {/* Segmented Control Switch */}
             <View style={styles.toggleContainer}>

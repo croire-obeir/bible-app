@@ -12,6 +12,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSQLiteContext } from 'expo-sqlite';
 import AppDrawer from '../../../../components/AppDrawer';
+import { useTabBarScroll } from '../../../../components/tab-bar-visibility';
 
 // Structure for our verse elements
 interface Verse {
@@ -37,6 +38,7 @@ export default function ChaptersScreen() {
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [selectedVerseNumbers, setSelectedVerseNumbers] = useState<number[]>([]);
   const [sharePanelVisible, setSharePanelVisible] = useState(false);
+  const handleTabBarScroll = useTabBarScroll();
 
   // Generate an array containing indices from 1 up to total chapters count
   const totalChapters = chapterCount ? parseInt(chapterCount, 10) : 0;
@@ -163,6 +165,8 @@ export default function ChaptersScreen() {
         <ScrollView 
           contentContainerStyle={styles.verseScrollContent}
           showsVerticalScrollIndicator={false}
+          onScroll={handleTabBarScroll}
+          scrollEventThrottle={16}
         >
           <View style={styles.verseGuide}>
             {verses.map((verse) => (

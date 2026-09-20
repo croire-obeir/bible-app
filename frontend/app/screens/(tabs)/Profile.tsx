@@ -18,6 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import * as SecureStore from 'expo-secure-store';
+import { useTabBarScroll } from '../../../components/tab-bar-visibility';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { handleNameEmailChange, handleDeleteAccount } from '../../../api/services/userDataUpdateServices';
 
@@ -31,6 +32,7 @@ interface UserData {
 }
 
 export default function ProfileScreen() {
+  const handleTabBarScroll = useTabBarScroll();
   const router = useRouter();
 
   // --- États ---
@@ -235,7 +237,7 @@ export default function ProfileScreen() {
           <View style={styles.placeholder} />
         </SafeAreaView>
 
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent} onScroll={handleTabBarScroll} scrollEventThrottle={16}>
           
           <LinearGradient colors={['#f4efe4', '#e7dcc6']} style={styles.profileCard}>
             <View style={styles.avatarContainer}>

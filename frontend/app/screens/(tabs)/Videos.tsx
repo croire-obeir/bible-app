@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ImageBackground, SafeAreaView, ScrollView, TouchableOpacity, Alert, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTabBarScroll } from '../../../components/tab-bar-visibility';
 import * as WebBrowser from 'expo-web-browser';
 import AppDrawer from '../../../components/AppDrawer';
 import Header from '../../../components/CustomHeader';
@@ -14,6 +15,7 @@ type VideoItem = {
 };
 
 export default function VideosScreen() {
+  const handleTabBarScroll = useTabBarScroll();
   const [drawerVisible, setDrawerVisible] = useState(false);
   const videos: VideoItem[] = useMemo(
     () => [
@@ -56,7 +58,7 @@ export default function VideosScreen() {
           title="Vidéos Sacrées"
         />
 
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} onScroll={handleTabBarScroll} scrollEventThrottle={16}>
           <Text style={styles.pageTitle}>Vidéos Sacrées</Text>
           <Text style={styles.intro}>Une collection éditoriale d&apos;enseignements visuels et de séries documentaires pour approfondir votre foi.</Text>
           <View style={styles.searchBox}><Ionicons name="search" size={15} color="#8a99ad" /><TextInput placeholder="Rechercher une vidéo..." placeholderTextColor="#9aa3b3" style={styles.searchInput} /></View>

@@ -1,13 +1,17 @@
+import React from 'react';
 import { Tabs, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Animated, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { BottomTabBar, type BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import type { TouchableOpacityProps } from 'react-native';
 import type { ComponentProps } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { TabBarVisibilityProvider, useTabBarVisibilityContext } from '../../../components/tab-bar-visibility';
 
 export default function TabsLayout() {
   return (
-    <Tabs
+    <TabBarVisibilityProvider>
+      <Tabs
   screenOptions={{
     headerShown: false,
 
@@ -35,13 +39,15 @@ export default function TabsLayout() {
       shadowRadius: 12,
     },
 
+    tabBar: (props) => <AnimatedTabBar {...props} />,
+
     tabBarLabelStyle: {
       fontSize: 9,
       fontWeight: '600',
       marginTop: 2,
     },
   }}
-    >
+      >
       <Tabs.Screen
         name="Home"
         options={{
@@ -103,7 +109,31 @@ export default function TabsLayout() {
           },
         }}
       />
-    </Tabs>
+      </Tabs>
+    </TabBarVisibilityProvider>
+  );
+}
+
+function AnimatedTabBar(props: BottomTabBarProps) {
+  const { hidden, setTabBarHidden } = useTabBarVisibilityContext();
+  const translateY = React.useRef(new Animated.Value(0)).current;
+
+  React.useEffect(() => {
+    setTabBarHidden(false);
+  }, [props.state.index, setTabBarHidden]);
+
+  React.useEffect(() => {
+    Animated.timing(translateY, {
+      toValue: hidden ? 140 : 0,
+      duration: 240,
+      useNativeDriver: true,
+    }).start();
+  }, [hidden, translateY]);
+
+  return (
+    <Animated.View pointerEvents={hidden ? 'none' : 'auto'} style={[styles.animatedTabBar, { transform: [{ translateY }] }]}> 
+      <BottomTabBar {...props} />
+    </Animated.View>
   );
 }
 
@@ -112,6 +142,7 @@ function TabIcon({ name, color, size, focused }: { name: ComponentProps<typeof I
 }
 
 const styles = StyleSheet.create({
+  animatedTabBar: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 128 },
   icon: { alignItems: 'center', minHeight: 24 },
   dot: { width: 3, height: 3, borderRadius: 2, backgroundColor: '#D4AF37', marginTop: 2 },
 });

@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ImageBackground, SafeAreaView, ScrollView, TouchableOpacity, Alert, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTabBarScroll } from '../../../components/tab-bar-visibility';
 import * as WebBrowser from 'expo-web-browser';
 import AppDrawer from '../../../components/AppDrawer';
 import Header from '../../../components/CustomHeader';
@@ -14,6 +15,7 @@ type AudioItem = {
 };
 
 export default function AudiosScreen() {
+  const handleTabBarScroll = useTabBarScroll();
   const [drawerVisible, setDrawerVisible] = useState(false);
   const audios: AudioItem[] = useMemo(
     () => [
@@ -55,7 +57,7 @@ export default function AudiosScreen() {
           title="Enseignements Audio"
         />
 
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} onScroll={handleTabBarScroll} scrollEventThrottle={16}>
           <Text style={styles.pageTitle}>Enseignements Audio</Text>
           <Text style={styles.intro}>Plongez dans les enseignements profonds de la Parole à travers nos archives audio.</Text>
           <View style={styles.searchBox}><Ionicons name="search" size={15} color="#8a99ad" /><TextInput placeholder="Rechercher un sermon, un auteur..." placeholderTextColor="#9aa3b3" style={styles.searchInput} /></View>
