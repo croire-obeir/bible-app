@@ -11,8 +11,9 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSQLiteContext } from 'expo-sqlite';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AppDrawer from '../../../../components/AppDrawer';
-import { useTabBarScroll } from '../../../../components/tab-bar-visibility';
+import { useTabBarScroll, useTabBarVisibilityContext } from '../../../../components/tab-bar-visibility';
 
 // Structure for our verse elements
 interface Verse {
@@ -23,6 +24,7 @@ interface Verse {
 export default function ChaptersScreen() {
   const router = useRouter();
   const db = useSQLiteContext();
+  const insets = useSafeAreaInsets();
   
   // 1. Retrieve the metadata forwarded from the books index page
   const { bookId, bookName, chapterCount } = useLocalSearchParams<{
@@ -39,6 +41,21 @@ export default function ChaptersScreen() {
   const [selectedVerseNumbers, setSelectedVerseNumbers] = useState<number[]>([]);
   const [sharePanelVisible, setSharePanelVisible] = useState(false);
   const handleTabBarScroll = useTabBarScroll();
+  const { setTabBarHidden } = useTabBarVisibilityContext();
+
+  // Restore the navigation when this page is left, including if the share
+  // panel was open at that moment.
+  useEffect(() => () => setTabBarHidden(false), [setTabBarHidden]);
+
+  const openSharePanel = () => {
+    setSharePanelVisible(true);
+    setTabBarHidden(true);
+  };
+
+  const closeSharePanel = () => {
+    setSharePanelVisible(false);
+    setTabBarHidden(false);
+  };
 
   // Generate an array containing indices from 1 up to total chapters count
   const totalChapters = chapterCount ? parseInt(chapterCount, 10) : 0;
@@ -124,7 +141,7 @@ export default function ChaptersScreen() {
       <View style={styles.topHeader}>
         <TouchableOpacity style={styles.headerAction} onPress={() => setDrawerVisible(true)}><Ionicons name="menu" size={21} color="#0a2d55" /></TouchableOpacity>
         <Text style={styles.bookTitle}>{bookName || 'Livre'}</Text>
-        <TouchableOpacity style={styles.shareHeaderButton} onPress={() => setSharePanelVisible(true)} disabled={selectedVerseNumbers.length === 0}>
+        <TouchableOpacity style={styles.shareHeaderButton} onPress={openSharePanel} disabled={selectedVerseNumbers.length === 0}>
           <Ionicons name="share-social-outline" size={15} color="#fff" />
           <Text style={styles.shareHeaderText}>Partager ({selectedVerseNumbers.length})</Text>
         </TouchableOpacity>
@@ -165,7 +182,9 @@ export default function ChaptersScreen() {
         <ScrollView 
           contentContainerStyle={styles.verseScrollContent}
           showsVerticalScrollIndicator={false}
-          onScroll={handleTabBarScroll}
+          // The underlying ScrollView can finish a momentum scroll after the
+          // panel opens. Do not let that event make the navigation visible.
+          onScroll={sharePanelVisible ? undefined : handleTabBarScroll}
           scrollEventThrottle={16}
         >
           <View style={styles.verseGuide}>
@@ -200,7 +219,7 @@ export default function ChaptersScreen() {
         </View>
       )}
       {sharePanelVisible && (
-        <View style={styles.sharePanelBackdrop}>
+        <View style={[styles.sharePanelBackdrop, { paddingBottom: Math.max(insets.bottom, 16) }]}>
           <View style={styles.sharePanel}>
             <View style={styles.sharePanelHandle} />
             <View style={styles.sharePanelHeader}>
@@ -208,7 +227,7 @@ export default function ChaptersScreen() {
                 <Text style={styles.sharePanelEyebrow}>SÉLECTION</Text>
                 <Text style={styles.sharePanelTitle}>Options de partage des versets</Text>
               </View>
-              <TouchableOpacity onPress={() => setSharePanelVisible(false)} style={styles.closePanelButton}>
+              <TouchableOpacity onPress={closeSharePanel} style={styles.closePanelButton}>
                 <Ionicons name="close" size={20} color="#0a2d55" />
               </TouchableOpacity>
             </View>
@@ -352,7 +371,7 @@ const styles = StyleSheet.create({
     height: 40,
   },
   sharePanelBackdrop: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, backgroundColor: 'rgba(10, 45, 85, 0.28)', justifyContent: 'flex-end' },
-  sharePanel: { backgroundColor: '#fff', borderTopLeftRadius: 26, borderTopRightRadius: 26, paddingHorizontal: 20, paddingTop: 10, paddingBottom: 112, shadowColor: '#0a2d55', shadowOpacity: 0.18, shadowRadius: 18, shadowOffset: { width: 0, height: -5 }, elevation: 12 },
+  sharePanel: { backgroundColor: '#fff', borderTopLeftRadius: 26, borderTopRightRadius: 26, paddingHorizontal: 20, paddingTop: 10, paddingBottom: 20, shadowColor: '#0a2d55', shadowOpacity: 0.18, shadowRadius: 18, shadowOffset: { width: 0, height: -5 }, elevation: 12 },
   sharePanelHandle: { width: 42, height: 4, borderRadius: 2, backgroundColor: '#d9dce1', alignSelf: 'center', marginBottom: 16 },
   sharePanelHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   sharePanelEyebrow: { color: '#b18a32', fontSize: 10, fontWeight: '800', letterSpacing: 1.2, marginBottom: 5 },

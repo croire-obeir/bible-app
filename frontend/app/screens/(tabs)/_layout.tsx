@@ -12,7 +12,8 @@ export default function TabsLayout() {
   return (
     <TabBarVisibilityProvider>
       <Tabs
-  screenOptions={{
+        tabBar={(props) => <AnimatedTabBar {...props} />}
+        screenOptions={{
     headerShown: false,
 
     tabBarActiveTintColor: '#0a2d55',
@@ -38,8 +39,6 @@ export default function TabsLayout() {
       },
       shadowRadius: 12,
     },
-
-    tabBar: (props) => <AnimatedTabBar {...props} />,
 
     tabBarLabelStyle: {
       fontSize: 9,
