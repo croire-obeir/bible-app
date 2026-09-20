@@ -269,8 +269,9 @@ const styles = StyleSheet.create({
   },
   appTitle: { 
     fontFamily: 'serif', 
-    fontStyle: 'italic', 
+    fontStyle: 'normal',
     fontSize: 22, 
+    fontWeight: '700',
     color: '#0a2d55' 
   },
   heroContent: { 
@@ -324,7 +325,7 @@ const styles = StyleSheet.create({
   themeTitle: { 
     color: '#0d254c', 
     fontFamily: 'serif', 
-    fontStyle: 'italic', 
+    fontStyle: 'normal',
     fontWeight: '700', 
     fontSize: 26, 
     marginBottom: 20 

@@ -259,9 +259,9 @@ const styles = StyleSheet.create({
   shareHeaderButton: { minWidth: 112, height: 34, paddingHorizontal: 10, borderRadius: 17, backgroundColor: '#0a2d55', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5 },
   shareHeaderText: { color: '#fff', fontSize: 11, fontWeight: '700' },
   bookTitle: { 
-    fontFamily: 'serif', fontStyle: 'italic', fontSize: 15, fontWeight: '700', color: '#0a2d55'
+    fontFamily: 'serif', fontStyle: 'normal', fontSize: 15, fontWeight: '700', color: '#0a2d55'
   },
-  chapterHeader: { fontFamily: 'serif', fontStyle: 'italic', color: '#0a2d55', fontSize: 15 },
+  chapterHeader: { fontFamily: 'serif', fontStyle: 'normal', color: '#0a2d55', fontSize: 15, fontWeight: '700' },
 
   // Horizontal Scrolling Chapter Track
   chapterTrackContainer: {

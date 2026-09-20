@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
   bg: { flex: 1 },
   content: { flex: 1, padding: 26, backgroundColor: '#fff' },
-  brand: { textAlign: 'center', marginVertical: 20, fontFamily: 'serif', fontStyle: 'italic', color: '#0a2d55', fontWeight: 'bold', letterSpacing: 1 },
+  brand: { textAlign: 'center', marginVertical: 20, fontFamily: 'serif', fontStyle: 'normal', color: '#0a2d55', fontWeight: 'bold', letterSpacing: 1 },
   heading: { fontFamily: 'serif', color: '#0a2d55', fontSize: 26, fontWeight: '800', marginBottom: 30 },
   button: { height: 52, borderRadius: 18, overflow: 'hidden', marginTop: 30 },
   gradient: { flex: 1, justifyContent: 'center', alignItems: 'center' },

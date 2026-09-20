@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
   logo: { marginTop: 80, alignItems: 'center', marginBottom: 50 },
   title: {
     fontFamily: 'serif',
-    fontStyle: 'italic',
+    fontStyle: 'normal',
     fontSize: 24,
     fontWeight: 'bold',
     letterSpacing: 1,

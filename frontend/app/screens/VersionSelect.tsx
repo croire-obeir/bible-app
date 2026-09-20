@@ -82,8 +82,9 @@ const styles = StyleSheet.create({
   },
   appTitle: {
     fontFamily: 'serif',
-    fontStyle: 'italic',
+    fontStyle: 'normal',
     fontSize: 22,
+    fontWeight: '700',
     color: '#0a2d55',
   },
   content: {

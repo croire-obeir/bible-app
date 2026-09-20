@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
   content: { flex: 1, paddingHorizontal: 26, backgroundColor: '#fff' },
   backButton: { marginTop: 10, color: '#0a2d55', fontSize: 15, fontWeight: 'bold' },
   logo: { marginTop: 35, alignItems: 'center', marginBottom: 35 },
-  title: { fontFamily: 'serif', fontStyle: 'italic', fontSize: 24, fontWeight: 'bold', letterSpacing: 1, color: '#0a2d55' },
+  title: { fontFamily: 'serif', fontStyle: 'normal', fontSize: 24, fontWeight: 'bold', letterSpacing: 1, color: '#0a2d55' },
   line: { width: 40, height: 3, backgroundColor: '#AA8418', marginTop: 5 },
   card: { flex: 1 },
   heading: { fontFamily: 'serif', fontSize: 28, fontWeight: '800', color: '#0a2d55', marginBottom: 30 },

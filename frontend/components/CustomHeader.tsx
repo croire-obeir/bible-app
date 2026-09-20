@@ -155,9 +155,9 @@ const styles = StyleSheet.create({
 
   logo: {
     fontFamily: 'serif',
-    fontStyle: 'italic',
+    fontStyle: 'normal',
     fontSize: 25,
-    fontWeight: '400',
+    fontWeight: '700',
     color: '#233A59',
     marginTop: 1,
   },

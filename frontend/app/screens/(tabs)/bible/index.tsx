@@ -301,8 +301,9 @@ const styles = StyleSheet.create({
   collectionTitle: { 
     color: '#28467b', 
     fontFamily: 'serif', 
-    fontStyle: 'italic', 
+    fontStyle: 'normal', 
     fontSize: 30, 
+    fontWeight: '700', 
     marginBottom: 8,
   },
   collectionDescription: { 

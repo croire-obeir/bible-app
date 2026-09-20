@@ -346,7 +346,7 @@ const styles = StyleSheet.create({
   bg: { flex: 1 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 15, backgroundColor: '#f8f3e7' },
   backButton: { padding: 5 },
-  headerTitle: { color: '#0a2d55', fontFamily: 'serif', fontStyle: 'italic', fontSize: 18, fontWeight: '700' },
+  headerTitle: { color: '#0a2d55', fontFamily: 'serif', fontStyle: 'normal', fontSize: 18, fontWeight: '700' },
   placeholder: { width: 34 },
   scrollContent: { paddingHorizontal: 14, paddingTop: 16, paddingBottom: 100 },
   profileCard: { borderRadius: 18, padding: 25, alignItems: 'center', marginBottom: 20 },

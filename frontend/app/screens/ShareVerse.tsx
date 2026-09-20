@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
   header: { height: 100, backgroundColor: '#c7ba9d', paddingHorizontal: 14, paddingTop: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   headerAction: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
   headerEyebrow: { color: '#6f6248', fontSize: 9, fontWeight: '800', letterSpacing: 1.2, textAlign: 'center' },
-  headerTitle: { color: '#233A59', fontFamily: 'serif', fontStyle: 'italic', fontSize: 24 },
+  headerTitle: { color: '#233A59', fontFamily: 'serif', fontStyle: 'normal', fontSize: 24, fontWeight: '700' },
   content: { paddingHorizontal: 14, paddingTop: 14, paddingBottom: 150 },
   sectionLabel: { color: '#7c8492', fontSize: 10, fontWeight: '800', letterSpacing: 1.1, marginBottom: 8 },
   verseCard: { height: 300, borderRadius: 22, overflow: 'hidden' },
