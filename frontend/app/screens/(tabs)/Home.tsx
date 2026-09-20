@@ -15,6 +15,7 @@ import AppDrawer from '../../../components/AppDrawer';
 
 type AppRoute =
   | '/screens/VersionSelect'
+  | '/screens/(tabs)/bible'
   | '/screens/(tabs)/Audios'
   | '/screens/(tabs)/Videos'
   | '/screens/(tabs)/Documents';

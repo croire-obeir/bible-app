@@ -22,7 +22,7 @@ export default function LoginScreen() {
 
   const handleBack = () => {
     if (returnTo) {
-      router.replace(returnTo);
+      router.replace(returnTo as never);
     } else {
       router.back();
     }

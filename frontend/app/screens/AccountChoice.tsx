@@ -26,7 +26,7 @@ export default function AccountChoiceScreen() {
               onPress={() => router.replace('/screens/Login')}
             >
               <LinearGradient colors={['#0a2d55', '#103b92']} style={styles.gradient}>
-                <Text style={styles.btnText}>Se connecter / S'inscrire</Text>
+                <Text style={styles.btnText}>Se connecter / S&apos;inscrire</Text>
               </LinearGradient>
             </TouchableOpacity>
 
@@ -34,7 +34,7 @@ export default function AccountChoiceScreen() {
               style={styles.guestButton}
               onPress={() => router.replace('/screens/Home')}
             >
-              <Text style={styles.guestButtonText}>Continuer en tant qu'invité</Text>
+              <Text style={styles.guestButtonText}>Continuer en tant qu&apos;invité</Text>
             </TouchableOpacity>
           </View>
         </SafeAreaView>

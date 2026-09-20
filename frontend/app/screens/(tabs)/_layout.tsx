@@ -1,6 +1,7 @@
 import { Tabs, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import type { TouchableOpacityProps } from 'react-native';
 import type { ComponentProps } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -84,17 +85,18 @@ export default function TabsLayout() {
           title: 'PROFILE',
           tabBarIcon: ({ color, size, focused }) => <TabIcon name="person-outline" color={color} size={size} focused={focused} />,
           tabBarButton: (props) => {
-            const { onPress, ...rest } = props;
+            const { onPress, delayLongPress: _delayLongPress, disabled, ...rest } = props;
             return (
               <TouchableOpacity
-                {...rest}
-                onPress={async () => {
+                {...(rest as TouchableOpacityProps)}
+                disabled={disabled ?? undefined}
+                onPress={async (event) => {
                   const storedData = await AsyncStorage.getItem('userprofile');
                   if (!storedData) {
                     router.push('/screens/Login?returnTo=/screens/Home');
                     return;
                   }
-                  onPress?.();
+                  onPress?.(event as never);
                 }}
               />
             );

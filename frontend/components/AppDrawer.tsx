@@ -5,8 +5,8 @@ import { Ionicons } from '@expo/vector-icons';
 type DrawerProps = { 
   visible: boolean; 
   onClose: () => void; 
-  selectedVersion: string; 
-  setSelectedVersion: (version: string) => void 
+  selectedVersion?: string; 
+  setSelectedVersion?: (version: string) => void;
 };
 
 // const items = [
@@ -42,7 +42,12 @@ type DrawerProps = {
 //   userRow: { marginTop: 410, borderTopWidth: 1, borderTopColor: 'rgba(7, 34, 86, .35)', paddingTop: 18, flexDirection: 'row', alignItems: 'center', gap: 11 }, avatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#062c73', alignItems: 'center', justifyContent: 'center' }, avatarText: { color: '#f8dc44', fontWeight: '800' }, userName: { color: '#fff', fontSize: 15, fontWeight: '700' }, plan: { color: '#c9d4ed', fontSize: 15, marginTop: 2 },
 // });
 
-export default function AppDrawer({ visible, onClose, selectedVersion, setSelectedVersion }: DrawerProps) {
+export default function AppDrawer({
+  visible,
+  onClose,
+  selectedVersion = 'LSG',
+  setSelectedVersion = () => undefined,
+}: DrawerProps) {
 
 
   

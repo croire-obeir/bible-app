@@ -138,7 +138,7 @@ export default function OnboardingScreen() {
                         colors={['#D4AF37', '#AA8418']} // Couleur Or/Premium
                         style={styles.gradientButton}
                       >
-                        <Text style={styles.buttonText}>COMMENCER L'AVENTURE</Text>
+                        <Text style={styles.buttonText}>COMMENCER L&apos;AVENTURE</Text>
                       </LinearGradient>
                     </TouchableOpacity>
                   ) : (

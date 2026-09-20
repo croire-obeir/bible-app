@@ -117,7 +117,7 @@ export default function SearchByTopicScreen() {
         {/* En-tête de la page */}
         <View style={styles.heroContent}>
           <Text style={styles.pageTitle}>Explorer</Text>
-          <Text style={styles.intro}>Que cherchez-vous dans Sa Parole{`\n`}aujourd'hui?</Text>
+          <Text style={styles.intro}>Que cherchez-vous dans Sa Parole{`\n`}aujourd&apos;hui?</Text>
         </View>
 
         {/* Barre de recherche */}

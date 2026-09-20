@@ -58,7 +58,7 @@ export default function VideosScreen() {
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           <Text style={styles.pageTitle}>Vidéos Sacrées</Text>
-          <Text style={styles.intro}>Une collection éditoriale d'enseignements visuels et de séries documentaires pour approfondir votre foi.</Text>
+          <Text style={styles.intro}>Une collection éditoriale d&apos;enseignements visuels et de séries documentaires pour approfondir votre foi.</Text>
           <View style={styles.searchBox}><Ionicons name="search" size={15} color="#8a99ad" /><TextInput placeholder="Rechercher une vidéo..." placeholderTextColor="#9aa3b3" style={styles.searchInput} /></View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>
             {['Tout Parcourir', 'Nouve', 'Série', 'Enseign'].map((filter, index) => <View key={filter} style={[styles.filter, index === 0 && styles.activeFilter]}><Text style={[styles.filterText, index === 0 && styles.activeFilterText]}>{filter}</Text></View>)}
