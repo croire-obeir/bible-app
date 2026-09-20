@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { Alert, ImageBackground, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useMemo, useRef, useState } from 'react';
+import { Alert, Image, ImageBackground, Modal, ScrollView, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -22,7 +22,9 @@ export default function ShareVerseScreen() {
   }>();
   const [background, setBackground] = useState<number | null>(0);
   const [customBackground, setCustomBackground] = useState<string | null>(null);
+  const [pendingBackground, setPendingBackground] = useState<string | null>(null);
   const [alignment, setAlignment] = useState<'left' | 'center' | 'right'>('center');
+  const cardRef = useRef<View>(null);
 
   const selectedVerses = useMemo<SelectedVerse[]>(() => {
     if (params.selectedVerses) {
@@ -54,9 +56,15 @@ export default function ShareVerseScreen() {
       quality: 0.9,
     });
     if (!result.canceled) {
-      setCustomBackground(result.assets[0].uri);
-      setBackground(null);
+      setPendingBackground(result.assets[0].uri);
     }
+  };
+
+  const confirmCustomBackground = () => {
+    if (!pendingBackground) return;
+    setCustomBackground(pendingBackground);
+    setBackground(null);
+    setPendingBackground(null);
   };
 
   const copyText = async () => {
@@ -80,6 +88,33 @@ export default function ShareVerseScreen() {
     await Share.share({ message: fullText });
   };
 
+  const shareImage = async () => {
+    if (!cardRef.current) return;
+
+    try {
+      // These modules are loaded only when sharing an image. This keeps an
+      // older development build from crashing before it has been rebuilt.
+      const Sharing = await import('expo-sharing');
+      const { captureRef } = await import('react-native-view-shot');
+      if (!await Sharing.isAvailableAsync()) {
+        Alert.alert('Partage indisponible', 'Le partage d’images n’est pas disponible sur cet appareil.');
+        return;
+      }
+
+      const imageUri = await captureRef(cardRef, { format: 'png', quality: 1, result: 'tmpfile' });
+      await Sharing.shareAsync(imageUri, {
+        mimeType: 'image/png',
+        dialogTitle: 'Partager le verset sous forme d’image',
+      });
+    } catch (error) {
+      console.error('Unable to share verse image:', error);
+      Alert.alert(
+        'Mise à jour requise',
+        'Reconstruisez l’application native pour activer le partage d’images.',
+      );
+    }
+  };
+
   const selectedBackground = customBackground || (background !== null ? backgrounds[background] : backgrounds[0]);
 
   return (
@@ -97,8 +132,9 @@ export default function ShareVerseScreen() {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.content}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.sectionLabel}>APERÇU DE L&apos;IMAGE</Text>
+        <View ref={cardRef} collapsable={false}>
         <ImageBackground source={selectedBackground} style={styles.verseCard} imageStyle={styles.verseImage}>
           <LinearGradient colors={['rgba(117,82,28,.18)', 'rgba(4,39,69,.96)']} style={styles.overlay}>
             <Text style={[styles.verse, alignment === 'left' && styles.left, alignment === 'right' && styles.right]}>
@@ -107,6 +143,7 @@ export default function ShareVerseScreen() {
             <Text style={styles.reference}>{selectedVerses.map((verse) => verse.reference).join('  •  ').toUpperCase()}</Text>
           </LinearGradient>
         </ImageBackground>
+        </View>
 
         <View style={styles.selectedSummary}>
           <View>
@@ -126,12 +163,12 @@ export default function ShareVerseScreen() {
           </View>
           <View style={styles.backgrounds}>
             {backgrounds.map((source, index) => (
-              <TouchableOpacity key={index} onPress={() => { setBackground(index); setCustomBackground(null); }} style={[styles.backgroundChoice, background === index && !customBackground && styles.selected]}>
-                <ImageBackground source={source} style={styles.backgroundImage} imageStyle={styles.backgroundImageRadius} />
+              <TouchableOpacity key={index} onPress={() => { setBackground(index); setCustomBackground(null); setPendingBackground(null); }} style={[styles.backgroundChoice, background === index && !customBackground && styles.selected]}>
+                <Image source={source} style={styles.backgroundImage} resizeMode="cover" />
               </TouchableOpacity>
             ))}
             <TouchableOpacity style={[styles.addChoice, customBackground && styles.selected]} onPress={selectImage} accessibilityLabel="Ajouter votre propre image">
-              {customBackground ? <ImageBackground source={{ uri: customBackground }} style={styles.backgroundImage} imageStyle={styles.backgroundImageRadius} /> : <Ionicons name="add" size={23} color="#6b7280" />}
+              {customBackground ? <Image source={{ uri: customBackground }} style={styles.backgroundImage} resizeMode="cover" /> : <Ionicons name="add" size={23} color="#6b7280" />}
             </TouchableOpacity>
           </View>
 
@@ -159,18 +196,24 @@ export default function ShareVerseScreen() {
             <Text style={styles.secondaryActionText}>Partager le texte</Text>
           </TouchableOpacity>
         </View>
-        <TouchableOpacity style={styles.shareButton} onPress={shareText}>
+        <TouchableOpacity style={styles.shareButton} onPress={shareImage}>
           <Ionicons name="image-outline" size={17} color="#fff" />
           <Text style={styles.shareText}>Partager sous forme d&apos;image</Text>
         </TouchableOpacity>
-      </View>
+      </ScrollView>
 
-      <View style={styles.bottomNav}>
-        <View style={styles.navItem}><Ionicons name="home-outline" size={18} color="#0a2d55" /><Text style={styles.activeNavText}>HOME</Text><View style={styles.navDot} /></View>
-        <View style={styles.navItem}><Ionicons name="book-outline" size={18} color="#8da0ba" /><Text style={styles.navText}>BIBLE</Text></View>
-        <View style={styles.navItem}><Ionicons name="library-outline" size={18} color="#8da0ba" /><Text style={styles.navText}>LIBRARY</Text></View>
-        <View style={styles.navItem}><Ionicons name="person-outline" size={18} color="#8da0ba" /><Text style={styles.navText}>PROFILE</Text></View>
-      </View>
+      <Modal visible={pendingBackground !== null} transparent animationType="fade" onRequestClose={() => setPendingBackground(null)}>
+        <View style={styles.confirmBackdrop}>
+          <View style={styles.confirmCard}>
+            <Text style={styles.confirmTitle}>Utiliser cette image ?</Text>
+            {pendingBackground && <Image source={{ uri: pendingBackground }} style={styles.confirmImage} resizeMode="cover" />}
+            <View style={styles.confirmActions}>
+              <TouchableOpacity style={styles.cancelButton} onPress={() => setPendingBackground(null)}><Text style={styles.cancelButtonText}>Annuler</Text></TouchableOpacity>
+              <TouchableOpacity style={styles.confirmButton} onPress={confirmCustomBackground}><Text style={styles.confirmButtonText}>Utiliser l’image</Text></TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -181,7 +224,7 @@ const styles = StyleSheet.create({
   headerAction: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
   headerEyebrow: { color: '#6f6248', fontSize: 9, fontWeight: '800', letterSpacing: 1.2, textAlign: 'center' },
   headerTitle: { color: '#233A59', fontFamily: 'serif', fontStyle: 'normal', fontSize: 24, fontWeight: '700' },
-  content: { paddingHorizontal: 14, paddingTop: 14, paddingBottom: 150 },
+  content: { paddingHorizontal: 14, paddingTop: 14, paddingBottom: 32 },
   sectionLabel: { color: '#7c8492', fontSize: 10, fontWeight: '800', letterSpacing: 1.1, marginBottom: 8 },
   verseCard: { height: 300, borderRadius: 22, overflow: 'hidden' },
   verseImage: { borderRadius: 22 },
@@ -201,10 +244,9 @@ const styles = StyleSheet.create({
   addImageLabel: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 9 },
   addImageText: { color: '#7b6325', fontSize: 11, fontWeight: '700' },
   backgrounds: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  backgroundChoice: { width: 48, height: 48, borderRadius: 24, overflow: 'hidden' },
+  backgroundChoice: { width: 48, height: 48, borderRadius: 24, overflow: 'hidden', backgroundColor: '#e8ebef' },
   selected: { borderWidth: 2, borderColor: '#103b92' },
-  backgroundImage: { flex: 1 },
-  backgroundImageRadius: { borderRadius: 24 },
+  backgroundImage: { width: '100%', height: '100%', borderRadius: 24 },
   addChoice: { width: 48, height: 48, borderRadius: 24, borderWidth: 1, borderColor: '#d8dbe0', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   optionsRow: { marginTop: 14 },
   optionButtons: { flexDirection: 'row', gap: 7 },
@@ -215,9 +257,13 @@ const styles = StyleSheet.create({
   secondaryActionText: { color: '#0a2d55', fontSize: 11, fontWeight: '700' },
   shareButton: { alignSelf: 'stretch', marginTop: 10, height: 48, borderRadius: 12, backgroundColor: '#103b92', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8, elevation: 3 },
   shareText: { color: '#fff', fontSize: 12, fontWeight: '700' },
-  bottomNav: { position: 'absolute', left: 20, right: 20, bottom: 70, height: 58, backgroundColor: '#fff', borderRadius: 30, flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', shadowColor: '#a0a0a0', shadowOpacity: 0.15, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 4 },
-  navItem: { width: 50, alignItems: 'center' },
-  navText: { color: '#8da0ba', fontSize: 9, marginTop: 2, fontWeight: '600' },
-  activeNavText: { color: '#0a2d55', fontSize: 9, marginTop: 2, fontWeight: '700' },
-  navDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: '#d4af37', marginTop: 3 },
+  confirmBackdrop: { flex: 1, backgroundColor: 'rgba(10, 45, 85, .55)', justifyContent: 'center', padding: 24 },
+  confirmCard: { backgroundColor: '#fff', borderRadius: 18, padding: 18 },
+  confirmTitle: { color: '#0a2d55', fontFamily: 'serif', fontSize: 21, fontWeight: '700', marginBottom: 14 },
+  confirmImage: { width: '100%', height: 260, borderRadius: 12, backgroundColor: '#e8ebef' },
+  confirmActions: { flexDirection: 'row', gap: 10, marginTop: 16 },
+  cancelButton: { flex: 1, height: 44, borderRadius: 10, backgroundColor: '#eef2f5', alignItems: 'center', justifyContent: 'center' },
+  cancelButtonText: { color: '#0a2d55', fontSize: 12, fontWeight: '700' },
+  confirmButton: { flex: 1.4, height: 44, borderRadius: 10, backgroundColor: '#103b92', alignItems: 'center', justifyContent: 'center' },
+  confirmButtonText: { color: '#fff', fontSize: 12, fontWeight: '700' },
 });
