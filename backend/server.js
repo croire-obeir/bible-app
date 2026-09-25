@@ -20,6 +20,7 @@ app.use('/api/user', userDataManipulationRoutes);
 app.use('/reset-password', passwordResetPageRoute);
 app.use('/api/refresh-token', refreshTokenauthRoute);
 app.use('/api/youtube', youtubeRoutes);
+app.use('/auth', youtubeRoutes);
 
 app.get('/', (req, res) => {
     res.send('Welcome to the Bible App API!');
