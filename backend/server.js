@@ -6,6 +6,10 @@ import passwordResetPageRoute from './src/routes/passowrdResetPageRoute.js';
 import refreshTokenauthRoute from './src/routes/refreshTokenauthRoute.js';
 import youtubeRoutes from './src/routes/youtubeRoutes.js';
 import passport from 'passport';
+import mediaClassesRoutes from './src/routes/mediaClassesRoutes.js';
+import mediaByClassRoutes from './src/routes/mediaByClassRoutes.js';
+import './src/services/youtubeSyncJob.js';
+
 
 
 const app = express();
@@ -21,6 +25,8 @@ app.use('/reset-password', passwordResetPageRoute);
 app.use('/api/refresh-token', refreshTokenauthRoute);
 app.use('/api/sync', youtubeRoutes);
 app.use('/auth', youtubeRoutes);
+app.use('/api/media-classes', mediaClassesRoutes);
+app.use('/api/media', mediaByClassRoutes);
 
 app.get('/', (req, res) => {
     res.send('Welcome to the Bible App API!');

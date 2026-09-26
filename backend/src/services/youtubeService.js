@@ -105,7 +105,10 @@ export const syncVideosToDatabase = async () => {
         const title = item.snippet.title;
 
         // Everything before the first " - "
-        const classification = title.split(' - ')[0].trim();
+        const classification = title
+                              .split(' - ')[0]
+                              .trim()
+                              .replace(/\s+/g, ' ');
 
         const video = {
           youtube_video_id: item.contentDetails.videoId,
@@ -177,7 +180,10 @@ export const syncAudiosToDatabase = async () => {
         const title = item.snippet.title;
 
         // Everything before the first " - "
-        const classification = title.split(' - ')[0].trim();
+        const classification = title
+                              .split(' - ')[0]
+                              .trim()
+                              .replace(/\s+/g, ' ');
 
         const audio = {
           youtube_video_id: item.contentDetails.videoId,
