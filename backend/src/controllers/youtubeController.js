@@ -1,42 +1,42 @@
 import {
-  getVideos,
-  getAudios,
+  syncVideosToDatabase,
+  syncAudiosToDatabase,
 } from '../services/youtubeService.js';
 
-export const getVideosController = async (
-  req,
-  res
-) => {
+export const syncVideosController = async (req, res) => {
   try {
-    const videos = await getVideos();
+    const result = await syncVideosToDatabase();
 
     res.status(200).json({
       success: true,
-      data: videos,
+      message: 'Videos synchronized successfully',
+      data: result,
     });
   } catch (error) {
-     res.status(500).json({
+    console.error('Video sync error:', error);
+
+    res.status(500).json({
       success: false,
-      message: "Échec de la récupération des vidéos",
+      message: 'Échec de la synchronisation des vidéos',
     });
   }
 };
 
-export const getAudiosController = async (
-  req,
-  res
-) => {
+export const syncAudiosController = async (req, res) => {
   try {
-    const audios = await getAudios();
+    const result = await syncAudiosToDatabase();
 
     res.status(200).json({
       success: true,
-      data: audios,
+      message: 'Audios synchronized successfully',
+      data: result,
     });
   } catch (error) {
+    console.error('Audio sync error:', error);
+
     res.status(500).json({
       success: false,
-      message: 'Échec de la récupération des audios',
+      message: 'Échec de la synchronisation des audios',
     });
   }
 };

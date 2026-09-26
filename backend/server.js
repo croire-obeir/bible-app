@@ -19,7 +19,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/user', userDataManipulationRoutes);
 app.use('/reset-password', passwordResetPageRoute);
 app.use('/api/refresh-token', refreshTokenauthRoute);
-app.use('/api/youtube', youtubeRoutes);
+app.use('/api/sync', youtubeRoutes);
 app.use('/auth', youtubeRoutes);
 
 app.get('/', (req, res) => {
