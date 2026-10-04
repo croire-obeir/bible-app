@@ -31,7 +31,11 @@ apiClient.interceptors.request.use(
       '/api/auth/signup', 
       '/api/auth/login', 
       '/api/auth/google-login',
-       '/api/user/forgot-password'
+        '/api/user/forgot-password',
+            '/api/media-classes/videos',
+            '/api/media-classes/audios',
+            '/api/media/videos',
+            '/api/media/audios'
       ];
     if (publicEndpoints.includes(config.url || '')) {
       return config;
