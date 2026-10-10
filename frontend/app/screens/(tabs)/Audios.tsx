@@ -1,96 +1,699 @@
-import React, { useCallback, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ImageBackground, SafeAreaView, ScrollView, TouchableOpacity, Alert, TextInput } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useTabBarScroll } from '../../../components/tab-bar-visibility';
-import * as WebBrowser from 'expo-web-browser';
-import AppDrawer from '../../../components/AppDrawer';
-import Header from '../../../components/CustomHeader';
 
-type AudioItem = {
-  id: string;
-  title: string;
-  author?: string;
-  duration?: string;
-  url: string;
-};
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import {
+  ActivityIndicator,
+  Image,
+  ImageBackground,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as WebBrowser from 'expo-web-browser';
+import YoutubePlayer from 'react-native-youtube-iframe';
+import { useTabBarScroll } from '../../../components/tab-bar-visibility';
+import Header from '../../../components/CustomHeader';
+import {
+  fetchMediaClasses,
+  fetchMediaPage,
+  getMediaErrorMessage,
+  getYouTubeUrl,
+  MediaItem,
+} from '../../../api/services/mediaServices';
+
+const PAGE_SIZE = 10;
+
+function formatPublishedDate(value: string): string {
+  const date = new Date(value.replace(' ', 'T'));
+
+  if (Number.isNaN(date.getTime())) return '';
+
+  return date.toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+}
 
 export default function AudiosScreen() {
   const handleTabBarScroll = useTabBarScroll();
-  const [drawerVisible, setDrawerVisible] = useState(false);
-  const audios: AudioItem[] = useMemo(
-    () => [
-      {
-        id: 'sample-audio-1',
-        title: 'Audio de test (MP3)',
-        author: 'Temporaire',
-        duration: '00:30',
-        url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
-      },
-      {
-        id: 'sample-audio-2',
-        title: 'Audio de test (MP3) #2',
-        author: 'Temporaire',
-        duration: '00:20',
-        url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
-      },
-    ],
-    []
-  );
+  const scrollViewRef = useRef<ScrollView>(null);
 
-  const openAudio = useCallback(async (item: AudioItem) => {
-    try {
-      await WebBrowser.openBrowserAsync(item.url);
-    } catch (e) {
-      Alert.alert('Erreur', "Impossible d'ouvrir l'audio.");
+  const [classes, setClasses] = useState<string[]>([]);
+  const [selectedClass, setSelectedClass] = useState('');
+  const [audios, setAudios] = useState<MediaItem[]>([]);
+  const [search, setSearch] = useState('');
+  const [classesLoading, setClassesLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [classesError, setClassesError] = useState('');
+  const [mediaError, setMediaError] = useState('');
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [retry, setRetry] = useState(0);
+
+  // Selected audio and YouTube playback state
+  const [selectedAudio, setSelectedAudio] = useState<MediaItem | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+
+    setClassesLoading(true);
+    setClassesError('');
+
+    fetchMediaClasses('audios')
+      .then((result) => {
+        if (!active) return;
+
+        setClasses(result);
+
+        setSelectedClass((current) =>
+          current && result.includes(current) ? current : result[0] ?? ''
+        );
+      })
+      .catch((error: unknown) => {
+        if (active) {
+          setClassesError(
+            getMediaErrorMessage(
+              error,
+              'Impossible de récupérer les catégories.'
+            )
+          );
+        }
+      })
+      .finally(() => {
+        if (active) setClassesLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [retry]);
+
+  useEffect(() => {
+    if (!selectedClass) {
+      setAudios([]);
+      setPage(0);
+      setTotalPages(0);
+      return;
     }
+
+    let active = true;
+
+    setLoading(true);
+    setMediaError('');
+    setAudios([]);
+    setPage(0);
+
+    fetchMediaPage('audios', selectedClass, 1, PAGE_SIZE)
+      .then((result) => {
+        if (!active) return;
+
+        setAudios(result.data);
+        setPage(result.pagination.page);
+        setTotalPages(result.pagination.totalPages);
+      })
+      .catch((error: unknown) => {
+        if (active) {
+          setMediaError(
+            getMediaErrorMessage(
+              error,
+              'Impossible de récupérer les audios.'
+            )
+          );
+        }
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [selectedClass, retry]);
+
+  const loadMore = useCallback(async () => {
+    if (
+      !selectedClass ||
+      loadingMore ||
+      loading ||
+      page >= totalPages
+    ) {
+      return;
+    }
+
+    setLoadingMore(true);
+    setMediaError('');
+
+    try {
+      const result = await fetchMediaPage(
+        'audios',
+        selectedClass,
+        page + 1,
+        PAGE_SIZE
+      );
+
+      setAudios((current) => [...current, ...result.data]);
+      setPage(result.pagination.page);
+      setTotalPages(result.pagination.totalPages);
+    } catch (error) {
+      setMediaError(
+        getMediaErrorMessage(error, 'Impossible de charger la suite.')
+      );
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [loading, loadingMore, page, selectedClass, totalPages]);
+
+  const filteredAudios = useMemo(() => {
+    const term = search.trim().toLocaleLowerCase('fr');
+
+    return term
+      ? audios.filter((audio) =>
+          audio.title.toLocaleLowerCase('fr').includes(term)
+        )
+      : audios;
+  }, [audios, search]);
+
+  const featured = filteredAudios[0];
+
+  // Play the selected audio inside the app
+  const openAudio = useCallback((item: MediaItem) => {
+    setSelectedAudio(item);
+    setIsPlaying(true);
+    setMediaError('');
   }, []);
+
+  // Open the original YouTube video for comments
+  const openYouTubeComments = useCallback(async () => {
+    if (!selectedAudio) return;
+
+    try {
+      await WebBrowser.openBrowserAsync(
+        getYouTubeUrl(selectedAudio.youtube_video_id)
+      );
+    } catch {
+      setMediaError("Impossible d'ouvrir YouTube.");
+    }
+  }, [selectedAudio]);
 
   return (
     <View style={styles.container}>
-      <ImageBackground source={require('../../../assets/enregistrement.png')} style={styles.bg} imageStyle={{ opacity: 0.05 }}>
-        {/* <SafeAreaView style={styles.header}>
-          <TouchableOpacity onPress={() => setDrawerVisible(true)}><Ionicons name="menu" size={20} color="#0a2d55" /></TouchableOpacity>
-          <Text style={styles.headerTitle}>Croire & Obéir</Text>
-          <Ionicons name="search" size={19} color="#0a2d55" />
-        </SafeAreaView> */}
-        <Header
-          title="Enseignements Audio"
-        />
+      <Header title="Enseignements Audio" />
 
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} onScroll={handleTabBarScroll} scrollEventThrottle={16}>
-          <Text style={styles.pageTitle}>Enseignements Audio</Text>
-          <Text style={styles.intro}>Plongez dans les enseignements profonds de la Parole à travers nos archives audio.</Text>
-          <View style={styles.searchBox}><Ionicons name="search" size={15} color="#8a99ad" /><TextInput placeholder="Rechercher un sermon, un auteur..." placeholderTextColor="#9aa3b3" style={styles.searchInput} /></View>
-          <View style={styles.filters}>{['Tous', 'Sermons', 'Méditations'].map((filter, index) => <View key={filter} style={[styles.filter, index === 0 && styles.activeFilter]}><Text style={[styles.filterText, index === 0 && styles.activeFilterText]}>{filter}</Text></View>)}</View>
-          <ImageBackground source={require('../../../assets/bible.jpg')} style={styles.featuredCard} imageStyle={styles.roundedImage}>
-            <View style={styles.featuredOverlay}><View style={styles.featuredPlay}><Ionicons name="play" size={18} color="#0a2d55" /></View><Text style={styles.featuredLabel}>EN VEDETTE</Text><Text style={styles.featuredTitle}>La Parole du dimanche</Text><Text style={styles.featuredText}>Une exploration profonde des textes anciens concernant la foi.</Text><Text style={styles.featuredMeta}>Dr. Jean Calvin  •  45:20</Text></View>
-          </ImageBackground>
-          <Text style={styles.collectionTitle}>Récentes</Text>
+      <ScrollView
+        ref={scrollViewRef}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        onScroll={handleTabBarScroll}
+        scrollEventThrottle={16}
+      >
+        <View style={styles.eyebrowRow}>
+          <View style={styles.eyebrowLine} />
+          <Text style={styles.eyebrow}>ÉCOUTER & MÉDITER</Text>
+        </View>
 
-          {audios.map((a) => (
-            <TouchableOpacity key={a.id} style={styles.itemCard} activeOpacity={0.85} onPress={() => openAudio(a)}>
-              <View style={styles.left}>
-                <View style={styles.iconWrap}><Ionicons name="volume-high-outline" size={19} color="#0a2d55" /></View>
-                <View style={styles.textWrap}>
-                  <Text style={styles.itemTitle}>{a.title}</Text>
-                  <Text style={styles.itemMeta}>{[a.author, a.duration].filter(Boolean).join(' • ')}</Text>
-                </View>
-              </View>
-              <Ionicons name="play" size={18} color="#D4AF37" />
+        <Text style={styles.pageTitle}>Enseignements Audio</Text>
+
+        <Text style={styles.intro}>
+          Des paroles inspirantes et des enseignements bibliques à écouter
+          où que vous soyez.
+        </Text>
+
+        <View style={styles.searchBox}>
+          <Ionicons name="search" size={18} color="#8792A3" />
+
+          <TextInput
+            value={search}
+            onChangeText={setSearch}
+            placeholder="Rechercher un enseignement..."
+            placeholderTextColor="#98A1AF"
+            style={styles.searchInput}
+            returnKeyType="search"
+          />
+
+          {!!search && (
+            <TouchableOpacity
+              onPress={() => setSearch('')}
+              accessibilityLabel="Effacer la recherche"
+            >
+              <Ionicons
+                name="close-circle"
+                size={18}
+                color="#98A1AF"
+              />
             </TouchableOpacity>
-          ))}
+          )}
+        </View>
 
-          <View style={styles.bottomPadding} />
-        </ScrollView>
-      </ImageBackground>
-      <AppDrawer visible={drawerVisible} onClose={() => setDrawerVisible(false)} />
+        <View style={styles.sectionHeading}>
+          <View>
+            <Text style={styles.sectionTitle}>Explorer par thème</Text>
+            <Text style={styles.sectionCaption}>
+              Trouvez une voix qui vous inspire
+            </Text>
+          </View>
+
+          <View style={styles.headingIcon}>
+            <Ionicons
+              name="headset-outline"
+              size={18}
+              color="#A88632"
+            />
+          </View>
+        </View>
+
+        {classesLoading ? (
+          <View style={styles.inlineLoading}>
+            <ActivityIndicator color="#A88632" />
+            <Text style={styles.mutedText}>Chargement des thèmes…</Text>
+          </View>
+        ) : classesError ? (
+          <View style={styles.notice}>
+            <Text style={styles.noticeText}>{classesError}</Text>
+            <TouchableOpacity
+              onPress={() => setRetry((value) => value + 1)}
+            >
+              <Text style={styles.retryText}>Réessayer</Text>
+            </TouchableOpacity>
+          </View>
+        ) : classes.length === 0 ? (
+          <View style={styles.notice}>
+            <Text style={styles.noticeText}>
+              Aucune catégorie audio disponible pour le moment.
+            </Text>
+          </View>
+        ) : (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.categoryList}
+          >
+            {classes.map((item) => {
+              const active = item === selectedClass;
+
+              return (
+                <TouchableOpacity
+                  key={item}
+                  onPress={() => setSelectedClass(item)}
+                  style={[
+                    styles.categoryChip,
+                    active && styles.categoryChipActive,
+                  ]}
+                  activeOpacity={0.8}
+                >
+                  <Text
+                    style={[
+                      styles.categoryText,
+                      active && styles.categoryTextActive,
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {item}
+                  </Text>
+
+                  {active && (
+                    <Ionicons
+                      name="checkmark-circle"
+                      size={15}
+                      color="#F4D787"
+                    />
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        )}
+
+        {featured && !loading && (
+          <TouchableOpacity
+            activeOpacity={0.92}
+            onPress={() => openAudio(featured)}
+            style={styles.featuredCard}
+          >
+            <ImageBackground
+              source={
+                featured.thumbnail
+                  ? { uri: featured.thumbnail }
+                  : require('../../../assets/bible.jpg')
+              }
+              style={styles.featuredImage}
+              imageStyle={styles.featuredImageRadius}
+            >
+              <LinearGradient
+                colors={[
+                  'rgba(8,24,48,0.02)',
+                  'rgba(8,24,48,0.88)',
+                ]}
+                style={styles.featuredGradient}
+              >
+                <View style={styles.featuredBadge}>
+                  <Ionicons
+                    name="musical-notes"
+                    size={12}
+                    color="#F6D984"
+                  />
+                  <Text style={styles.featuredBadgeText}>
+                    SÉLECTION DU MOMENT
+                  </Text>
+                </View>
+
+                <View style={styles.featuredBottom}>
+                  <Text style={styles.featuredCategory}>
+                    {featured.classification}
+                  </Text>
+
+                  <Text style={styles.featuredTitle} numberOfLines={2}>
+                    {featured.title}
+                  </Text>
+
+                  <View style={styles.featuredAction}>
+                    <View style={styles.playButton}>
+                      <Ionicons
+                        name="play"
+                        size={16}
+                        color="#12294B"
+                      />
+                    </View>
+                    <Text style={styles.listenText}>
+                      Écouter maintenant
+                    </Text>
+                    <Ionicons
+                      name="arrow-forward"
+                      size={16}
+                      color="#F6D984"
+                    />
+                  </View>
+                </View>
+              </LinearGradient>
+            </ImageBackground>
+          </TouchableOpacity>
+        )}
+
+        {/* Embedded YouTube player */}
+        {selectedAudio && (
+          <View
+            onLayout={(event) => {
+              scrollViewRef.current?.scrollTo({
+                y: Math.max(0, event.nativeEvent.layout.y - 16),
+                animated: true,
+              });
+            }}
+            style={{
+              marginTop: 20,
+              marginBottom: 24,
+              marginHorizontal: 16,
+              padding: 14,
+              backgroundColor: '#FFFFFF',
+              borderRadius: 16,
+              borderWidth: StyleSheet.hairlineWidth,
+              borderColor: '#E4E7EC',
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 17,
+                fontWeight: '700',
+                color: '#12294B',
+                marginBottom: 12,
+              }}
+            >
+              {selectedAudio.title}
+            </Text>
+
+            <YoutubePlayer
+              height={220}
+              videoId={selectedAudio.youtube_video_id}
+              play={isPlaying}
+              onChangeState={(state) => {
+                if (state === 'ended') {
+                  setIsPlaying(false);
+                }
+              }}
+            />
+
+            <TouchableOpacity
+              onPress={openYouTubeComments}
+              activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel="Voir ou publier des commentaires sur YouTube"
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: '#C62828',
+                paddingVertical: 13,
+                paddingHorizontal: 16,
+                borderRadius: 10,
+                marginTop: 12,
+              }}
+            >
+              <Ionicons
+                name="logo-youtube"
+                size={20}
+                color="#FFFFFF"
+              />
+
+              <Text
+                style={{
+                  color: '#FFFFFF',
+                  fontWeight: '600',
+                  fontSize: 14,
+                  marginLeft: 8,
+                }}
+              >
+                Voir les commentaires sur YouTube
+              </Text>
+
+              <Ionicons
+                name="open-outline"
+                size={17}
+                color="#FFFFFF"
+                style={{ marginLeft: 8 }}
+              />
+            </TouchableOpacity>
+
+            <Text
+              style={{
+                fontSize: 12,
+                lineHeight: 18,
+                color: '#687386',
+                marginTop: 9,
+                textAlign: 'center',
+              }}
+            >
+              Pour lire ou publier des commentaires, ouvrez la vidéo sur
+              YouTube.
+            </Text>
+          </View>
+        )}
+
+        <View style={styles.sectionHeadingList}>
+          <View>
+            <Text style={styles.sectionTitle}>
+              {selectedClass || 'La collection'}
+            </Text>
+            <Text style={styles.sectionCaption}>
+              {loading
+                ? 'Mise à jour de la collection…'
+                : `${filteredAudios.length} ${
+                    filteredAudios.length > 1
+                      ? 'enseignements affichés'
+                      : 'enseignement affiché'
+                  }`}
+            </Text>
+          </View>
+
+          <View style={styles.headingIcon}>
+            <Ionicons
+              name="library-outline"
+              size={19}
+              color="#A88632"
+            />
+          </View>
+        </View>
+
+        {loading && (
+          <View style={styles.loadingPanel}>
+            <ActivityIndicator size="large" color="#A88632" />
+            <Text style={styles.mutedText}>
+              Nous préparons votre sélection…
+            </Text>
+          </View>
+        )}
+
+        {!!mediaError && (
+          <View style={styles.notice}>
+            <Text style={styles.noticeText}>{mediaError}</Text>
+            <TouchableOpacity
+              onPress={() => setRetry((value) => value + 1)}
+            >
+              <Text style={styles.retryText}>Réessayer</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {!loading &&
+          !mediaError &&
+          filteredAudios.length === 0 &&
+          !!selectedClass && (
+            <View style={styles.emptyState}>
+              <View style={styles.emptyIcon}>
+                <Ionicons
+                  name="musical-notes-outline"
+                  size={24}
+                  color="#9C7B2E"
+                />
+              </View>
+
+              <Text style={styles.emptyTitle}>
+                {search ? 'Aucun résultat' : 'Collection en préparation'}
+              </Text>
+
+              <Text style={styles.emptyText}>
+                {search
+                  ? 'Essayez un autre mot-clé.'
+                  : 'Aucun audio trouvé dans cette catégorie pour le moment.'}
+              </Text>
+            </View>
+          )}
+
+        {filteredAudios.map((audio) => (
+          <TouchableOpacity
+            key={audio.youtube_video_id}
+            style={styles.mediaCard}
+            onPress={() => openAudio(audio)}
+            activeOpacity={0.82}
+          >
+            <View style={styles.thumbnailWrap}>
+              <Image
+                source={
+                  audio.thumbnail
+                    ? { uri: audio.thumbnail }
+                    : require('../../../assets/pimage.jpg')
+                }
+                style={styles.thumbnail}
+              />
+
+              <View style={styles.thumbnailPlay}>
+                <Ionicons name="headset" size={12} color="#fff" />
+              </View>
+            </View>
+
+            <View style={styles.mediaInfo}>
+              <Text style={styles.mediaTitle} numberOfLines={2}>
+                {audio.title}
+              </Text>
+
+              <Text style={styles.mediaMeta} numberOfLines={1}>
+                {audio.classification}
+                {formatPublishedDate(audio.published_at)
+                  ? `  ·  ${formatPublishedDate(audio.published_at)}`
+                  : ''}
+              </Text>
+            </View>
+
+            <Ionicons name="play-circle" size={23} color="#B18A32" />
+          </TouchableOpacity>
+        ))}
+
+        {!loading && page < totalPages && (
+          <TouchableOpacity
+            style={styles.loadMoreButton}
+            onPress={loadMore}
+            disabled={loadingMore}
+            activeOpacity={0.8}
+          >
+            {loadingMore ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <>
+                <Text style={styles.loadMoreText}>
+                  Charger plus d’audios
+                </Text>
+                <Ionicons name="arrow-down" size={16} color="#fff" />
+              </>
+            )}
+          </TouchableOpacity>
+        )}
+
+        {!loading &&
+          page > 0 &&
+          page >= totalPages &&
+          audios.length > 0 && (
+            <Text style={styles.endNote}>
+              Vous êtes à jour sur cette collection.
+            </Text>
+          )}
+
+        <View style={styles.bottomPadding} />
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  bg: { flex: 1 },
-  header: { height: 100, backgroundColor: '#c7ba9d', paddingHorizontal: 14, paddingTop: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, headerTitle: { color: '#233A59', fontFamily: 'serif', fontStyle: 'normal', fontSize: 25, fontWeight: '700' }, scrollContent: { paddingHorizontal: 12, paddingTop: 13, paddingBottom: 160 }, pageTitle: { fontFamily: 'serif', fontSize: 30, fontWeight: '700', color: '#0a2d55', marginTop: 10, marginBottom: 8 }, intro: { color: '#687080', fontSize: 13, lineHeight: 19, marginBottom: 16 }, searchBox: { height: 46, borderRadius: 23, backgroundColor: '#f7f7f8', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 15, gap: 9 }, searchInput: { flex: 1, fontSize: 13 }, filters: { flexDirection: 'row', gap: 8, paddingVertical: 14 }, filter: { paddingHorizontal: 17, height: 32, borderRadius: 16, justifyContent: 'center', backgroundColor: '#fff' }, activeFilter: { backgroundColor: '#092d6b' }, filterText: { fontSize: 11, color: '#727887' }, activeFilterText: { color: '#fff' }, featuredCard: { height: 350, borderRadius: 18, overflow: 'hidden', marginBottom: 23 }, roundedImage: { borderRadius: 18 }, featuredOverlay: { flex: 1, padding: 21, justifyContent: 'flex-end', backgroundColor: 'rgba(4,28,65,.35)' }, featuredPlay: { position: 'absolute', top: 21, left: 21, width: 48, height: 48, borderRadius: 24, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center' }, featuredLabel: { color: '#f4d43d', fontSize: 11, fontWeight: '800', marginBottom: 8 }, featuredTitle: { color: '#fff', fontFamily: 'serif', fontSize: 25, fontWeight: '700' }, featuredText: { color: '#fff', fontSize: 14, lineHeight: 21, marginTop: 7 }, featuredMeta: { color: '#dbe4f4', fontSize: 11, marginTop: 16 }, collectionTitle: { color: '#0a2d55', fontFamily: 'serif', fontSize: 20, marginBottom: 12 }, itemCard: { backgroundColor: '#fff', borderRadius: 18, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: '#edf0f4', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', elevation: 1 }, left: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1, paddingRight: 10 },
-  iconWrap: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#e7edf7', justifyContent: 'center', alignItems: 'center' }, textWrap: { flex: 1 }, itemTitle: { fontSize: 14, fontWeight: '700', color: '#0a2d55' }, itemMeta: { marginTop: 4, fontSize: 11, color: '#8a92a1' }, bottomPadding: { height: 20 },
+  container: { flex: 1, backgroundColor: '#F8F7F3' },
+  scrollContent: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 130 },
+  eyebrowRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
+  eyebrowLine: { width: 22, height: 2, backgroundColor: '#B18A32' },
+  eyebrow: { color: '#A17C2C', fontSize: 10, letterSpacing: 2, fontWeight: '800' },
+  pageTitle: { color: '#102B50', fontFamily: 'serif', fontSize: 31, fontWeight: '700', marginTop: 9 },
+  intro: { color: '#697587', fontSize: 14, lineHeight: 21, marginTop: 7, marginBottom: 18 },
+  searchBox: { minHeight: 50, borderRadius: 15, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E9E7E0', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 15, gap: 10, shadowColor: '#1F3554', shadowOpacity: 0.04, shadowRadius: 9, elevation: 1 },
+  searchInput: { flex: 1, color: '#233A59', fontSize: 14, paddingVertical: 10 },
+  sectionHeading: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 25, marginBottom: 12 },
+  sectionHeadingList: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 26, marginBottom: 13 },
+  sectionTitle: { color: '#102B50', fontSize: 18, fontWeight: '700' },
+  sectionCaption: { color: '#929AA6', fontSize: 12, marginTop: 3 },
+  headingIcon: { width: 36, height: 36, borderRadius: 12, backgroundColor: '#F1EBDD', alignItems: 'center', justifyContent: 'center' },
+  categoryList: { gap: 8, paddingBottom: 3 },
+  categoryChip: { minHeight: 38, maxWidth: 240, paddingHorizontal: 14, borderRadius: 20, flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E9E7E0' },
+  categoryChipActive: { backgroundColor: '#102B50', borderColor: '#102B50' },
+  categoryText: { color: '#657184', fontSize: 12, fontWeight: '600' },
+  categoryTextActive: { color: '#fff' },
+  inlineLoading: { minHeight: 52, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  mutedText: { color: '#8A94A3', fontSize: 13 },
+  featuredCard: { height: 250, marginTop: 23, borderRadius: 20, overflow: 'hidden', backgroundColor: '#183354', shadowColor: '#102B50', shadowOpacity: 0.14, shadowRadius: 12, elevation: 4 },
+  featuredImage: { flex: 1 },
+  featuredImageRadius: { borderRadius: 20 },
+  featuredGradient: { flex: 1, padding: 18, justifyContent: 'space-between' },
+  featuredBadge: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 7, borderRadius: 20, backgroundColor: 'rgba(16,43,80,0.82)' },
+  featuredBadgeText: { color: '#F6D984', fontSize: 9, fontWeight: '800', letterSpacing: 1.1 },
+  featuredBottom: { gap: 7 },
+  featuredCategory: { color: '#F4D787', fontSize: 10, fontWeight: '800', letterSpacing: 1 },
+  featuredTitle: { color: '#fff', fontSize: 21, lineHeight: 27, fontWeight: '700' },
+  featuredAction: { flexDirection: 'row', alignItems: 'center', gap: 9, marginTop: 3 },
+  playButton: { width: 34, height: 34, borderRadius: 17, backgroundColor: '#F4D787', alignItems: 'center', justifyContent: 'center' },
+  listenText: { color: '#fff', fontSize: 12, fontWeight: '700', flex: 1 },
+  loadingPanel: { minHeight: 150, alignItems: 'center', justifyContent: 'center', gap: 12 },
+  notice: { padding: 15, backgroundColor: '#FFF8E7', borderColor: '#F0DDAA', borderWidth: 1, borderRadius: 14, gap: 8, marginTop: 10 },
+  noticeText: { color: '#725C2D', fontSize: 13, lineHeight: 19 },
+  retryText: { color: '#102B50', fontWeight: '800', fontSize: 13 },
+  emptyState: { alignItems: 'center', backgroundColor: '#fff', borderRadius: 18, padding: 24, borderWidth: 1, borderColor: '#ECEAE4' },
+  emptyIcon: { width: 48, height: 48, borderRadius: 16, backgroundColor: '#F5F0E3', alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
+  emptyTitle: { color: '#102B50', fontWeight: '700', fontSize: 15 },
+  emptyText: { color: '#8993A1', fontSize: 12, lineHeight: 18, textAlign: 'center', marginTop: 5 },
+  mediaCard: { minHeight: 88, flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#fff', borderWidth: 1, borderColor: '#ECEAE4', borderRadius: 16, padding: 10, marginBottom: 9 },
+  thumbnailWrap: { width: 90, height: 64, borderRadius: 11, overflow: 'hidden', backgroundColor: '#E7E9EC', alignItems: 'center', justifyContent: 'center' },
+  thumbnail: { width: '100%', height: '100%' },
+  thumbnailPlay: { position: 'absolute', width: 27, height: 27, borderRadius: 14, backgroundColor: 'rgba(16,43,80,0.9)', alignItems: 'center', justifyContent: 'center' },
+  mediaInfo: { flex: 1 },
+  mediaTitle: { color: '#193452', fontWeight: '700', fontSize: 13, lineHeight: 18 },
+  mediaMeta: { color: '#929AA6', fontSize: 10, marginTop: 5 },
+  loadMoreButton: { minHeight: 48, marginTop: 7, borderRadius: 14, backgroundColor: '#102B50', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 9 },
+  loadMoreText: { color: '#fff', fontSize: 13, fontWeight: '700' },
+  endNote: { color: '#9BA3AE', fontSize: 11, textAlign: 'center', marginTop: 14 },
+  bottomPadding: { height: 20 },
 });

@@ -7,7 +7,8 @@ const getApiUrl = () => {
       return 'http://localhost:3000';
     } else if (Platform.OS === 'android') {
       // http://192.168.178.100:3000
-      return 'http://192.168.100.49:3000';
+      //192.168.0.176
+      return 'http://192.168.0.176:3000';
     } else {
       // iOS Simulator or Physical Device
       return 'http://192.168.1.XX:3000'; // Replace with your IP
@@ -31,7 +32,11 @@ apiClient.interceptors.request.use(
       '/api/auth/signup', 
       '/api/auth/login', 
       '/api/auth/google-login',
-       '/api/user/forgot-password'
+        '/api/user/forgot-password',
+            '/api/media-classes/videos',
+            '/api/media-classes/audios',
+            '/api/media/videos',
+            '/api/media/audios'
       ];
     if (publicEndpoints.includes(config.url || '')) {
       return config;
