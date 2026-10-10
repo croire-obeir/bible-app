@@ -19,6 +19,7 @@ import Header from '../../../components/CustomHeader';
 import {
   buildR2DocumentUrl,
   fetchDocumentManifest,
+  getCachedDocumentManifest,
   getNestedFolderSegments,
   type ManifestCategory,
   type ManifestDocument,
@@ -58,8 +59,8 @@ function toPdfItem(
     subcategory:
       nestedFolders.length > 0
         ? nestedFolders
-            .map((segment) => segment.trim() || segment)
-            .join(' / ')
+          .map((segment) => segment.trim() || segment)
+          .join(' / ')
         : undefined,
     url: buildR2DocumentUrl(document.file),
   };
@@ -89,15 +90,53 @@ export default function DocumentsScreen() {
   const [folderPath, setFolderPath] = useState<string[]>([]);
 
   const loadManifest = useCallback(async (isRefresh = false) => {
-    if (isRefresh) {
-      setIsRefreshing(true);
-    } else {
-      setIsLoading(true);
-    }
-
     setErrorMessage(null);
 
+    // Pull-to-refresh: fetch the latest manifest directly.
+    if (isRefresh) {
+      setIsRefreshing(true);
+
+      try {
+        const result = await fetchDocumentManifest();
+
+        if (result.success) {
+          setCategories(result.data.categories);
+        } else {
+          setErrorMessage(result.error);
+        }
+      } catch {
+        setErrorMessage(
+          'Une erreur est survenue lors du chargement des documents.'
+        );
+      } finally {
+        setIsRefreshing(false);
+      }
+
+      return;
+    }
+
+    setIsLoading(true);
+
     try {
+      // 1. Read the local cache first.
+      const cachedManifest = await getCachedDocumentManifest();
+
+      if (cachedManifest) {
+        // Display documents immediately from local storage.
+        setCategories(cachedManifest.categories);
+        setIsLoading(false);
+
+        // 2. Update from R2 in the background.
+        const result = await fetchDocumentManifest();
+
+        if (result.success) {
+          setCategories(result.data.categories);
+        }
+
+        return;
+      }
+
+      // 3. No cache yet: fetch from R2.
       const result = await fetchDocumentManifest();
 
       if (result.success) {
@@ -111,7 +150,6 @@ export default function DocumentsScreen() {
       );
     } finally {
       setIsLoading(false);
-      setIsRefreshing(false);
     }
   }, []);
 
@@ -129,14 +167,14 @@ export default function DocumentsScreen() {
 
 
   const sortedCategories = useMemo(
-  () =>
-    [...categories].sort((a, b) =>
-      a.name.trim().localeCompare(b.name.trim(), 'fr', {
-        sensitivity: 'base',
-      })
-    ),
-  [categories]
-);
+    () =>
+      [...categories].sort((a, b) =>
+        a.name.trim().localeCompare(b.name.trim(), 'fr', {
+          sensitivity: 'base',
+        })
+      ),
+    [categories]
+  );
 
   // Total document count across all categories.
   const totalDocumentCount = useMemo(
@@ -323,7 +361,7 @@ export default function DocumentsScreen() {
             style={[
               styles.filter,
               selectedCategoryId === ALL_CATEGORIES_ID &&
-                styles.activeFilter,
+              styles.activeFilter,
             ]}
             onPress={() => handleSelectCategory(ALL_CATEGORIES_ID)}
             activeOpacity={0.85}
@@ -332,7 +370,7 @@ export default function DocumentsScreen() {
               style={[
                 styles.filterText,
                 selectedCategoryId === ALL_CATEGORIES_ID &&
-                  styles.activeFilterText,
+                styles.activeFilterText,
               ]}
             >
               Tout ({totalDocumentCount})
@@ -529,7 +567,7 @@ export default function DocumentsScreen() {
         ))}
 
         {visibleFolders.length === 0 &&
-        visibleDocuments.length === 0 ? (
+          visibleDocuments.length === 0 ? (
           <View style={styles.emptyList}>
             <Text style={styles.stateText}>
               Ce dossier ne contient pas encore de documents.
