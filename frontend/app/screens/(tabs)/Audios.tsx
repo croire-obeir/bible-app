@@ -1,4 +1,11 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -13,6 +20,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as WebBrowser from 'expo-web-browser';
+import YoutubePlayer from 'react-native-youtube-iframe';
 import { useTabBarScroll } from '../../../components/tab-bar-visibility';
 import Header from '../../../components/CustomHeader';
 import {
@@ -27,12 +35,20 @@ const PAGE_SIZE = 10;
 
 function formatPublishedDate(value: string): string {
   const date = new Date(value.replace(' ', 'T'));
+
   if (Number.isNaN(date.getTime())) return '';
-  return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+
+  return date.toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
 }
 
 export default function AudiosScreen() {
   const handleTabBarScroll = useTabBarScroll();
+  const scrollViewRef = useRef<ScrollView>(null);
+
   const [classes, setClasses] = useState<string[]>([]);
   const [selectedClass, setSelectedClass] = useState('');
   const [audios, setAudios] = useState<MediaItem[]>([]);
@@ -46,23 +62,43 @@ export default function AudiosScreen() {
   const [totalPages, setTotalPages] = useState(0);
   const [retry, setRetry] = useState(0);
 
+  // Selected audio and YouTube playback state
+  const [selectedAudio, setSelectedAudio] = useState<MediaItem | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+
   useEffect(() => {
     let active = true;
+
     setClassesLoading(true);
     setClassesError('');
+
     fetchMediaClasses('audios')
       .then((result) => {
         if (!active) return;
+
         setClasses(result);
-        setSelectedClass((current) => current && result.includes(current) ? current : result[0] ?? '');
+
+        setSelectedClass((current) =>
+          current && result.includes(current) ? current : result[0] ?? ''
+        );
       })
       .catch((error: unknown) => {
-        if (active) setClassesError(getMediaErrorMessage(error, 'Impossible de récupérer les catégories.'));
+        if (active) {
+          setClassesError(
+            getMediaErrorMessage(
+              error,
+              'Impossible de récupérer les catégories.'
+            )
+          );
+        }
       })
       .finally(() => {
         if (active) setClassesLoading(false);
       });
-    return () => { active = false; };
+
+    return () => {
+      active = false;
+    };
   }, [retry]);
 
   useEffect(() => {
@@ -72,38 +108,69 @@ export default function AudiosScreen() {
       setTotalPages(0);
       return;
     }
+
     let active = true;
+
     setLoading(true);
     setMediaError('');
     setAudios([]);
     setPage(0);
+
     fetchMediaPage('audios', selectedClass, 1, PAGE_SIZE)
       .then((result) => {
         if (!active) return;
+
         setAudios(result.data);
         setPage(result.pagination.page);
         setTotalPages(result.pagination.totalPages);
       })
       .catch((error: unknown) => {
-        if (active) setMediaError(getMediaErrorMessage(error, 'Impossible de récupérer les audios.'));
+        if (active) {
+          setMediaError(
+            getMediaErrorMessage(
+              error,
+              'Impossible de récupérer les audios.'
+            )
+          );
+        }
       })
       .finally(() => {
         if (active) setLoading(false);
       });
-    return () => { active = false; };
+
+    return () => {
+      active = false;
+    };
   }, [selectedClass, retry]);
 
   const loadMore = useCallback(async () => {
-    if (!selectedClass || loadingMore || loading || page >= totalPages) return;
+    if (
+      !selectedClass ||
+      loadingMore ||
+      loading ||
+      page >= totalPages
+    ) {
+      return;
+    }
+
     setLoadingMore(true);
     setMediaError('');
+
     try {
-      const result = await fetchMediaPage('audios', selectedClass, page + 1, PAGE_SIZE);
+      const result = await fetchMediaPage(
+        'audios',
+        selectedClass,
+        page + 1,
+        PAGE_SIZE
+      );
+
       setAudios((current) => [...current, ...result.data]);
       setPage(result.pagination.page);
       setTotalPages(result.pagination.totalPages);
     } catch (error) {
-      setMediaError(getMediaErrorMessage(error, 'Impossible de charger la suite.'));
+      setMediaError(
+        getMediaErrorMessage(error, 'Impossible de charger la suite.')
+      );
     } finally {
       setLoadingMore(false);
     }
@@ -111,33 +178,62 @@ export default function AudiosScreen() {
 
   const filteredAudios = useMemo(() => {
     const term = search.trim().toLocaleLowerCase('fr');
-    return term ? audios.filter((audio) => audio.title.toLocaleLowerCase('fr').includes(term)) : audios;
+
+    return term
+      ? audios.filter((audio) =>
+          audio.title.toLocaleLowerCase('fr').includes(term)
+        )
+      : audios;
   }, [audios, search]);
+
   const featured = filteredAudios[0];
 
-  const openAudio = useCallback(async (item: MediaItem) => {
-    try {
-      await WebBrowser.openBrowserAsync(getYouTubeUrl(item.youtube_video_id));
-    } catch {
-      setMediaError("Impossible d'ouvrir cet audio.");
-    }
+  // Play the selected audio inside the app
+  const openAudio = useCallback((item: MediaItem) => {
+    setSelectedAudio(item);
+    setIsPlaying(true);
+    setMediaError('');
   }, []);
+
+  // Open the original YouTube video for comments
+  const openYouTubeComments = useCallback(async () => {
+    if (!selectedAudio) return;
+
+    try {
+      await WebBrowser.openBrowserAsync(
+        getYouTubeUrl(selectedAudio.youtube_video_id)
+      );
+    } catch {
+      setMediaError("Impossible d'ouvrir YouTube.");
+    }
+  }, [selectedAudio]);
 
   return (
     <View style={styles.container}>
       <Header title="Enseignements Audio" />
+
       <ScrollView
+        ref={scrollViewRef}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         onScroll={handleTabBarScroll}
         scrollEventThrottle={16}
       >
-        <View style={styles.eyebrowRow}><View style={styles.eyebrowLine} /><Text style={styles.eyebrow}>ÉCOUTER & MÉDITER</Text></View>
+        <View style={styles.eyebrowRow}>
+          <View style={styles.eyebrowLine} />
+          <Text style={styles.eyebrow}>ÉCOUTER & MÉDITER</Text>
+        </View>
+
         <Text style={styles.pageTitle}>Enseignements Audio</Text>
-        <Text style={styles.intro}>Des paroles inspirantes et des enseignements bibliques à écouter où que vous soyez.</Text>
+
+        <Text style={styles.intro}>
+          Des paroles inspirantes et des enseignements bibliques à écouter
+          où que vous soyez.
+        </Text>
 
         <View style={styles.searchBox}>
           <Ionicons name="search" size={18} color="#8792A3" />
+
           <TextInput
             value={search}
             onChangeText={setSearch}
@@ -146,69 +242,401 @@ export default function AudiosScreen() {
             style={styles.searchInput}
             returnKeyType="search"
           />
-          {!!search && <TouchableOpacity onPress={() => setSearch('')} accessibilityLabel="Effacer la recherche"><Ionicons name="close-circle" size={18} color="#98A1AF" /></TouchableOpacity>}
+
+          {!!search && (
+            <TouchableOpacity
+              onPress={() => setSearch('')}
+              accessibilityLabel="Effacer la recherche"
+            >
+              <Ionicons
+                name="close-circle"
+                size={18}
+                color="#98A1AF"
+              />
+            </TouchableOpacity>
+          )}
         </View>
 
         <View style={styles.sectionHeading}>
-          <View><Text style={styles.sectionTitle}>Explorer par thème</Text><Text style={styles.sectionCaption}>Trouvez une voix qui vous inspire</Text></View>
-          <View style={styles.headingIcon}><Ionicons name="headset-outline" size={18} color="#A88632" /></View>
+          <View>
+            <Text style={styles.sectionTitle}>Explorer par thème</Text>
+            <Text style={styles.sectionCaption}>
+              Trouvez une voix qui vous inspire
+            </Text>
+          </View>
+
+          <View style={styles.headingIcon}>
+            <Ionicons
+              name="headset-outline"
+              size={18}
+              color="#A88632"
+            />
+          </View>
         </View>
+
         {classesLoading ? (
-          <View style={styles.inlineLoading}><ActivityIndicator color="#A88632" /><Text style={styles.mutedText}>Chargement des thèmes…</Text></View>
+          <View style={styles.inlineLoading}>
+            <ActivityIndicator color="#A88632" />
+            <Text style={styles.mutedText}>Chargement des thèmes…</Text>
+          </View>
         ) : classesError ? (
-          <View style={styles.notice}><Text style={styles.noticeText}>{classesError}</Text><TouchableOpacity onPress={() => setRetry((value) => value + 1)}><Text style={styles.retryText}>Réessayer</Text></TouchableOpacity></View>
+          <View style={styles.notice}>
+            <Text style={styles.noticeText}>{classesError}</Text>
+            <TouchableOpacity
+              onPress={() => setRetry((value) => value + 1)}
+            >
+              <Text style={styles.retryText}>Réessayer</Text>
+            </TouchableOpacity>
+          </View>
         ) : classes.length === 0 ? (
-          <View style={styles.notice}><Text style={styles.noticeText}>Aucune catégorie audio disponible pour le moment.</Text></View>
+          <View style={styles.notice}>
+            <Text style={styles.noticeText}>
+              Aucune catégorie audio disponible pour le moment.
+            </Text>
+          </View>
         ) : (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryList}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.categoryList}
+          >
             {classes.map((item) => {
               const active = item === selectedClass;
-              return <TouchableOpacity key={item} onPress={() => setSelectedClass(item)} style={[styles.categoryChip, active && styles.categoryChipActive]} activeOpacity={0.8}><Text style={[styles.categoryText, active && styles.categoryTextActive]} numberOfLines={1}>{item}</Text>{active && <Ionicons name="checkmark-circle" size={15} color="#F4D787" />}</TouchableOpacity>;
+
+              return (
+                <TouchableOpacity
+                  key={item}
+                  onPress={() => setSelectedClass(item)}
+                  style={[
+                    styles.categoryChip,
+                    active && styles.categoryChipActive,
+                  ]}
+                  activeOpacity={0.8}
+                >
+                  <Text
+                    style={[
+                      styles.categoryText,
+                      active && styles.categoryTextActive,
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {item}
+                  </Text>
+
+                  {active && (
+                    <Ionicons
+                      name="checkmark-circle"
+                      size={15}
+                      color="#F4D787"
+                    />
+                  )}
+                </TouchableOpacity>
+              );
             })}
           </ScrollView>
         )}
 
         {featured && !loading && (
-          <TouchableOpacity activeOpacity={0.92} onPress={() => openAudio(featured)} style={styles.featuredCard}>
+          <TouchableOpacity
+            activeOpacity={0.92}
+            onPress={() => openAudio(featured)}
+            style={styles.featuredCard}
+          >
             <ImageBackground
-              source={featured.thumbnail ? { uri: featured.thumbnail } : require('../../../assets/bible.jpg')}
+              source={
+                featured.thumbnail
+                  ? { uri: featured.thumbnail }
+                  : require('../../../assets/bible.jpg')
+              }
               style={styles.featuredImage}
               imageStyle={styles.featuredImageRadius}
             >
-              <LinearGradient colors={['rgba(8,24,48,0.02)', 'rgba(8,24,48,0.88)']} style={styles.featuredGradient}>
-                <View style={styles.featuredBadge}><Ionicons name="musical-notes" size={12} color="#F6D984" /><Text style={styles.featuredBadgeText}>SÉLECTION DU MOMENT</Text></View>
+              <LinearGradient
+                colors={[
+                  'rgba(8,24,48,0.02)',
+                  'rgba(8,24,48,0.88)',
+                ]}
+                style={styles.featuredGradient}
+              >
+                <View style={styles.featuredBadge}>
+                  <Ionicons
+                    name="musical-notes"
+                    size={12}
+                    color="#F6D984"
+                  />
+                  <Text style={styles.featuredBadgeText}>
+                    SÉLECTION DU MOMENT
+                  </Text>
+                </View>
+
                 <View style={styles.featuredBottom}>
-                  <Text style={styles.featuredCategory}>{featured.classification}</Text>
-                  <Text style={styles.featuredTitle} numberOfLines={2}>{featured.title}</Text>
-                  <View style={styles.featuredAction}><View style={styles.playButton}><Ionicons name="play" size={16} color="#12294B" /></View><Text style={styles.listenText}>Écouter maintenant</Text><Ionicons name="arrow-forward" size={16} color="#F6D984" /></View>
+                  <Text style={styles.featuredCategory}>
+                    {featured.classification}
+                  </Text>
+
+                  <Text style={styles.featuredTitle} numberOfLines={2}>
+                    {featured.title}
+                  </Text>
+
+                  <View style={styles.featuredAction}>
+                    <View style={styles.playButton}>
+                      <Ionicons
+                        name="play"
+                        size={16}
+                        color="#12294B"
+                      />
+                    </View>
+                    <Text style={styles.listenText}>
+                      Écouter maintenant
+                    </Text>
+                    <Ionicons
+                      name="arrow-forward"
+                      size={16}
+                      color="#F6D984"
+                    />
+                  </View>
                 </View>
               </LinearGradient>
             </ImageBackground>
           </TouchableOpacity>
         )}
 
+        {/* Embedded YouTube player */}
+        {selectedAudio && (
+          <View
+            onLayout={(event) => {
+              scrollViewRef.current?.scrollTo({
+                y: Math.max(0, event.nativeEvent.layout.y - 16),
+                animated: true,
+              });
+            }}
+            style={{
+              marginTop: 20,
+              marginBottom: 24,
+              marginHorizontal: 16,
+              padding: 14,
+              backgroundColor: '#FFFFFF',
+              borderRadius: 16,
+              borderWidth: StyleSheet.hairlineWidth,
+              borderColor: '#E4E7EC',
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 17,
+                fontWeight: '700',
+                color: '#12294B',
+                marginBottom: 12,
+              }}
+            >
+              {selectedAudio.title}
+            </Text>
+
+            <YoutubePlayer
+              height={220}
+              videoId={selectedAudio.youtube_video_id}
+              play={isPlaying}
+              onChangeState={(state) => {
+                if (state === 'ended') {
+                  setIsPlaying(false);
+                }
+              }}
+            />
+
+            <TouchableOpacity
+              onPress={openYouTubeComments}
+              activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel="Voir ou publier des commentaires sur YouTube"
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: '#C62828',
+                paddingVertical: 13,
+                paddingHorizontal: 16,
+                borderRadius: 10,
+                marginTop: 12,
+              }}
+            >
+              <Ionicons
+                name="logo-youtube"
+                size={20}
+                color="#FFFFFF"
+              />
+
+              <Text
+                style={{
+                  color: '#FFFFFF',
+                  fontWeight: '600',
+                  fontSize: 14,
+                  marginLeft: 8,
+                }}
+              >
+                Voir les commentaires sur YouTube
+              </Text>
+
+              <Ionicons
+                name="open-outline"
+                size={17}
+                color="#FFFFFF"
+                style={{ marginLeft: 8 }}
+              />
+            </TouchableOpacity>
+
+            <Text
+              style={{
+                fontSize: 12,
+                lineHeight: 18,
+                color: '#687386',
+                marginTop: 9,
+                textAlign: 'center',
+              }}
+            >
+              Pour lire ou publier des commentaires, ouvrez la vidéo sur
+              YouTube.
+            </Text>
+          </View>
+        )}
+
         <View style={styles.sectionHeadingList}>
-          <View><Text style={styles.sectionTitle}>{selectedClass || 'La collection'}</Text><Text style={styles.sectionCaption}>{loading ? 'Mise à jour de la collection…' : `${filteredAudios.length} ${filteredAudios.length > 1 ? 'enseignements affichés' : 'enseignement affiché'}`}</Text></View>
-          <View style={styles.headingIcon}><Ionicons name="library-outline" size={19} color="#A88632" /></View>
+          <View>
+            <Text style={styles.sectionTitle}>
+              {selectedClass || 'La collection'}
+            </Text>
+            <Text style={styles.sectionCaption}>
+              {loading
+                ? 'Mise à jour de la collection…'
+                : `${filteredAudios.length} ${
+                    filteredAudios.length > 1
+                      ? 'enseignements affichés'
+                      : 'enseignement affiché'
+                  }`}
+            </Text>
+          </View>
+
+          <View style={styles.headingIcon}>
+            <Ionicons
+              name="library-outline"
+              size={19}
+              color="#A88632"
+            />
+          </View>
         </View>
 
-        {loading && <View style={styles.loadingPanel}><ActivityIndicator size="large" color="#A88632" /><Text style={styles.mutedText}>Nous préparons votre sélection…</Text></View>}
-        {!!mediaError && <View style={styles.notice}><Text style={styles.noticeText}>{mediaError}</Text><TouchableOpacity onPress={() => setRetry((value) => value + 1)}><Text style={styles.retryText}>Réessayer</Text></TouchableOpacity></View>}
-        {!loading && !mediaError && filteredAudios.length === 0 && !!selectedClass && <View style={styles.emptyState}><View style={styles.emptyIcon}><Ionicons name="musical-notes-outline" size={24} color="#9C7B2E" /></View><Text style={styles.emptyTitle}>{search ? 'Aucun résultat' : 'Collection en préparation'}</Text><Text style={styles.emptyText}>{search ? 'Essayez un autre mot-clé.' : 'Aucun audio trouvé dans cette catégorie pour le moment.'}</Text></View>}
+        {loading && (
+          <View style={styles.loadingPanel}>
+            <ActivityIndicator size="large" color="#A88632" />
+            <Text style={styles.mutedText}>
+              Nous préparons votre sélection…
+            </Text>
+          </View>
+        )}
+
+        {!!mediaError && (
+          <View style={styles.notice}>
+            <Text style={styles.noticeText}>{mediaError}</Text>
+            <TouchableOpacity
+              onPress={() => setRetry((value) => value + 1)}
+            >
+              <Text style={styles.retryText}>Réessayer</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {!loading &&
+          !mediaError &&
+          filteredAudios.length === 0 &&
+          !!selectedClass && (
+            <View style={styles.emptyState}>
+              <View style={styles.emptyIcon}>
+                <Ionicons
+                  name="musical-notes-outline"
+                  size={24}
+                  color="#9C7B2E"
+                />
+              </View>
+
+              <Text style={styles.emptyTitle}>
+                {search ? 'Aucun résultat' : 'Collection en préparation'}
+              </Text>
+
+              <Text style={styles.emptyText}>
+                {search
+                  ? 'Essayez un autre mot-clé.'
+                  : 'Aucun audio trouvé dans cette catégorie pour le moment.'}
+              </Text>
+            </View>
+          )}
 
         {filteredAudios.map((audio) => (
-          <TouchableOpacity key={audio.youtube_video_id} style={styles.mediaCard} onPress={() => openAudio(audio)} activeOpacity={0.82}>
+          <TouchableOpacity
+            key={audio.youtube_video_id}
+            style={styles.mediaCard}
+            onPress={() => openAudio(audio)}
+            activeOpacity={0.82}
+          >
             <View style={styles.thumbnailWrap}>
-              <Image source={audio.thumbnail ? { uri: audio.thumbnail } : require('../../../assets/pimage.jpg')} style={styles.thumbnail} />
-              <View style={styles.thumbnailPlay}><Ionicons name="headset" size={12} color="#fff" /></View>
+              <Image
+                source={
+                  audio.thumbnail
+                    ? { uri: audio.thumbnail }
+                    : require('../../../assets/pimage.jpg')
+                }
+                style={styles.thumbnail}
+              />
+
+              <View style={styles.thumbnailPlay}>
+                <Ionicons name="headset" size={12} color="#fff" />
+              </View>
             </View>
-            <View style={styles.mediaInfo}><Text style={styles.mediaTitle} numberOfLines={2}>{audio.title}</Text><Text style={styles.mediaMeta} numberOfLines={1}>{audio.classification}{formatPublishedDate(audio.published_at) ? `  ·  ${formatPublishedDate(audio.published_at)}` : ''}</Text></View>
+
+            <View style={styles.mediaInfo}>
+              <Text style={styles.mediaTitle} numberOfLines={2}>
+                {audio.title}
+              </Text>
+
+              <Text style={styles.mediaMeta} numberOfLines={1}>
+                {audio.classification}
+                {formatPublishedDate(audio.published_at)
+                  ? `  ·  ${formatPublishedDate(audio.published_at)}`
+                  : ''}
+              </Text>
+            </View>
+
             <Ionicons name="play-circle" size={23} color="#B18A32" />
           </TouchableOpacity>
         ))}
 
-        {!loading && page < totalPages && <TouchableOpacity style={styles.loadMoreButton} onPress={loadMore} disabled={loadingMore} activeOpacity={0.8}>{loadingMore ? <ActivityIndicator color="#fff" /> : <><Text style={styles.loadMoreText}>Charger plus d’audios</Text><Ionicons name="arrow-down" size={16} color="#fff" /></>}</TouchableOpacity>}
-        {!loading && page > 0 && page >= totalPages && audios.length > 0 && <Text style={styles.endNote}>Vous êtes à jour sur cette collection.</Text>}
+        {!loading && page < totalPages && (
+          <TouchableOpacity
+            style={styles.loadMoreButton}
+            onPress={loadMore}
+            disabled={loadingMore}
+            activeOpacity={0.8}
+          >
+            {loadingMore ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <>
+                <Text style={styles.loadMoreText}>
+                  Charger plus d’audios
+                </Text>
+                <Ionicons name="arrow-down" size={16} color="#fff" />
+              </>
+            )}
+          </TouchableOpacity>
+        )}
+
+        {!loading &&
+          page > 0 &&
+          page >= totalPages &&
+          audios.length > 0 && (
+            <Text style={styles.endNote}>
+              Vous êtes à jour sur cette collection.
+            </Text>
+          )}
+
         <View style={styles.bottomPadding} />
       </ScrollView>
     </View>
