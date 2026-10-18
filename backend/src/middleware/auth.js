@@ -11,7 +11,7 @@ const verifyToken = (req, res, next) => {
 
     try {
         // 2. Verify the token using your secret key
-        const verified = jwt.verify(token, "my_secret");
+        const verified = jwt.verify(token, process.env.JWT_SECRET);
         
         // 3. Add the user data (like id) to the request object
         req.user = verified; 
