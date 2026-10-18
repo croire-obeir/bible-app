@@ -52,7 +52,6 @@ export default function AudiosScreen() {
   const [classes, setClasses] = useState<string[]>([]);
   const [selectedClass, setSelectedClass] = useState('');
   const [audios, setAudios] = useState<MediaItem[]>([]);
-  const [search, setSearch] = useState('');
   const [classesLoading, setClassesLoading] = useState(true);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -62,10 +61,12 @@ export default function AudiosScreen() {
   const [totalPages, setTotalPages] = useState(0);
   const [retry, setRetry] = useState(0);
 
-  // Selected audio and YouTube playback state
-  const [selectedAudio, setSelectedAudio] = useState<MediaItem | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
+  // Only the selected video's card displays the active player.
+  const [playingAudioId, setPlayingAudioId] = useState<string | null>(
+    null
+  );
 
+  // Fetch categories.
   useEffect(() => {
     let active = true;
 
@@ -79,7 +80,9 @@ export default function AudiosScreen() {
         setClasses(result);
 
         setSelectedClass((current) =>
-          current && result.includes(current) ? current : result[0] ?? ''
+          current && result.includes(current)
+            ? current
+            : result[0] ?? ''
         );
       })
       .catch((error: unknown) => {
@@ -101,11 +104,13 @@ export default function AudiosScreen() {
     };
   }, [retry]);
 
+  // Fetch the first page whenever the selected category changes.
   useEffect(() => {
     if (!selectedClass) {
       setAudios([]);
       setPage(0);
       setTotalPages(0);
+      setPlayingAudioId(null);
       return;
     }
 
@@ -115,6 +120,7 @@ export default function AudiosScreen() {
     setMediaError('');
     setAudios([]);
     setPage(0);
+    setPlayingAudioId(null);
 
     fetchMediaPage('audios', selectedClass, 1, PAGE_SIZE)
       .then((result) => {
@@ -143,6 +149,7 @@ export default function AudiosScreen() {
     };
   }, [selectedClass, retry]);
 
+  // Load additional pages.
   const loadMore = useCallback(async () => {
     if (
       !selectedClass ||
@@ -169,44 +176,46 @@ export default function AudiosScreen() {
       setTotalPages(result.pagination.totalPages);
     } catch (error) {
       setMediaError(
-        getMediaErrorMessage(error, 'Impossible de charger la suite.')
+        getMediaErrorMessage(
+          error,
+          'Impossible de charger la suite.'
+        )
       );
     } finally {
       setLoadingMore(false);
     }
-  }, [loading, loadingMore, page, selectedClass, totalPages]);
+  }, [
+    loading,
+    loadingMore,
+    page,
+    selectedClass,
+    totalPages,
+  ]);
 
-  const filteredAudios = useMemo(() => {
-    const term = search.trim().toLocaleLowerCase('fr');
+  
 
-    return term
-      ? audios.filter((audio) =>
-          audio.title.toLocaleLowerCase('fr').includes(term)
-        )
-      : audios;
-  }, [audios, search]);
-
-  const featured = filteredAudios[0];
-
-  // Play the selected audio inside the app
+  // Activate or deactivate playback in the selected card.
   const openAudio = useCallback((item: MediaItem) => {
-    setSelectedAudio(item);
-    setIsPlaying(true);
-    setMediaError('');
+    setPlayingAudioId((current) =>
+      current === item.youtube_video_id
+        ? null
+        : item.youtube_video_id
+    );
   }, []);
 
-  // Open the original YouTube video for comments
-  const openYouTubeComments = useCallback(async () => {
-    if (!selectedAudio) return;
-
-    try {
-      await WebBrowser.openBrowserAsync(
-        getYouTubeUrl(selectedAudio.youtube_video_id)
-      );
-    } catch {
-      setMediaError("Impossible d'ouvrir YouTube.");
-    }
-  }, [selectedAudio]);
+  // Open the corresponding YouTube video for comments.
+  const openYouTubeComments = useCallback(
+    async (item: MediaItem) => {
+      try {
+        await WebBrowser.openBrowserAsync(
+          getYouTubeUrl(item.youtube_video_id)
+        );
+      } catch {
+        setMediaError("Impossible d'ouvrir YouTube.");
+      }
+    },
+    []
+  );
 
   return (
     <View style={styles.container}>
@@ -219,47 +228,28 @@ export default function AudiosScreen() {
         onScroll={handleTabBarScroll}
         scrollEventThrottle={16}
       >
+        {/* Page introduction */}
         <View style={styles.eyebrowRow}>
           <View style={styles.eyebrowLine} />
           <Text style={styles.eyebrow}>ÉCOUTER & MÉDITER</Text>
         </View>
 
-        <Text style={styles.pageTitle}>Enseignements Audio</Text>
-
-        <Text style={styles.intro}>
-          Des paroles inspirantes et des enseignements bibliques à écouter
-          où que vous soyez.
+        <Text style={styles.pageTitle}>
+          Enseignements Audio
         </Text>
 
-        <View style={styles.searchBox}>
-          <Ionicons name="search" size={18} color="#8792A3" />
+        <Text style={styles.intro}>
+          Des paroles inspirantes et des enseignements bibliques à
+          écouter où que vous soyez.
+        </Text>
 
-          <TextInput
-            value={search}
-            onChangeText={setSearch}
-            placeholder="Rechercher un enseignement..."
-            placeholderTextColor="#98A1AF"
-            style={styles.searchInput}
-            returnKeyType="search"
-          />
-
-          {!!search && (
-            <TouchableOpacity
-              onPress={() => setSearch('')}
-              accessibilityLabel="Effacer la recherche"
-            >
-              <Ionicons
-                name="close-circle"
-                size={18}
-                color="#98A1AF"
-              />
-            </TouchableOpacity>
-          )}
-        </View>
-
+        
+        {/* Category heading */}
         <View style={styles.sectionHeading}>
           <View>
-            <Text style={styles.sectionTitle}>Explorer par thème</Text>
+            <Text style={styles.sectionTitle}>
+              Explorer par thème
+            </Text>
             <Text style={styles.sectionCaption}>
               Trouvez une voix qui vous inspire
             </Text>
@@ -274,10 +264,13 @@ export default function AudiosScreen() {
           </View>
         </View>
 
+        {/* Category filters */}
         {classesLoading ? (
           <View style={styles.inlineLoading}>
             <ActivityIndicator color="#A88632" />
-            <Text style={styles.mutedText}>Chargement des thèmes…</Text>
+            <Text style={styles.mutedText}>
+              Chargement des thèmes…
+            </Text>
           </View>
         ) : classesError ? (
           <View style={styles.notice}>
@@ -336,179 +329,18 @@ export default function AudiosScreen() {
           </ScrollView>
         )}
 
-        {featured && !loading && (
-          <TouchableOpacity
-            activeOpacity={0.92}
-            onPress={() => openAudio(featured)}
-            style={styles.featuredCard}
-          >
-            <ImageBackground
-              source={
-                featured.thumbnail
-                  ? { uri: featured.thumbnail }
-                  : require('../../../assets/bible.jpg')
-              }
-              style={styles.featuredImage}
-              imageStyle={styles.featuredImageRadius}
-            >
-              <LinearGradient
-                colors={[
-                  'rgba(8,24,48,0.02)',
-                  'rgba(8,24,48,0.88)',
-                ]}
-                style={styles.featuredGradient}
-              >
-                <View style={styles.featuredBadge}>
-                  <Ionicons
-                    name="musical-notes"
-                    size={12}
-                    color="#F6D984"
-                  />
-                  <Text style={styles.featuredBadgeText}>
-                    SÉLECTION DU MOMENT
-                  </Text>
-                </View>
-
-                <View style={styles.featuredBottom}>
-                  <Text style={styles.featuredCategory}>
-                    {featured.classification}
-                  </Text>
-
-                  <Text style={styles.featuredTitle} numberOfLines={2}>
-                    {featured.title}
-                  </Text>
-
-                  <View style={styles.featuredAction}>
-                    <View style={styles.playButton}>
-                      <Ionicons
-                        name="play"
-                        size={16}
-                        color="#12294B"
-                      />
-                    </View>
-                    <Text style={styles.listenText}>
-                      Écouter maintenant
-                    </Text>
-                    <Ionicons
-                      name="arrow-forward"
-                      size={16}
-                      color="#F6D984"
-                    />
-                  </View>
-                </View>
-              </LinearGradient>
-            </ImageBackground>
-          </TouchableOpacity>
-        )}
-
-        {/* Embedded YouTube player */}
-        {selectedAudio && (
-          <View
-            onLayout={(event) => {
-              scrollViewRef.current?.scrollTo({
-                y: Math.max(0, event.nativeEvent.layout.y - 16),
-                animated: true,
-              });
-            }}
-            style={{
-              marginTop: 20,
-              marginBottom: 24,
-              marginHorizontal: 16,
-              padding: 14,
-              backgroundColor: '#FFFFFF',
-              borderRadius: 16,
-              borderWidth: StyleSheet.hairlineWidth,
-              borderColor: '#E4E7EC',
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 17,
-                fontWeight: '700',
-                color: '#12294B',
-                marginBottom: 12,
-              }}
-            >
-              {selectedAudio.title}
-            </Text>
-
-            <YoutubePlayer
-              height={220}
-              videoId={selectedAudio.youtube_video_id}
-              play={isPlaying}
-              onChangeState={(state) => {
-                if (state === 'ended') {
-                  setIsPlaying(false);
-                }
-              }}
-            />
-
-            <TouchableOpacity
-              onPress={openYouTubeComments}
-              activeOpacity={0.8}
-              accessibilityRole="button"
-              accessibilityLabel="Voir ou publier des commentaires sur YouTube"
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: '#C62828',
-                paddingVertical: 13,
-                paddingHorizontal: 16,
-                borderRadius: 10,
-                marginTop: 12,
-              }}
-            >
-              <Ionicons
-                name="logo-youtube"
-                size={20}
-                color="#FFFFFF"
-              />
-
-              <Text
-                style={{
-                  color: '#FFFFFF',
-                  fontWeight: '600',
-                  fontSize: 14,
-                  marginLeft: 8,
-                }}
-              >
-                Voir les commentaires sur YouTube
-              </Text>
-
-              <Ionicons
-                name="open-outline"
-                size={17}
-                color="#FFFFFF"
-                style={{ marginLeft: 8 }}
-              />
-            </TouchableOpacity>
-
-            <Text
-              style={{
-                fontSize: 12,
-                lineHeight: 18,
-                color: '#687386',
-                marginTop: 9,
-                textAlign: 'center',
-              }}
-            >
-              Pour lire ou publier des commentaires, ouvrez la vidéo sur
-              YouTube.
-            </Text>
-          </View>
-        )}
-
+        {/* Collection heading */}
         <View style={styles.sectionHeadingList}>
           <View>
             <Text style={styles.sectionTitle}>
               {selectedClass || 'La collection'}
             </Text>
+
             <Text style={styles.sectionCaption}>
               {loading
                 ? 'Mise à jour de la collection…'
-                : `${filteredAudios.length} ${
-                    filteredAudios.length > 1
+                : `${audios.length} ${
+                    audios.length > 1
                       ? 'enseignements affichés'
                       : 'enseignement affiché'
                   }`}
@@ -524,6 +356,7 @@ export default function AudiosScreen() {
           </View>
         </View>
 
+        {/* Loading */}
         {loading && (
           <View style={styles.loadingPanel}>
             <ActivityIndicator size="large" color="#A88632" />
@@ -533,6 +366,7 @@ export default function AudiosScreen() {
           </View>
         )}
 
+        {/* Error */}
         {!!mediaError && (
           <View style={styles.notice}>
             <Text style={styles.noticeText}>{mediaError}</Text>
@@ -544,9 +378,10 @@ export default function AudiosScreen() {
           </View>
         )}
 
+        {/* Empty state */}
         {!loading &&
           !mediaError &&
-          filteredAudios.length === 0 &&
+          audios.length === 0 &&
           !!selectedClass && (
             <View style={styles.emptyState}>
               <View style={styles.emptyIcon}>
@@ -558,56 +393,144 @@ export default function AudiosScreen() {
               </View>
 
               <Text style={styles.emptyTitle}>
-                {search ? 'Aucun résultat' : 'Collection en préparation'}
+                 Collection en préparation
               </Text>
 
               <Text style={styles.emptyText}>
-                {search
-                  ? 'Essayez un autre mot-clé.'
-                  : 'Aucun audio trouvé dans cette catégorie pour le moment.'}
+                Aucun audio trouvé dans cette catégorie pour le moment.
               </Text>
             </View>
           )}
 
-        {filteredAudios.map((audio) => (
-          <TouchableOpacity
-            key={audio.youtube_video_id}
-            style={styles.mediaCard}
-            onPress={() => openAudio(audio)}
-            activeOpacity={0.82}
-          >
-            <View style={styles.thumbnailWrap}>
-              <Image
-                source={
-                  audio.thumbnail
-                    ? { uri: audio.thumbnail }
-                    : require('../../../assets/pimage.jpg')
-                }
-                style={styles.thumbnail}
-              />
+        {/* Video cards with inline playback */}
+        {!loading &&
+          audios.map((audio) => {
+            const isActive =
+              playingAudioId === audio.youtube_video_id;
 
-              <View style={styles.thumbnailPlay}>
-                <Ionicons name="headset" size={12} color="#fff" />
+            return (
+              <View
+                key={audio.youtube_video_id}
+                style={styles.inlineMediaCard}
+              >
+                {/* Thumbnail or embedded player */}
+                <View style={styles.inlinePlayerWrap}>
+                  {isActive ? (
+                    <YoutubePlayer
+                      height={220}
+                      videoId={audio.youtube_video_id}
+                      play={true}
+                      onChangeState={(state) => {
+                        if (state === 'ended') {
+                          setPlayingAudioId(null);
+                        }
+                      }}
+                    />
+                  ) : (
+                    <TouchableOpacity
+                      activeOpacity={0.9}
+                      onPress={() => openAudio(audio)}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Lire ${audio.title}`}
+                    >
+                      <ImageBackground
+                        source={
+                          audio.thumbnail
+                            ? { uri: audio.thumbnail }
+                            : require('../../../assets/pimage.jpg')
+                        }
+                        style={styles.inlinePlayerImage}
+                        imageStyle={styles.inlinePlayerImageRadius}
+                      >
+                        <LinearGradient
+                          colors={[
+                            'rgba(8,24,48,0.02)',
+                            'rgba(8,24,48,0.88)',
+                          ]}
+                          style={styles.inlinePlayerGradient}
+                        >
+                          <View style={styles.inlinePlayButton}>
+                            <Ionicons
+                              name="play"
+                              size={24}
+                              color="#12294B"
+                            />
+                          </View>
+
+                          <View style={styles.inlinePlayerBottom}>
+                            <Text
+                              style={styles.inlinePlayerCategory}
+                              numberOfLines={1}
+                            >
+                              {audio.classification}
+                            </Text>
+
+                            <Text
+                              style={styles.inlinePlayerTitle}
+                              numberOfLines={2}
+                            >
+                              {audio.title}
+                            </Text>
+                          </View>
+                        </LinearGradient>
+                      </ImageBackground>
+                    </TouchableOpacity>
+                  )}
+                </View>
+
+                {/* Title and metadata */}
+                <View style={styles.inlineMediaInfo}>
+                  <View style={styles.inlineMediaText}>
+                    <Text
+                      style={styles.mediaTitle}
+                      numberOfLines={2}
+                    >
+                      {audio.title}
+                    </Text>
+
+                    <Text
+                      style={styles.mediaMeta}
+                      numberOfLines={2}
+                    >
+                      {audio.classification}
+                      {formatPublishedDate(audio.published_at)
+                        ? `  ·  ${formatPublishedDate(
+                            audio.published_at
+                          )}`
+                        : ''}
+                    </Text>
+                  </View>
+
+                  {/* Comments button for this specific video */}
+                  <TouchableOpacity
+                    onPress={() => openYouTubeComments(audio)}
+                    activeOpacity={0.8}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Voir les commentaires de ${audio.title} sur YouTube`}
+                    style={styles.inlineCommentsButton}
+                  >
+                    <Ionicons
+                      name="logo-youtube"
+                      size={19}
+                      color="#FFFFFF"
+                    />
+
+                    <Text style={styles.inlineCommentsText}>
+                       commenter sur YouTube
+                    </Text>
+
+                    <Ionicons
+                      name="open-outline"
+                      size={16}
+                      color="#FFFFFF"
+                    />
+                  </TouchableOpacity>
+                </View>
               </View>
-            </View>
+            );
+          })}
 
-            <View style={styles.mediaInfo}>
-              <Text style={styles.mediaTitle} numberOfLines={2}>
-                {audio.title}
-              </Text>
-
-              <Text style={styles.mediaMeta} numberOfLines={1}>
-                {audio.classification}
-                {formatPublishedDate(audio.published_at)
-                  ? `  ·  ${formatPublishedDate(audio.published_at)}`
-                  : ''}
-              </Text>
-            </View>
-
-            <Ionicons name="play-circle" size={23} color="#B18A32" />
-          </TouchableOpacity>
-        ))}
-
+        {/* Load more */}
         {!loading && page < totalPages && (
           <TouchableOpacity
             style={styles.loadMoreButton}
@@ -616,18 +539,23 @@ export default function AudiosScreen() {
             activeOpacity={0.8}
           >
             {loadingMore ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color="#FFFFFF" />
             ) : (
               <>
                 <Text style={styles.loadMoreText}>
                   Charger plus d’audios
                 </Text>
-                <Ionicons name="arrow-down" size={16} color="#fff" />
+                <Ionicons
+                  name="arrow-down"
+                  size={16}
+                  color="#FFFFFF"
+                />
               </>
             )}
           </TouchableOpacity>
         )}
 
+        {/* End of collection */}
         {!loading &&
           page > 0 &&
           page >= totalPages &&
@@ -651,8 +579,6 @@ const styles = StyleSheet.create({
   eyebrow: { color: '#A17C2C', fontSize: 10, letterSpacing: 2, fontWeight: '800' },
   pageTitle: { color: '#102B50', fontFamily: 'serif', fontSize: 31, fontWeight: '700', marginTop: 9 },
   intro: { color: '#697587', fontSize: 14, lineHeight: 21, marginTop: 7, marginBottom: 18 },
-  searchBox: { minHeight: 50, borderRadius: 15, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E9E7E0', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 15, gap: 10, shadowColor: '#1F3554', shadowOpacity: 0.04, shadowRadius: 9, elevation: 1 },
-  searchInput: { flex: 1, color: '#233A59', fontSize: 14, paddingVertical: 10 },
   sectionHeading: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 25, marginBottom: 12 },
   sectionHeadingList: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 26, marginBottom: 13 },
   sectionTitle: { color: '#102B50', fontSize: 18, fontWeight: '700' },
@@ -665,18 +591,6 @@ const styles = StyleSheet.create({
   categoryTextActive: { color: '#fff' },
   inlineLoading: { minHeight: 52, flexDirection: 'row', alignItems: 'center', gap: 10 },
   mutedText: { color: '#8A94A3', fontSize: 13 },
-  featuredCard: { height: 250, marginTop: 23, borderRadius: 20, overflow: 'hidden', backgroundColor: '#183354', shadowColor: '#102B50', shadowOpacity: 0.14, shadowRadius: 12, elevation: 4 },
-  featuredImage: { flex: 1 },
-  featuredImageRadius: { borderRadius: 20 },
-  featuredGradient: { flex: 1, padding: 18, justifyContent: 'space-between' },
-  featuredBadge: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 7, borderRadius: 20, backgroundColor: 'rgba(16,43,80,0.82)' },
-  featuredBadgeText: { color: '#F6D984', fontSize: 9, fontWeight: '800', letterSpacing: 1.1 },
-  featuredBottom: { gap: 7 },
-  featuredCategory: { color: '#F4D787', fontSize: 10, fontWeight: '800', letterSpacing: 1 },
-  featuredTitle: { color: '#fff', fontSize: 21, lineHeight: 27, fontWeight: '700' },
-  featuredAction: { flexDirection: 'row', alignItems: 'center', gap: 9, marginTop: 3 },
-  playButton: { width: 34, height: 34, borderRadius: 17, backgroundColor: '#F4D787', alignItems: 'center', justifyContent: 'center' },
-  listenText: { color: '#fff', fontSize: 12, fontWeight: '700', flex: 1 },
   loadingPanel: { minHeight: 150, alignItems: 'center', justifyContent: 'center', gap: 12 },
   notice: { padding: 15, backgroundColor: '#FFF8E7', borderColor: '#F0DDAA', borderWidth: 1, borderRadius: 14, gap: 8, marginTop: 10 },
   noticeText: { color: '#725C2D', fontSize: 13, lineHeight: 19 },
@@ -696,4 +610,103 @@ const styles = StyleSheet.create({
   loadMoreText: { color: '#fff', fontSize: 13, fontWeight: '700' },
   endNote: { color: '#9BA3AE', fontSize: 11, textAlign: 'center', marginTop: 14 },
   bottomPadding: { height: 20 },
+  inlineMediaCard: {
+  marginHorizontal: 16,
+  marginBottom: 20,
+  backgroundColor: '#FFFFFF',
+  borderRadius: 16,
+  overflow: 'hidden',
+  borderWidth: StyleSheet.hairlineWidth,
+  borderColor: '#E4E7EC',
+  shadowColor: '#12294B',
+  shadowOffset: { width: 0, height: 3 },
+  shadowOpacity: 0.07,
+  shadowRadius: 8,
+  elevation: 2,
+},
+
+inlinePlayerWrap: {
+  width: '100%',
+  overflow: 'hidden',
+  backgroundColor: '#081830',
+},
+
+inlinePlayerImage: {
+  width: '100%',
+  height: 220,
+  justifyContent: 'center',
+},
+
+inlinePlayerImageRadius: {
+  borderTopLeftRadius: 16,
+  borderTopRightRadius: 16,
+},
+
+inlinePlayerGradient: {
+  flex: 1,
+  justifyContent: 'center',
+  padding: 18,
+},
+
+inlinePlayButton: {
+  alignSelf: 'center',
+  width: 56,
+  height: 56,
+  borderRadius: 28,
+  backgroundColor: '#F6D984',
+  alignItems: 'center',
+  justifyContent: 'center',
+  borderWidth: 2,
+  borderColor: '#FFFFFF',
+},
+
+inlinePlayerBottom: {
+  position: 'absolute',
+  left: 16,
+  right: 16,
+  bottom: 14,
+},
+
+inlinePlayerCategory: {
+  color: '#F6D984',
+  fontSize: 11,
+  fontWeight: '700',
+  textTransform: 'uppercase',
+  marginBottom: 5,
+},
+
+inlinePlayerTitle: {
+  color: '#FFFFFF',
+  fontSize: 17,
+  fontWeight: '700',
+  lineHeight: 23,
+},
+
+inlineMediaInfo: {
+  padding: 14,
+  gap: 12,
+},
+
+inlineMediaText: {
+  gap: 5,
+},
+
+inlineCommentsButton: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 8,
+  backgroundColor: '#C62828',
+  paddingVertical: 13,
+  paddingHorizontal: 12,
+  borderRadius: 10,
+  alignSelf: 'stretch',
+},
+
+inlineCommentsText: {
+  color: '#FFFFFF',
+  fontWeight: '600',
+  fontSize: 13,
+  flexShrink: 1,
+},
 });
