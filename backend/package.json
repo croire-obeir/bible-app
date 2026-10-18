@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "migrate": "knex migrate:latest --env-file=.env",
-    "start": "npm run migrate && node --env-file=.env server.js",
+    "migrate": "knex migrate:latest",
+    "start": "npm run migrate && node server.js",
     "dev": "npm run migrate && nodemon --env-file=.env server.js"
   },
   "dependencies": {
