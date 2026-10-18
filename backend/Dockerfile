@@ -17,12 +17,18 @@ CMD npx knex migrate:latest --knexfile ./src/config/knexfile.js --env-file=.env 
 
 # Stage 2: Production
 FROM node:24-alpine AS production
+
 WORKDIR /app
-COPY --from=base /app/package*.json ./
+
+ENV NODE_ENV=production
+
+COPY package*.json ./
 RUN npm ci --omit=dev
-COPY --from=base /app .
+
+COPY --chown=node:node . .
 
 USER node
 
-# In production, we chain migrations and the server start
-CMD npx knex migrate:latest --knexfile ./src/config/knexfile.js --env-file=.env && node --env-file=.env server.js
+EXPOSE 3000
+
+CMD ["npm", "start"]
