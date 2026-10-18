@@ -33,58 +33,6 @@ if (!AUDIOS_PLAYLIST_ID) {
 
 
 
-// export const getVideos = async () => {
-//   try {
-//     const allItems = [];
-//     let nextPageToken = undefined;
-
-//     do {
-//       const response = await youtube.playlistItems.list({
-//         part: 'snippet,contentDetails',
-//         playlistId: VIDEOS_PLAYLIST_ID,
-//         maxResults: 50,
-//         pageToken: nextPageToken,
-//       });
-
-//       allItems.push(...(response.data.items || []));
-
-//       nextPageToken = response.data.nextPageToken;
-//     } while (nextPageToken);
-
-//     const classifiedVideos = {};
-
-//     allItems.forEach((item) => {
-//       const title = item.snippet.title;
-
-//       // Everything before the first " - "
-//       const classification = title.split(' - ')[0].trim();
-
-//       const video = {
-//         videoId: item.contentDetails.videoId,
-//         title,
-//         thumbnail:
-//           item.snippet.thumbnails?.high?.url ??
-//           item.snippet.thumbnails?.default?.url,
-//         publishedAt: item.snippet.publishedAt,
-//       };
-
-//       if (!classifiedVideos[classification]) {
-//         classifiedVideos[classification] = [];
-//       }
-
-//       classifiedVideos[classification].push(video);
-//     });
-
-//     return classifiedVideos;
-//   } catch (error) {
-//     console.error(
-//       'YouTube API error:',
-//       error.response?.data || error.message
-//     );
-
-//     throw new Error("Échec de la récupération des vidéos YouTube");
-//   }
-// };
 
 export const syncVideosToDatabase = async () => {
   try {
