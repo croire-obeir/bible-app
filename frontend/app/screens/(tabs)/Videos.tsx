@@ -25,11 +25,13 @@ import {
   MediaItem,
 } from '../../../api/services/mediaServices';
 
+
 const PAGE_SIZE = 10;
 
 function formatPublishedDate(value: string): string {
   const date = new Date(value.replace(' ', 'T'));
   if (Number.isNaN(date.getTime())) return '';
+
   return date.toLocaleDateString('fr-FR', {
     day: 'numeric',
     month: 'short',
@@ -44,7 +46,6 @@ export default function VideosScreen() {
   const [classes, setClasses] = useState<string[]>([]);
   const [selectedClass, setSelectedClass] = useState('');
   const [videos, setVideos] = useState<MediaItem[]>([]);
-  const [search, setSearch] = useState('');
   const [classesLoading, setClassesLoading] = useState(true);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -54,18 +55,19 @@ export default function VideosScreen() {
   const [totalPages, setTotalPages] = useState(0);
   const [retry, setRetry] = useState(0);
 
-  // Embedded YouTube player state
-  const [selectedVideo, setSelectedVideo] = useState<MediaItem | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
+  // ID of the video currently playing inline.
+  const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
+
     setClassesLoading(true);
     setClassesError('');
 
     fetchMediaClasses('videos')
       .then((result) => {
         if (!active) return;
+
         setClasses(result);
         setSelectedClass((current) =>
           current && result.includes(current) ? current : result[0] ?? ''
@@ -74,7 +76,10 @@ export default function VideosScreen() {
       .catch((error: unknown) => {
         if (active) {
           setClassesError(
-            getMediaErrorMessage(error, 'Impossible de récupérer les catégories.')
+            getMediaErrorMessage(
+              error,
+              'Impossible de récupérer les catégories.'
+            )
           );
         }
       })
@@ -92,18 +97,22 @@ export default function VideosScreen() {
       setVideos([]);
       setPage(0);
       setTotalPages(0);
+      setPlayingVideoId(null);
       return;
     }
 
     let active = true;
+
     setLoading(true);
     setMediaError('');
     setVideos([]);
     setPage(0);
+    setPlayingVideoId(null);
 
     fetchMediaPage('videos', selectedClass, 1, PAGE_SIZE)
       .then((result) => {
         if (!active) return;
+
         setVideos(result.data);
         setPage(result.pagination.page);
         setTotalPages(result.pagination.totalPages);
@@ -111,7 +120,10 @@ export default function VideosScreen() {
       .catch((error: unknown) => {
         if (active) {
           setMediaError(
-            getMediaErrorMessage(error, 'Impossible de récupérer les vidéos.')
+            getMediaErrorMessage(
+              error,
+              'Impossible de récupérer les vidéos.'
+            )
           );
         }
       })
@@ -125,7 +137,14 @@ export default function VideosScreen() {
   }, [selectedClass, retry]);
 
   const loadMore = useCallback(async () => {
-    if (!selectedClass || loadingMore || loading || page >= totalPages) return;
+    if (
+      !selectedClass ||
+      loadingMore ||
+      loading ||
+      page >= totalPages
+    ) {
+      return;
+    }
 
     setLoadingMore(true);
     setMediaError('');
@@ -137,6 +156,7 @@ export default function VideosScreen() {
         page + 1,
         PAGE_SIZE
       );
+
       setVideos((current) => [...current, ...result.data]);
       setPage(result.pagination.page);
       setTotalPages(result.pagination.totalPages);
@@ -149,36 +169,24 @@ export default function VideosScreen() {
     }
   }, [loading, loadingMore, page, selectedClass, totalPages]);
 
-  const filteredVideos = useMemo(() => {
-    const term = search.trim().toLocaleLowerCase('fr');
-    return term
-      ? videos.filter((video) =>
-          video.title.toLocaleLowerCase('fr').includes(term)
-        )
-      : videos;
-  }, [search, videos]);
-
-  const featured = filteredVideos[0];
-
-  // Play inside the app instead of opening YouTube immediately.
+  // Tap once to play inline; tap the same card again to close it.
   const openVideo = useCallback((item: MediaItem) => {
-    setSelectedVideo(item);
-    setIsPlaying(true);
+    setPlayingVideoId((current) =>
+      current === item.youtube_video_id ? null : item.youtube_video_id
+    );
     setMediaError('');
   }, []);
 
-  // Open the selected video's YouTube page for comments.
-  const openYouTubeComments = useCallback(async () => {
-    if (!selectedVideo) return;
-
+  // Open the corresponding YouTube video to view or post comments.
+  const openYouTubeComments = useCallback(async (item: MediaItem) => {
     try {
       await WebBrowser.openBrowserAsync(
-        getYouTubeUrl(selectedVideo.youtube_video_id)
+        getYouTubeUrl(item.youtube_video_id)
       );
     } catch {
       setMediaError("Impossible d'ouvrir YouTube.");
     }
-  }, [selectedVideo]);
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -197,36 +205,20 @@ export default function VideosScreen() {
         </View>
 
         <Text style={styles.pageTitle}>Vidéos Sacrées</Text>
+
         <Text style={styles.intro}>
           Enseignements, témoignages et découvertes bibliques pour nourrir
           votre foi, à votre rythme.
         </Text>
 
-        <View style={styles.searchBox}>
-          <Ionicons name="search" size={18} color="#8792A3" />
-          <TextInput
-            value={search}
-            onChangeText={setSearch}
-            placeholder="Rechercher une vidéo..."
-            placeholderTextColor="#98A1AF"
-            style={styles.searchInput}
-            returnKeyType="search"
-          />
-          {!!search && (
-            <TouchableOpacity
-              onPress={() => setSearch('')}
-              accessibilityLabel="Effacer la recherche"
-            >
-              <Ionicons name="close-circle" size={18} color="#98A1AF" />
-            </TouchableOpacity>
-          )}
-        </View>
-
         <View style={styles.sectionHeading}>
           <View>
             <Text style={styles.sectionTitle}>Explorer par thème</Text>
-            <Text style={styles.sectionCaption}>Choisissez une collection</Text>
+            <Text style={styles.sectionCaption}>
+              Choisissez une collection
+            </Text>
           </View>
+
           <View style={styles.headingIcon}>
             <Ionicons name="albums-outline" size={18} color="#A88632" />
           </View>
@@ -240,7 +232,9 @@ export default function VideosScreen() {
         ) : classesError ? (
           <View style={styles.notice}>
             <Text style={styles.noticeText}>{classesError}</Text>
-            <TouchableOpacity onPress={() => setRetry((value) => value + 1)}>
+            <TouchableOpacity
+              onPress={() => setRetry((value) => value + 1)}
+            >
               <Text style={styles.retryText}>Réessayer</Text>
             </TouchableOpacity>
           </View>
@@ -278,6 +272,7 @@ export default function VideosScreen() {
                   >
                     {item}
                   </Text>
+
                   {active && (
                     <Ionicons
                       name="checkmark-circle"
@@ -291,160 +286,29 @@ export default function VideosScreen() {
           </ScrollView>
         )}
 
-        {featured && !loading && (
-          <TouchableOpacity
-            activeOpacity={0.92}
-            onPress={() => openVideo(featured)}
-            style={styles.featuredCard}
-          >
-            <ImageBackground
-              source={
-                featured.thumbnail
-                  ? { uri: featured.thumbnail }
-                  : require('../../../assets/bible.jpg')
-              }
-              style={styles.featuredImage}
-              imageStyle={styles.featuredImageRadius}
-            >
-              <LinearGradient
-                colors={['rgba(8,24,48,0.02)', 'rgba(8,24,48,0.88)']}
-                style={styles.featuredGradient}
-              >
-                <View style={styles.featuredBadge}>
-                  <Ionicons name="sparkles" size={12} color="#F6D984" />
-                  <Text style={styles.featuredBadgeText}>À DÉCOUVRIR</Text>
-                </View>
-                <View style={styles.featuredBottom}>
-                  <Text style={styles.featuredCategory}>
-                    {featured.classification}
-                  </Text>
-                  <Text style={styles.featuredTitle} numberOfLines={2}>
-                    {featured.title}
-                  </Text>
-                  <View style={styles.featuredAction}>
-                    <View style={styles.playButton}>
-                      <Ionicons name="play" size={16} color="#12294B" />
-                    </View>
-                    <Text style={styles.watchText}>Regarder la vidéo</Text>
-                    <Ionicons
-                      name="arrow-forward"
-                      size={16}
-                      color="#F6D984"
-                    />
-                  </View>
-                </View>
-              </LinearGradient>
-            </ImageBackground>
-          </TouchableOpacity>
-        )}
-
-        {/* Embedded YouTube player and comments link */}
-        {selectedVideo && (
-          <View
-            onLayout={(event) => {
-              scrollViewRef.current?.scrollTo({
-                y: Math.max(0, event.nativeEvent.layout.y - 16),
-                animated: true,
-              });
-            }}
-            style={{
-              marginTop: 20,
-              marginBottom: 24,
-              marginHorizontal: 16,
-              padding: 14,
-              backgroundColor: '#FFFFFF',
-              borderRadius: 16,
-              borderWidth: StyleSheet.hairlineWidth,
-              borderColor: '#E4E7EC',
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 17,
-                fontWeight: '700',
-                color: '#12294B',
-                marginBottom: 12,
-              }}
-            >
-              {selectedVideo.title}
-            </Text>
-
-            <YoutubePlayer
-              height={220}
-              videoId={selectedVideo.youtube_video_id}
-              play={isPlaying}
-              onChangeState={(state) => {
-                if (state === 'ended') {
-                  setIsPlaying(false);
-                }
-              }}
-            />
-
-            <TouchableOpacity
-              onPress={openYouTubeComments}
-              activeOpacity={0.8}
-              accessibilityRole="button"
-              accessibilityLabel="Voir ou publier des commentaires sur YouTube"
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: '#C62828',
-                paddingVertical: 13,
-                paddingHorizontal: 16,
-                borderRadius: 10,
-                marginTop: 12,
-              }}
-            >
-              <Ionicons name="logo-youtube" size={20} color="#FFFFFF" />
-              <Text
-                style={{
-                  color: '#FFFFFF',
-                  fontWeight: '600',
-                  fontSize: 14,
-                  marginLeft: 8,
-                }}
-              >
-                Voir les commentaires sur YouTube
-              </Text>
-              <Ionicons
-                name="open-outline"
-                size={17}
-                color="#FFFFFF"
-                style={{ marginLeft: 8 }}
-              />
-            </TouchableOpacity>
-
-            <Text
-              style={{
-                fontSize: 12,
-                lineHeight: 18,
-                color: '#687386',
-                marginTop: 9,
-                textAlign: 'center',
-              }}
-            >
-              Pour lire ou publier des commentaires, ouvrez la vidéo sur
-              YouTube.
-            </Text>
-          </View>
-        )}
-
         <View style={styles.sectionHeadingList}>
           <View>
             <Text style={styles.sectionTitle}>
               {selectedClass || 'La collection'}
             </Text>
+
             <Text style={styles.sectionCaption}>
               {loading
                 ? 'Mise à jour de la collection…'
-                : `${filteredVideos.length} ${
-                    filteredVideos.length > 1 ? 'vidéos affichées' : 'vidéo affichée'
+                : `${videos.length} ${
+                    videos.length > 1
+                      ? 'vidéos affichées'
+                      : 'vidéo affichée'
                   }`}
             </Text>
           </View>
+
           <View style={styles.headingIcon}>
-            <Ionicons name="play-circle-outline" size={19} color="#A88632" />
+            <Ionicons
+              name="play-circle-outline"
+              size={19}
+              color="#A88632"
+            />
           </View>
         </View>
 
@@ -460,62 +324,147 @@ export default function VideosScreen() {
         {!!mediaError && (
           <View style={styles.notice}>
             <Text style={styles.noticeText}>{mediaError}</Text>
-            <TouchableOpacity onPress={() => setRetry((value) => value + 1)}>
+            <TouchableOpacity
+              onPress={() => setRetry((value) => value + 1)}
+            >
               <Text style={styles.retryText}>Réessayer</Text>
             </TouchableOpacity>
           </View>
         )}
 
-        {!loading && !mediaError && filteredVideos.length === 0 && !!selectedClass && (
-          <View style={styles.emptyState}>
-            <View style={styles.emptyIcon}>
-              <Ionicons name="videocam-outline" size={24} color="#9C7B2E" />
-            </View>
-            <Text style={styles.emptyTitle}>
-              {search ? 'Aucun résultat' : 'Collection en préparation'}
-            </Text>
-            <Text style={styles.emptyText}>
-              {search
-                ? 'Essayez un autre mot-clé.'
-                : 'Aucune vidéo trouvée dans cette catégorie pour le moment.'}
-            </Text>
-          </View>
-        )}
+        {!loading &&
+          !mediaError &&
+          videos.length === 0 &&
+          !!selectedClass && (
+            <View style={styles.emptyState}>
+              <View style={styles.emptyIcon}>
+                <Ionicons
+                  name="videocam-outline"
+                  size={24}
+                  color="#9C7B2E"
+                />
+              </View>
 
-        {filteredVideos.map((video) => (
-          <TouchableOpacity
-            key={video.youtube_video_id}
-            style={styles.mediaCard}
-            onPress={() => openVideo(video)}
-            activeOpacity={0.82}
-          >
-            <View style={styles.thumbnailWrap}>
-              <Image
-                source={
-                  video.thumbnail
-                    ? { uri: video.thumbnail }
-                    : require('../../../assets/pimage.jpg')
-                }
-                style={styles.thumbnail}
-              />
-              <View style={styles.thumbnailPlay}>
-                <Ionicons name="play" size={12} color="#fff" />
+              <Text style={styles.emptyTitle}>
+                Collection en préparation
+              </Text>
+
+              <Text style={styles.emptyText}>
+                Aucune vidéo trouvée dans cette catégorie pour le moment.
+              </Text>
+            </View>
+          )}
+
+        {videos.map((video) => {
+          const isActive =
+            playingVideoId === video.youtube_video_id;
+
+          return (
+            <View
+              key={video.youtube_video_id}
+              style={styles.inlineMediaCard}
+            >
+              {isActive ? (
+                <View style={styles.inlinePlayerWrap}>
+                  <YoutubePlayer
+                    height={220}
+                    videoId={video.youtube_video_id}
+                    play={true}
+                    onChangeState={(state) => {
+                      if (state === 'ended') {
+                        setPlayingVideoId(null);
+                      }
+                    }}
+                  />
+                </View>
+              ) : (
+                <TouchableOpacity
+                  activeOpacity={0.9}
+                  onPress={() => openVideo(video)}
+                >
+                  <ImageBackground
+                    source={
+                      video.thumbnail
+                        ? { uri: video.thumbnail }
+                        : require('../../../assets/pimage.jpg')
+                    }
+                    style={styles.inlinePlayerImage}
+                    imageStyle={styles.inlinePlayerImageRadius}
+                  >
+                    <LinearGradient
+                      colors={[
+                        'rgba(8,24,48,0.04)',
+                        'rgba(8,24,48,0.88)',
+                      ]}
+                      style={styles.inlinePlayerGradient}
+                    >
+                      <View style={styles.inlinePlayButton}>
+                        <Ionicons
+                          name="play"
+                          size={22}
+                          color="#12294B"
+                        />
+                      </View>
+
+                      <View style={styles.inlinePlayerBottom}>
+                        <Text
+                          style={styles.inlinePlayerCategory}
+                          numberOfLines={1}
+                        >
+                          {video.classification}
+                        </Text>
+
+                        <Text
+                          style={styles.inlinePlayerTitle}
+                          numberOfLines={2}
+                        >
+                          {video.title}
+                        </Text>
+                      </View>
+                    </LinearGradient>
+                  </ImageBackground>
+                </TouchableOpacity>
+              )}
+
+              <View style={styles.inlineMediaInfo}>
+                <Text style={styles.mediaTitle} numberOfLines={2}>
+                  {video.title}
+                </Text>
+
+                <Text style={styles.mediaMeta} numberOfLines={1}>
+                  {video.classification}
+                  {formatPublishedDate(video.published_at)
+                    ? `  ·  ${formatPublishedDate(video.published_at)}`
+                    : ''}
+                </Text>
+
+                <TouchableOpacity
+                  onPress={() => openYouTubeComments(video)}
+                  activeOpacity={0.8}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Voir ou publier des commentaires sur ${video.title} sur YouTube`}
+                  style={styles.inlineCommentsButton}
+                >
+                  <Ionicons
+                    name="logo-youtube"
+                    size={18}
+                    color="#FFFFFF"
+                  />
+
+                  <Text style={styles.inlineCommentsText}>
+                    Voir les commentaires sur YouTube
+                  </Text>
+
+                  <Ionicons
+                    name="open-outline"
+                    size={16}
+                    color="#FFFFFF"
+                  />
+                </TouchableOpacity>
               </View>
             </View>
-            <View style={styles.mediaInfo}>
-              <Text style={styles.mediaTitle} numberOfLines={2}>
-                {video.title}
-              </Text>
-              <Text style={styles.mediaMeta} numberOfLines={1}>
-                {video.classification}
-                {formatPublishedDate(video.published_at)
-                  ? `  ·  ${formatPublishedDate(video.published_at)}`
-                  : ''}
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={18} color="#B2BBC7" />
-          </TouchableOpacity>
-        ))}
+          );
+        })}
 
         {!loading && page < totalPages && (
           <TouchableOpacity
@@ -525,27 +474,37 @@ export default function VideosScreen() {
             activeOpacity={0.8}
           >
             {loadingMore ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color="#FFFFFF" />
             ) : (
               <>
-                <Text style={styles.loadMoreText}>Charger plus de vidéos</Text>
-                <Ionicons name="arrow-down" size={16} color="#fff" />
+                <Text style={styles.loadMoreText}>
+                  Charger plus de vidéos
+                </Text>
+                <Ionicons
+                  name="arrow-down"
+                  size={16}
+                  color="#FFFFFF"
+                />
               </>
             )}
           </TouchableOpacity>
         )}
 
-        {!loading && page > 0 && page >= totalPages && videos.length > 0 && (
-          <Text style={styles.endNote}>
-            Vous êtes à jour sur cette collection.
-          </Text>
-        )}
+        {!loading &&
+          page > 0 &&
+          page >= totalPages &&
+          videos.length > 0 && (
+            <Text style={styles.endNote}>
+              Vous êtes à jour sur cette collection.
+            </Text>
+          )}
 
         <View style={styles.bottomPadding} />
       </ScrollView>
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8F7F3' },
@@ -600,4 +559,107 @@ const styles = StyleSheet.create({
   loadMoreText: { color: '#fff', fontSize: 13, fontWeight: '700' },
   endNote: { color: '#9BA3AE', fontSize: 11, textAlign: 'center', marginTop: 14 },
   bottomPadding: { height: 20 },
+  inlineMediaCard: {
+  marginHorizontal: 16,
+  marginBottom: 18,
+  backgroundColor: '#FFFFFF',
+  borderRadius: 16,
+  borderWidth: StyleSheet.hairlineWidth,
+  borderColor: '#E4E7EC',
+  overflow: 'hidden',
+
+  // Card shadow
+  shadowColor: '#12294B',
+  shadowOffset: { width: 0, height: 4 },
+  shadowOpacity: 0.08,
+  shadowRadius: 10,
+  elevation: 3,
+},
+
+inlinePlayerWrap: {
+  width: '100%',
+  overflow: 'hidden',
+},
+
+inlinePlayerImage: {
+  width: '100%',
+  height: 220,
+  justifyContent: 'flex-end',
+},
+
+inlinePlayerImageRadius: {
+  borderTopLeftRadius: 15,
+  borderTopRightRadius: 15,
+},
+
+inlinePlayerGradient: {
+  flex: 1,
+  justifyContent: 'center',
+  alignItems: 'center',
+  padding: 16,
+},
+
+inlinePlayButton: {
+  alignSelf: 'center',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: 54,
+  height: 54,
+  borderRadius: 27,
+  backgroundColor: '#F6D984',
+  borderWidth: 2,
+  borderColor: 'rgba(255,255,255,0.9)',
+},
+
+inlinePlayerBottom: {
+  position: 'absolute',
+  bottom: 16,
+  left: 16,
+  right: 16,
+},
+
+inlinePlayerCategory: {
+  color: '#F6D984',
+  fontSize: 11,
+  fontWeight: '700',
+  textTransform: 'uppercase',
+  letterSpacing: 1,
+  marginBottom: 6,
+},
+
+inlinePlayerTitle: {
+  color: '#FFFFFF',
+  fontSize: 18,
+  fontWeight: '700',
+  lineHeight: 25,
+  textShadowColor: 'rgba(0,0,0,0.35)',
+  textShadowOffset: { width: 0, height: 1 },
+  textShadowRadius: 4,
+},
+
+inlineMediaInfo: {
+  padding: 14,
+  backgroundColor: '#FFFFFF',
+},
+
+inlineCommentsButton: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'center',
+  backgroundColor: '#C62828',
+  paddingVertical: 12,
+  paddingHorizontal: 12,
+  borderRadius: 10,
+  marginTop: 12,
+},
+
+inlineCommentsText: {
+  color: '#FFFFFF',
+  fontWeight: '600',
+  fontSize: 13,
+  marginHorizontal: 8,
+  flexShrink: 1,
+},
+
+
 });
