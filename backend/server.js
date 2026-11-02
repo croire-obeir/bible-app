@@ -3,7 +3,7 @@ import cors from 'cors';
 import authRoutes from './src/routes/authRoutes.js';
 import userDataManipulationRoutes from './src/routes/uerDatamanipulationRoutes.js';
 import passwordResetPageRoute from './src/routes/passowrdResetPageRoute.js';
-import refreshTokenauthRoute from './src/routes/refreshTokenauthRoute.js';
+import refreshTokenauthRoute from './src/routes/refreshTokenAuthRoute.js';
 import youtubeRoutes from './src/routes/youtubeRoutes.js';
 import passport from 'passport';
 import mediaClassesRoutes from './src/routes/mediaClassesRoutes.js';
