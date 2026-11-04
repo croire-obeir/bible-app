@@ -31,15 +31,11 @@ export const youtubeCallback = async (req, res) => {
     const { code, error } = req.query;
 
     if (error) {
-      return res.status(400).send(
-        'YouTube authorization was denied.'
-      );
+      return res.status(400).send('YouTube authorization was denied.');
     }
 
     if (!code) {
-      return res.status(400).send(
-        'Missing authorization code.'
-      );
+      return res.status(400).send('Missing authorization code.');
     }
 
     const { tokens } = await oauth2Client.getToken(code);
@@ -49,17 +45,17 @@ export const youtubeCallback = async (req, res) => {
         'No refresh token returned. Please authorize again.'
       );
     }
-    
-   console.log('YouTube authorization successful.');
 
-    res.send(
-      'YouTube authorization successful.'
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+    res.set('Pragma', 'no-cache');
+
+    res.type('text/plain').send(
+      `Authorization successful.\n\nNew refresh token:\n${tokens.refresh_token}`
     );
+
   } catch (error) {
     console.error('YouTube OAuth error:', error.message);
-    res.status(500).send(
-      'YouTube authorization failed.'
-    );
+    res.status(500).send('YouTube authorization failed.');
   }
 };
 

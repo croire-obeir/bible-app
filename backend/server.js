@@ -29,7 +29,7 @@ app.use('/api/media-classes', mediaClassesRoutes);
 app.use('/api/media', mediaByClassRoutes);
 
 app.get('/', (req, res) => {
-    res.send('Welcome to the Bible App API!');
+    res.send('Welcome to the Croire et Obeir API!');
 });
 
 const PORT = process.env.PORT || 3000;
