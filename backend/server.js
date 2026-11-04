@@ -14,6 +14,8 @@ import './src/services/youtubeSyncJob.js';
 
 const app = express();
 
+app.set('trust proxy', 1);
+
 app.use(cors());
 app.use(express.json());
 app.use(passport.initialize());
@@ -29,7 +31,7 @@ app.use('/api/media-classes', mediaClassesRoutes);
 app.use('/api/media', mediaByClassRoutes);
 
 app.get('/', (req, res) => {
-    res.send('Bienvenue to the Croire et Obeir API!');
+    res.send('Bienvenue a L\'API Croire et Obeir API!');
 });
 
 const PORT = process.env.PORT || 3000;
