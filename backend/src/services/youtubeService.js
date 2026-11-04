@@ -54,21 +54,46 @@ export const syncVideosToDatabase = async () => {
 
         // Everything before the first " - "
         const classification = title
-                              .split(' - ')[0]
-                              .trim()
-                              .replace(/\s+/g, ' ');
+          .split(' - ')[0]
+          .trim()
+          .replace(/\s+/g, ' ');
+
+        // const video = {
+        //   youtube_video_id: item.contentDetails.videoId,
+        //   title,
+        //   classification,
+        //   thumbnail:
+        //     item.snippet.thumbnails?.high?.url ??
+        //     item.snippet.thumbnails?.default?.url,
+        //   published_at: new Date(item.snippet.publishedAt)
+        //     .toISOString()
+        //     .slice(0, 19)
+        //     .replace('T', ' '),
+        // };
+
+        const videoId = item.contentDetails?.videoId;
+
+        if (!videoId || !title) {
+          console.warn('Skipping video with missing ID or title');
+          continue;
+        }
+
+        const publishedDate = item.snippet.publishedAt
+          ? new Date(item.snippet.publishedAt)
+          : null;
 
         const video = {
-          youtube_video_id: item.contentDetails.videoId,
+          youtube_video_id: videoId,
           title,
           classification,
           thumbnail:
             item.snippet.thumbnails?.high?.url ??
-            item.snippet.thumbnails?.default?.url,
-          published_at: new Date(item.snippet.publishedAt)
-            .toISOString()
-            .slice(0, 19)
-            .replace('T', ' '),
+            item.snippet.thumbnails?.default?.url ??
+            null,
+          published_at:
+            publishedDate && !Number.isNaN(publishedDate.getTime())
+              ? publishedDate.toISOString().slice(0, 19).replace('T', ' ')
+              : null,
         };
 
         await db.execute(
@@ -129,21 +154,46 @@ export const syncAudiosToDatabase = async () => {
 
         // Everything before the first " - "
         const classification = title
-                              .split(' - ')[0]
-                              .trim()
-                              .replace(/\s+/g, ' ');
+          .split(' - ')[0]
+          .trim()
+          .replace(/\s+/g, ' ');
+
+        // const audio = {
+        //   youtube_video_id: item.contentDetails.videoId,
+        //   title,
+        //   classification,
+        //   thumbnail:
+        //     item.snippet.thumbnails?.high?.url ??
+        //     item.snippet.thumbnails?.default?.url,
+        //   published_at: new Date(item.snippet.publishedAt)
+        //     .toISOString()
+        //     .slice(0, 19)
+        //     .replace('T', ' '),
+        // };
+
+        const audioId = item.contentDetails?.videoId;
+
+        if (!audioId || !title) {
+          console.warn('Skipping audio with missing ID or title');
+          continue;
+        }
+
+        const publishedDate = item.snippet.publishedAt
+          ? new Date(item.snippet.publishedAt)
+          : null;
 
         const audio = {
-          youtube_video_id: item.contentDetails.videoId,
+          youtube_video_id: audioId,
           title,
           classification,
           thumbnail:
             item.snippet.thumbnails?.high?.url ??
-            item.snippet.thumbnails?.default?.url,
-          published_at: new Date(item.snippet.publishedAt)
-            .toISOString()
-            .slice(0, 19)
-            .replace('T', ' '),
+            item.snippet.thumbnails?.default?.url ??
+            null,
+          published_at:
+            publishedDate && !Number.isNaN(publishedDate.getTime())
+              ? publishedDate.toISOString().slice(0, 19).replace('T', ' ')
+              : null,
         };
 
         await db.execute(
