@@ -46,13 +46,8 @@ export const youtubeCallback = async (req, res) => {
       );
     }
 
-    res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
-    res.set('Pragma', 'no-cache');
-
-    res.type('text/plain').send(
-      `Authorization successful.\n\nNew refresh token:\n${tokens.refresh_token}`
-    );
-
+    console.log('YouTube authorization successful.');
+    res.send('YouTube authorization successful.');
   } catch (error) {
     console.error('YouTube OAuth error:', error.message);
     res.status(500).send('YouTube authorization failed.');
