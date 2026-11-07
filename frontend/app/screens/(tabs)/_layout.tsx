@@ -85,6 +85,13 @@ export default function TabsLayout() {
         }}
         />
       <Tabs.Screen
+        name="Contact"
+        options={{
+          title: 'CONTACT',
+          tabBarIcon: ({ color, size, focused }) => <TabIcon name="chatbubble-ellipses-outline" color={color} size={size} focused={focused} />,
+        }}
+      />
+      <Tabs.Screen
         name="Profile"
         options={{
           title: 'PROFILE',
