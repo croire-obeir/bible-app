@@ -77,13 +77,7 @@ export default function TabsLayout() {
         }}
         />
 
-      <Tabs.Screen
-        name="Documents" // Points to app/screens/(tabs)/documents.tsx
-        options={{
-          title: 'LIBRARY',
-          tabBarIcon: ({ color, size, focused }) => <TabIcon name="library-outline" color={color} size={size} focused={focused} />,
-        }}
-        />
+      
       <Tabs.Screen
         name="Contact"
         options={{
