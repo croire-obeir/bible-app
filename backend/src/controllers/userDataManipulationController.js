@@ -4,6 +4,7 @@ import {Resend} from 'resend';
 import { randomBytes } from 'node:crypto';
 import bcrypt from 'bcryptjs';
 
+
 const userUpdateSchema = z.object({
     username: z.string().min(3).max(20),
     email: z.email("Invalid email format"),
@@ -96,6 +97,7 @@ export const forgotPassword= async(req,res)=>{
         // 2. Generate Reset Token
         const token = randomBytes(20).toString('hex');
         const expiry = new Date(Date.now() + 3600000);
+        const RESET_PASSWORD_URL = process.env.RESET_PASSWORD_URL;
 
         // 3. Update MySQL User record
         await db.execute(
@@ -117,7 +119,7 @@ export const forgotPassword= async(req,res)=>{
                     <p>Pour définir un nouveau mot de passe, veuillez cliquer sur le bouton ci-dessous. Ce lien est valable pour une durée de <strong>1 heure</strong> :</p>
                     
                     <p style="text-align: center; margin: 30px 0;">
-                        <a href="http://localhost:3000/reset-password?token=${token}" 
+                        <a href="${RESET_PASSWORD_URL}?token=${token}" 
                         style="background-color: #007AFF; color: #ffffff; padding: 12px 25px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
                         Réinitialiser mon mot de passe
                         </a>
@@ -131,7 +133,7 @@ export const forgotPassword= async(req,res)=>{
                     <hr style="border: 0; border-top: 1px solid #eee; margin-top: 30px;">
                     <p style="font-size: 11px; color: #999;">
                         Note : Si le bouton ne s'affiche pas correctement, copiez le lien suivant dans votre navigateur :<br>
-                        http://localhost:3000/reset-password?token=${token}
+                        ${RESET_PASSWORD_URL}?token=${token}
                     </p>
                 </div>
                         `,
