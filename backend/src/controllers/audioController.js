@@ -1,6 +1,6 @@
 import db from '../config/db.js';
 
-export const getVideoClasses = async (req, res) => {
+export const getAudioClasses = async (req, res) => {
   try {
     const [rows] = await db.execute(
       `SELECT DISTINCT classification
