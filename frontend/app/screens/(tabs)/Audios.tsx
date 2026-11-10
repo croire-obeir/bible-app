@@ -14,6 +14,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as WebBrowser from 'expo-web-browser';
@@ -21,12 +22,14 @@ import YoutubePlayer from 'react-native-youtube-iframe';
 import { useTabBarScroll } from '../../../components/tab-bar-visibility';
 import Header from '../../../components/CustomHeader';
 import {
-  fetchMediaClasses,
+ fetchMediaClasses,
   fetchMediaPage,
+  fetchNewMedia,
   getMediaErrorMessage,
   getYouTubeUrl,
   MediaItem,
 } from '../../../api/services/mediaServices';
+import { useNotifications } from '../../../components/notification-context';
 
 const PAGE_SIZE = 10;
 
@@ -43,6 +46,13 @@ function formatPublishedDate(value: string): string {
 }
 
 export default function AudiosScreen() {
+
+  const {
+    hasNewAudios,
+    lastSeenAudioId,
+    markMediaSeen,
+  } = useNotifications();
+
   const handleTabBarScroll = useTabBarScroll();
   const scrollViewRef = useRef<ScrollView>(null);
 
@@ -57,6 +67,9 @@ export default function AudiosScreen() {
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [retry, setRetry] = useState(0);
+  const [newAudios, setNewAudios] = useState<MediaItem[]>([]);
+  const [newAudiosLoading, setNewAudiosLoading] = useState(false);
+  const [newAudiosError, setNewAudiosError] = useState('');
 
   // Only the selected video's card displays the active player.
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(
@@ -101,6 +114,65 @@ export default function AudiosScreen() {
     };
   }, [retry]);
 
+  useEffect(() => {
+    if (!hasNewAudios || lastSeenAudioId === null) {
+      return;
+    }
+
+    let isActive = true;
+
+    const loadNewAudios = async () => {
+      try {
+        setNewAudiosLoading(true);
+        setNewAudiosError('');
+
+        console.log('Fetching new audios after ID:', lastSeenAudioId);
+
+        const result = await fetchNewMedia('audios', lastSeenAudioId);
+
+        if (!isActive) return;
+
+        console.log('New audios retrieved:', result.length);
+        console.log('Retrieved audios:', result);
+
+        setNewAudios(result);
+
+        // Finish loading before updating notification state.
+        setNewAudiosLoading(false);
+
+        console.log('Marking audios as seen...');
+
+        try {
+          await markMediaSeen('audios');
+        } catch (error) {
+          console.error('Error updating audio marker:', error);
+        }
+
+      } catch (error) {
+        console.error('NEW AUDIOS FETCH ERROR:', error);
+
+        if (!isActive) return;
+
+        setNewAudiosError(
+          getMediaErrorMessage(
+            error,
+            'Impossible de récupérer les nouveaux audios.'
+          )
+        );
+      } finally {
+        if (isActive) {
+          setNewAudiosLoading(false);
+        }
+      }
+    };
+
+    void loadNewAudios();
+
+    return () => {
+      isActive = false;
+    };
+  }, [hasNewAudios, lastSeenAudioId, markMediaSeen]);
+
   // Fetch the first page whenever the selected category changes.
   useEffect(() => {
     if (!selectedClass) {
@@ -110,6 +182,8 @@ export default function AudiosScreen() {
       setPlayingAudioId(null);
       return;
     }
+
+
 
     let active = true;
 
@@ -214,6 +288,17 @@ export default function AudiosScreen() {
     []
   );
 
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        setNewAudios([]);
+        setNewAudiosError('');
+        setNewAudiosLoading(false);
+        setPlayingAudioId(null);
+      };
+    }, [])
+  );
+
   return (
     <View style={styles.container}>
       <Header title="Enseignements Audio" />
@@ -239,6 +324,162 @@ export default function AudiosScreen() {
           Des paroles inspirantes et des enseignements bibliques à
           écouter où que vous soyez.
         </Text>
+
+
+        {/* New audios section */}
+        {(newAudiosLoading || newAudiosError || newAudios.length > 0) && (
+          <View style={{ marginTop: 20 }}>
+
+            <View style={styles.sectionHeading}>
+              <View>
+                <Text style={styles.sectionTitle}>
+                  Nouveautés
+                </Text>
+
+                <Text style={styles.sectionCaption}>
+                  {newAudiosLoading
+                    ? 'Chargement des nouveaux audios…'
+                    : `${newAudios.length} nouveaux ${newAudios.length > 1 ? 'enseignements' : 'enseignement'
+                    }`}
+                </Text>
+              </View>
+
+              <View style={styles.headingIcon}>
+                <Ionicons
+                  name="sparkles-outline"
+                  size={19}
+                  color="#A88632"
+                />
+              </View>
+            </View>
+
+            {newAudiosLoading && (
+              <View style={styles.inlineLoading}>
+                <ActivityIndicator color="#A88632" />
+                <Text style={styles.mutedText}>
+                  Chargement des nouveautés…
+                </Text>
+              </View>
+            )}
+
+            {!!newAudiosError && (
+              <View style={styles.notice}>
+                <Text style={styles.noticeText}>{newAudiosError}</Text>
+              </View>
+            )}
+
+            {newAudios.map((audio) => {
+              const isActive =
+                playingAudioId === audio.youtube_video_id;
+
+              return (
+                <View
+                  key={audio.youtube_video_id}
+                  style={styles.inlineMediaCard}
+                >
+                  <View style={styles.inlinePlayerWrap}>
+                    {isActive ? (
+                      <YoutubePlayer
+                        height={220}
+                        videoId={audio.youtube_video_id}
+                        play={true}
+                        onChangeState={(state) => {
+                          if (state === 'ended') {
+                            setPlayingAudioId(null);
+                          }
+                        }}
+                      />
+                    ) : (
+                      <TouchableOpacity
+                        activeOpacity={0.9}
+                        onPress={() => openAudio(audio)}
+                      >
+                        <ImageBackground
+                          source={
+                            audio.thumbnail
+                              ? { uri: audio.thumbnail }
+                              : require('../../../assets/pimage.jpg')
+                          }
+                          style={styles.inlinePlayerImage}
+                          imageStyle={styles.inlinePlayerImageRadius}
+                        >
+                          <LinearGradient
+                            colors={[
+                              'rgba(8,24,48,0.02)',
+                              'rgba(8,24,48,0.88)',
+                            ]}
+                            style={styles.inlinePlayerGradient}
+                          >
+                            <View style={styles.inlinePlayButton}>
+                              <Ionicons
+                                name="play"
+                                size={24}
+                                color="#12294B"
+                              />
+                            </View>
+
+                            <View style={styles.inlinePlayerBottom}>
+                              <Text
+                                style={styles.inlinePlayerCategory}
+                                numberOfLines={1}
+                              >
+                                {audio.classification}
+                              </Text>
+
+                              <Text
+                                style={styles.inlinePlayerTitle}
+                                numberOfLines={2}
+                              >
+                                {audio.title}
+                              </Text>
+                            </View>
+                          </LinearGradient>
+                        </ImageBackground>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+
+                  <View style={styles.inlineMediaInfo}>
+                    <View style={styles.inlineMediaText}>
+                      <Text style={styles.mediaTitle} numberOfLines={2}>
+                        {audio.title}
+                      </Text>
+
+                      <Text style={styles.mediaMeta}>
+                        {audio.classification}
+                        {formatPublishedDate(audio.published_at)
+                          ? ` · ${formatPublishedDate(audio.published_at)}`
+                          : ''}
+                      </Text>
+                    </View>
+
+                    <TouchableOpacity
+                      onPress={() => openYouTubeComments(audio)}
+                      style={styles.inlineCommentsButton}
+                    >
+                      <Ionicons
+                        name="logo-youtube"
+                        size={19}
+                        color="#FFFFFF"
+                      />
+
+                      <Text style={styles.inlineCommentsText}>
+                        commenter sur YouTube
+                      </Text>
+
+                      <Ionicons
+                        name="open-outline"
+                        size={16}
+                        color="#FFFFFF"
+                      />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        )}
+
 
         
         {/* Category heading */}

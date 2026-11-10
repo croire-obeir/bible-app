@@ -116,56 +116,63 @@ const inspectAsyncStorage = async () => {
   }, [retry]);
 
   useEffect(() => {
-    if (!hasNewVideos || lastSeenVideoId === null) {
-      return;
-    }
+  if (!hasNewVideos || lastSeenVideoId === null) {
+    return;
+  }
 
-    let isActive = true;
+  let isActive = true;
 
-    const loadNewVideos = async () => {
+  const loadNewVideos = async () => {
+    try {
+      setNewVideosLoading(true);
+      setNewVideosError('');
+
+      console.log('Fetching new videos after ID:', lastSeenVideoId);
+
+      const result = await fetchNewMedia('videos', lastSeenVideoId);
+
+      if (!isActive) return;
+
+      console.log('New videos retrieved:', result.length);
+      console.log('Retrieved videos:', result);
+
+      setNewVideos(result);
+
+      // Finish loading before updating notification state.
+      setNewVideosLoading(false);
+
+      console.log('Marking videos as seen...');
+
       try {
-        setNewVideosLoading(true);
-        setNewVideosError('');
-
-        console.log('Fetching new videos after ID:', lastSeenVideoId);
-
-        const result = await fetchNewMedia('videos', lastSeenVideoId);
-
-        console.log('New videos retrieved:', result.length);
-        console.log('Retrieved videos:', result);
-
-        if (!isActive) return;
-
-        setNewVideos(result);
-
-        console.log('Marking videos as seen...');
-        // await markMediaSeen('videos');
-
-
+        await markMediaSeen('videos');
       } catch (error) {
-        console.error('NEW VIDEOS FETCH ERROR:', error);
-
-        if (!isActive) return;
-
-        setNewVideosError(
-          getMediaErrorMessage(
-            error,
-            'Impossible de récupérer les nouvelles vidéos.'
-          )
-        );
-      } finally {
-        if (isActive) {
-          setNewVideosLoading(false);
-        }
+        console.error('Error updating video marker:', error);
       }
-    };
 
-    void loadNewVideos();
+    } catch (error) {
+      console.error('NEW VIDEOS FETCH ERROR:', error);
 
-    return () => {
-      isActive = false;
-    };
-  }, [hasNewVideos, lastSeenVideoId, markMediaSeen]);
+      if (!isActive) return;
+
+      setNewVideosError(
+        getMediaErrorMessage(
+          error,
+          'Impossible de récupérer les nouvelles vidéos.'
+        )
+      );
+    } finally {
+      if (isActive) {
+        setNewVideosLoading(false);
+      }
+    }
+  };
+
+  void loadNewVideos();
+
+  return () => {
+    isActive = false;
+  };
+}, [hasNewVideos, lastSeenVideoId, markMediaSeen]);
 
   useEffect(() => {
     if (!selectedClass) {
@@ -273,34 +280,22 @@ const inspectAsyncStorage = async () => {
     }, [])
   );
 
-
-
-
-// useEffect(() => {
-//   const prepareTest = async () => {
-//     await AsyncStorage.setItem('lastSeenVideoId', '90');
-
-//     await refreshNotifications();
-
-//     await inspectAsyncStorage();
-//   };
-
-//   void prepareTest();
-//   console.log('useEffect executed');
-// }, [refreshNotifications]);
-
 useEffect(() => {
-  const prepareTest = async () => {
-    await AsyncStorage.setItem('lastSeenVideoId', '90');
+  const checkVideoMarker = async () => {
+    try {
+      const marker = await AsyncStorage.getItem('lastSeenVideoId');
 
-    console.log('Marker set to 90 ss');
+      console.log('LAST SEEN VIDEO ID (AsyncStorage):', marker);
 
-    await refreshNotifications();
-
-    console.log('Notifications refreshed');
+      console.log(
+        'Compare this with SELECT MAX(id) FROM videos in MySQL'
+      );
+    } catch (error) {
+      console.error('Error checking video marker:', error);
+    }
   };
 
-  void prepareTest();
+  void checkVideoMarker();
 }, []);
 
   return (

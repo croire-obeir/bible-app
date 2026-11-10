@@ -3,6 +3,7 @@ import apiClient from '../client';
 export type MediaKind = 'videos' | 'audios';
 
 export type MediaItem = {
+  id?: number;
   youtube_video_id: string;
   title: string;
   classification: string;
@@ -48,8 +49,7 @@ export async function fetchMediaPage(
   kind: MediaKind,
   classification: string,
   page: number,
-  limit = 10,
-  afterId?: number
+  limit = 10
 ): Promise<MediaPage> {
   const response = await apiClient.get<{
     success: boolean;
@@ -60,7 +60,6 @@ export async function fetchMediaPage(
       classification,
       page,
       limit,
-      ...(afterId !== undefined && { afterId }),
     },
   });
 
@@ -71,46 +70,19 @@ export async function fetchMediaPage(
 }
 
 
-export async function fetchNewMedia(
+export const fetchNewMedia = async (
   kind: MediaKind,
   afterId: number
-): Promise<MediaItem[]> {
-  const classifications = await fetchMediaClasses(kind);
+): Promise<MediaItem[]> => {
+  const response = await apiClient.get<{
+    success: boolean;
+    data: MediaItem[];
+  }>(`/api/new-media/${kind}`, {
+    params: { afterId },
+  });
 
-  const results = await Promise.all(
-    classifications.map(async (classification) => {
-      const firstPage = await fetchMediaPage(
-        kind,
-        classification,
-        1,
-        10,
-        afterId
-      );
-
-      const items = [...firstPage.data];
-
-      for (
-        let page = 2;
-        page <= firstPage.pagination.totalPages;
-        page++
-      ) {
-        const nextPage = await fetchMediaPage(
-          kind,
-          classification,
-          page,
-          10,
-          afterId
-        );
-
-        items.push(...nextPage.data);
-      }
-
-      return items;
-    })
-  );
-
-  return results.flat();
-}
+  return response.data.data;
+};
 
 
 export function getMediaErrorMessage(error: unknown, fallback: string): string {
