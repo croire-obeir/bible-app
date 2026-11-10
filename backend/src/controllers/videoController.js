@@ -29,7 +29,6 @@ export const getVideoClasses = async (req, res) => {
 };
 
 
-
 export const getVideosByClass = async (req, res) => {
   try {
     const { classification } = req.query;
@@ -40,22 +39,6 @@ export const getVideosByClass = async (req, res) => {
       50
     );
 
-    // Optional filter for retrieving only new videos
-    const afterId =
-      req.query.afterId !== undefined
-        ? Number.parseInt(req.query.afterId, 10)
-        : null;
-
-    if (
-      afterId !== null &&
-      (!Number.isSafeInteger(afterId) || afterId < 0)
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid afterId',
-      });
-    }
-
     const offset = (page - 1) * limit;
 
     if (!classification) {
@@ -65,35 +48,24 @@ export const getVideosByClass = async (req, res) => {
       });
     }
 
-    // Build the optional ID filter
-    const idCondition =
-      afterId !== null ? 'AND id > ?' : '';
-
-    const queryParams =
-      afterId !== null
-        ? [classification, afterId]
-        : [classification];
-
-    // Count videos matching the filters
+    // Get total number of videos
     const [countRows] = await db.execute(
       `SELECT COUNT(*) AS total
        FROM videos
-       WHERE classification = ?
-       ${idCondition}`,
-      queryParams
+       WHERE classification = ?`,
+      [classification]
     );
 
     const total = countRows[0].total;
 
-    // Retrieve videos matching the filters
+    // Get videos
     const [rows] = await db.execute(
       `SELECT id, youtube_video_id, title, classification, thumbnail, published_at
        FROM videos
        WHERE classification = ?
-       ${idCondition}
        ORDER BY published_at DESC
        LIMIT ${limit} OFFSET ${offset}`,
-      queryParams
+      [classification]
     );
 
     return res.status(200).json({
