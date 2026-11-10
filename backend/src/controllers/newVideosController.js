@@ -1,4 +1,6 @@
 
+import db from '../config/db.js';
+
 export const getNewVideos = async (req, res) => {
   try {
     const afterId = Number.parseInt(req.query.afterId, 10);

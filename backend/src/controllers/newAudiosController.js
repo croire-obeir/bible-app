@@ -1,4 +1,4 @@
-
+import db from '../config/db.js';
 export const getNewAudios = async (req, res) => {
   try {
     const afterId = Number.parseInt(req.query.afterId, 10);
