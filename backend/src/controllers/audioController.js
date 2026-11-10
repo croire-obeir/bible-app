@@ -26,7 +26,6 @@ export const getAudioClasses = async (req, res) => {
 
 
 
-
 export const getAudiosByClass = async (req, res) => {
   try {
     const { classification } = req.query;
@@ -37,22 +36,6 @@ export const getAudiosByClass = async (req, res) => {
       50
     );
 
-    // Optional filter for retrieving only new audios
-    const afterId =
-      req.query.afterId !== undefined
-        ? Number.parseInt(req.query.afterId, 10)
-        : null;
-
-    if (
-      afterId !== null &&
-      (!Number.isSafeInteger(afterId) || afterId < 0)
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid afterId',
-      });
-    }
-
     const offset = (page - 1) * limit;
 
     if (!classification) {
@@ -62,35 +45,24 @@ export const getAudiosByClass = async (req, res) => {
       });
     }
 
-    // Build the optional ID filter
-    const idCondition =
-      afterId !== null ? 'AND id > ?' : '';
-
-    const queryParams =
-      afterId !== null
-        ? [classification, afterId]
-        : [classification];
-
-    // Count audios matching the filters
+    // Get total number of audios
     const [countRows] = await db.execute(
       `SELECT COUNT(*) AS total
        FROM audios
-       WHERE classification = ?
-       ${idCondition}`,
-      queryParams
+       WHERE classification = ?`,
+      [classification]
     );
 
     const total = countRows[0].total;
 
-    // Retrieve audios matching the filters
+    // Get videos
     const [rows] = await db.execute(
       `SELECT youtube_video_id, title, classification, thumbnail, published_at
        FROM audios
        WHERE classification = ?
-       ${idCondition}
        ORDER BY published_at DESC
        LIMIT ${limit} OFFSET ${offset}`,
-      queryParams
+      [classification]
     );
 
     return res.status(200).json({
@@ -104,11 +76,11 @@ export const getAudiosByClass = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Error fetching audios by class:', error);
+    console.error('Error fetching videos by class:', error);
 
     return res.status(500).json({
       success: false,
-      message: 'Échec de la récupération des audios',
+      message: 'Échec de la récupération des vidéos',
     });
   }
 };
