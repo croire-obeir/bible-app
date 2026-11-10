@@ -56,7 +56,7 @@ export const signup=async(req,res)=>{
         await db.execute(insertSql, [email, hashedPassword, username]);
         
         // Fetch the newly created user to get the ID and confirm data
-        const [rows] = await db.execute('SELECT id, username, email FROM users WHERE email = ?', [email]);
+        const [rows] = await db.execute('SELECT id, username, email, avatar FROM users WHERE email = ?', [email]);
         const user = rows[0];
 
         // Send ONE response containing everything the frontend needs
@@ -65,7 +65,8 @@ export const signup=async(req,res)=>{
             user: {
                 id: user.id,
                 email: user.email,
-                username: user.username
+                username: user.username,
+                avatar: user.avatar,
             }
         });
     } catch (err) {
@@ -117,7 +118,8 @@ export const login = async (req, res) => {
             refreshToken,
             id: user.id, 
             username:user.username,
-            email: user.email
+            email: user.email,
+            avatar: user.avatar || null,
          });
     } catch (err) {
         res.status(500).json({ error: err.message + "errrr" });
@@ -195,7 +197,7 @@ export const googleLogin = async (req, res) => {
             id: user.id, 
             username:user.username,
             email: user.email,
-            avatar: user.avatar 
+            avatar: user.avatar || null,
          });
 
     } catch (err) {

@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { Alert, Image, ImageBackground, Modal, ScrollView, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, ImageBackground, Modal, ScrollView, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -24,6 +24,8 @@ export default function ShareVerseScreen() {
   const [customBackground, setCustomBackground] = useState<string | null>(null);
   const [pendingBackground, setPendingBackground] = useState<string | null>(null);
   const [alignment, setAlignment] = useState<'left' | 'center' | 'right'>('center');
+  const [isSharing, setIsSharing] = useState(false);
+  const shareInProgress = useRef(false);
   const cardRef = useRef<View>(null);
 
   const selectedVerses = useMemo<SelectedVerse[]>(() => {
@@ -85,12 +87,26 @@ export default function ShareVerseScreen() {
   };
 
   const shareText = async () => {
-    await Share.share({ message: fullText });
+    if (shareInProgress.current) return;
+
+    shareInProgress.current = true;
+    setIsSharing(true);
+    try {
+      await Share.share({ message: fullText });
+    } catch (error) {
+      console.error('Unable to share verse text:', error);
+      Alert.alert('Partage indisponible', 'Impossible de partager le texte pour le moment. Réessayez.');
+    } finally {
+      shareInProgress.current = false;
+      setIsSharing(false);
+    }
   };
 
   const shareImage = async () => {
-    if (!cardRef.current) return;
+    if (shareInProgress.current || !cardRef.current) return;
 
+    shareInProgress.current = true;
+    setIsSharing(true);
     try {
       // These modules are loaded only when sharing an image. This keeps an
       // older development build from crashing before it has been rebuilt.
@@ -109,9 +125,12 @@ export default function ShareVerseScreen() {
     } catch (error) {
       console.error('Unable to share verse image:', error);
       Alert.alert(
-        'Mise à jour requise',
-        'Reconstruisez l’application native pour activer le partage d’images.',
+        'Partage indisponible',
+        'Impossible de partager l’image pour le moment. Réessayez.',
       );
+    } finally {
+      shareInProgress.current = false;
+      setIsSharing(false);
     }
   };
 
@@ -127,7 +146,7 @@ export default function ShareVerseScreen() {
           <Text style={styles.headerEyebrow}>PARTAGE</Text>
           <Text style={styles.headerTitle}>Écritures Sacrées</Text>
         </View>
-        <TouchableOpacity style={styles.headerAction} onPress={shareText}>
+        <TouchableOpacity style={styles.headerAction} onPress={shareText} disabled={isSharing}>
           <Ionicons name="share-outline" size={21} color="#0a2d55" />
         </TouchableOpacity>
       </View>
@@ -191,14 +210,16 @@ export default function ShareVerseScreen() {
             <Ionicons name="copy-outline" size={17} color="#0a2d55" />
             <Text style={styles.secondaryActionText}>Copier le texte</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.secondaryAction} onPress={shareText}>
+          <TouchableOpacity style={styles.secondaryAction} onPress={shareText} disabled={isSharing}>
             <Ionicons name="share-social-outline" size={17} color="#0a2d55" />
             <Text style={styles.secondaryActionText}>Partager le texte</Text>
           </TouchableOpacity>
         </View>
-        <TouchableOpacity style={styles.shareButton} onPress={shareImage}>
-          <Ionicons name="image-outline" size={17} color="#fff" />
-          <Text style={styles.shareText}>Partager sous forme d&apos;image</Text>
+        <TouchableOpacity style={[styles.shareButton, isSharing && styles.disabledShareButton]} onPress={shareImage} disabled={isSharing}>
+          {isSharing
+            ? <ActivityIndicator size="small" color="#fff" />
+            : <Ionicons name="image-outline" size={17} color="#fff" />}
+          <Text style={styles.shareText}>{isSharing ? 'Partage en cours...' : 'Partager sous forme d’image'}</Text>
         </TouchableOpacity>
       </ScrollView>
 
@@ -256,6 +277,7 @@ const styles = StyleSheet.create({
   secondaryAction: { flex: 1, minHeight: 44, borderRadius: 11, backgroundColor: '#eaf0f5', alignItems: 'center', justifyContent: 'center', gap: 5, flexDirection: 'row' },
   secondaryActionText: { color: '#0a2d55', fontSize: 11, fontWeight: '700' },
   shareButton: { alignSelf: 'stretch', marginTop: 10, height: 48, borderRadius: 12, backgroundColor: '#103b92', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8, elevation: 3 },
+  disabledShareButton: { opacity: 0.7 },
   shareText: { color: '#fff', fontSize: 12, fontWeight: '700' },
   confirmBackdrop: { flex: 1, backgroundColor: 'rgba(10, 45, 85, .55)', justifyContent: 'center', padding: 24 },
   confirmCard: { backgroundColor: '#fff', borderRadius: 18, padding: 18 },

@@ -11,13 +11,29 @@ export const handleNameEmailChange=async(username:string, email:string, userId:s
             email: email
         });
         if (response.status === 200) {
-             const userprofile= {username: response.data.username, email: response.data.email};
-             await AsyncStorage.setItem('userprofile', JSON.stringify(userprofile));
-             return { success: true, data: response.data };
+               const userprofile = response.data.data;
+               const storedProfile = await AsyncStorage.getItem('userprofile');
+               const existingProfile = storedProfile ? JSON.parse(storedProfile) : {};
+               const updatedProfile = { ...existingProfile, ...userprofile };
+               await AsyncStorage.setItem('userprofile', JSON.stringify(updatedProfile));
+               return { success: true, data: updatedProfile };
         }
     }catch(error:any){
         const message = error.response?.data?.message || "Échec de la connexion au serveur";
         Alert.alert("Update Error", message);
+        return { success: false, error: message };
+    }
+}
+
+export const uploadProfileAvatar = async (avatar: string) => {
+    try {
+        const response = await apiClient.put('/api/user/avatar', { avatar });
+        if (response.status === 200 && response.data?.data?.avatar) {
+            return { success: true, avatar: response.data.data.avatar };
+        }
+        return { success: false, error: 'Le serveur n’a pas confirmé la mise à jour de la photo.' };
+    } catch (error: any) {
+        const message = error.response?.data?.message || 'Échec de la mise à jour de la photo.';
         return { success: false, error: message };
     }
 }

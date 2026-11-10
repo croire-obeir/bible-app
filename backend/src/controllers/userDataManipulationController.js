@@ -10,6 +10,12 @@ const userUpdateSchema = z.object({
     email: z.email("Invalid email format"),
 });
 
+const userAvatarSchema = z.object({
+    avatar: z.string()
+        .max(700_000, 'Photo trop volumineuse')
+        .regex(/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/, 'Format de photo invalide'),
+});
+
 const passwordSchema = z.object({
     password: z.string()
         .min(8, "Password must be at least 8 characters")
@@ -51,7 +57,7 @@ export const updateUserData = async (req, res) => {
         // 3. Fetch the updated user data to return it
         // Note: We fetch 'username' specifically since your query updated 'name'
         const [rows] = await db.query(
-            'SELECT username, email FROM users WHERE id = ?', 
+            'SELECT id, username, email, avatar FROM users WHERE id = ?', 
             [userId]
         );
 
@@ -61,14 +67,43 @@ export const updateUserData = async (req, res) => {
         res.json({ 
             message: "User data updated successfully",
             data: {
+                userId: updatedUser.id,
                 username: updatedUser.username,
-                email: updatedUser.email
+                email: updatedUser.email,
+                avatar: updatedUser.avatar,
             }
         });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 }
+
+export const updateUserAvatar = async (req, res) => {
+    const validation = userAvatarSchema.safeParse(req.body);
+    if (!validation.success) {
+        return res.status(400).json({
+            message: validation.error.issues[0]?.message || 'Photo invalide',
+        });
+    }
+
+    try {
+        const [result] = await db.execute(
+            'UPDATE users SET avatar = ?, updated_at = NOW() WHERE id = ?',
+            [validation.data.avatar, req.user.userId]
+        );
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Utilisateur introuvable' });
+        }
+
+        return res.json({
+            message: 'Photo de profil mise à jour',
+            data: { avatar: validation.data.avatar },
+        });
+    } catch (err) {
+        console.error('Profile photo update failed:', err);
+        return res.status(500).json({ message: 'Impossible d’enregistrer la photo de profil' });
+    }
+};
 
 export const deleteUserData = async (req, res) => {
     const {userId} = req.params;

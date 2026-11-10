@@ -3,20 +3,6 @@ import { Alert } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-interface User {
-  id: string;
-  username: string;
-  email: string;
-  token?: string; // Optional if only returned on login
-}
-
-interface AuthResponse {
-  user: User;
-  token: string;
-}
-
-
-
 export const handleUserRegistration = async (userData: any) => {
   // 1. Get the action from the Store
   //   const setLogin = useUserStore.getState().setLogin;
@@ -30,7 +16,12 @@ export const handleUserRegistration = async (userData: any) => {
 
     // 2. Logic: Handle the success globally
     if (response.data && response.data.user) {
-      const userprofile = { username: response.data.user.username, email: response.data.user.email };
+      const userprofile = {
+        username: response.data.user.username,
+        email: response.data.user.email,
+        userId: response.data.user.id,
+        avatar: response.data.user.avatar || null,
+      };
       // AsyncStorage only stores strings, so we stringify the object
       await AsyncStorage.setItem('userprofile', JSON.stringify(userprofile));
       return { success: true, data: response.data };
@@ -59,13 +50,14 @@ export const handleUserSignIn = async (userLoginData: any) => {
       id,
       username,
       email,
+      avatar,
     } = response.data;
 
     if (accessToken && refreshToken && email) {
       // Store the token securely
       await SecureStore.setItemAsync('accessToken', accessToken);
       await SecureStore.setItemAsync('refreshToken', refreshToken);
-      const userprofile = { username: username, email: email, userId: id };
+      const userprofile = { username, email, userId: id, avatar: avatar || null };
       await AsyncStorage.setItem('userprofile', JSON.stringify(userprofile));
 
       return { success: true, data: response.data };
@@ -93,13 +85,14 @@ export const sendGoogleTokenToBackend = async (idToken: string) => {
       id,
       username,
       email,
+      avatar,
     } = response.data;
 
     if (accessToken && refreshToken && email) {
       // Store the token securely
       await SecureStore.setItemAsync('accessToken', accessToken);
       await SecureStore.setItemAsync('refreshToken', refreshToken);
-      const userprofile = { username: username, email: email, userId: id };
+      const userprofile = { username, email, userId: id, avatar: avatar || null };
       await AsyncStorage.setItem('userprofile', JSON.stringify(userprofile));
 
       return { success: true, data: response.data };

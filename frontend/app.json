@@ -51,7 +51,13 @@
       "expo-web-browser",
       "expo-secure-store",
       "expo-sqlite",
-      "expo-asset"
+      "expo-asset",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Autorisez Croire et Obéir à accéder à vos photos pour choisir une photo de profil."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

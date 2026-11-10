@@ -20,9 +20,9 @@ import * as ImagePicker from 'expo-image-picker';
 import * as SecureStore from 'expo-secure-store';
 import { useTabBarScroll } from '../../../components/tab-bar-visibility';
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { handleNameEmailChange, handleDeleteAccount } from '../../../api/services/userDataUpdateServices';
+import { handleNameEmailChange, handleDeleteAccount, uploadProfileAvatar } from '../../../api/services/userDataUpdateServices';
 
-const STORAGE_KEY = '@user_profile_data';
+const STORAGE_KEY = 'userprofile';
 
 interface UserData {
   username: string;
@@ -38,6 +38,7 @@ export default function ProfileScreen() {
   // --- États ---
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSavingAvatar, setIsSavingAvatar] = useState(false);
   const [userData, setUserData] = useState<UserData>({
     username: '',
     email: '',
@@ -55,7 +56,7 @@ export default function ProfileScreen() {
 
       const loadProfileData = async () => {
         try {
-          const storedData = await AsyncStorage.getItem('userprofile');
+          const storedData = await AsyncStorage.getItem(STORAGE_KEY);
           if (!active) return;
 
           if (!storedData) {
@@ -127,7 +128,7 @@ export default function ProfileScreen() {
             
             await AsyncStorage.setItem('@all_users', JSON.stringify(users));
             Alert.alert("Succès", "Votre mot de passe a été mis à jour.");
-          } catch (e) {
+          } catch {
             Alert.alert("Erreur", "Impossible de mettre à jour le mot de passe.");
           }
         } else {
@@ -138,38 +139,62 @@ export default function ProfileScreen() {
     );
   };
 
-  // const pickImage = async () => {
-  //   const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-  //   if (status !== 'granted') {
-  //     Alert.alert("Permission refusée", "Accès galerie requis.");
-  //     return;
-  //   }
+  const pickImage = async () => {
+    if (isSavingAvatar) return;
 
-  //   let result = await ImagePicker.launchImageLibraryAsync({
-  //     mediaTypes: ImagePicker.MediaTypeOptions.Images,
-  //     allowsEditing: true,
-  //     aspect: [1, 1],
-  //     quality: 1,
-  //   });
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert('Permission requise', 'Autorisez l’accès à vos photos pour modifier votre photo de profil.');
+        return;
+      }
 
-  //   if (!result.canceled && result.assets && result.assets.length > 0) {
-  //     const newAvatar = result.assets[0].uri;
-  //     if (isEditing) {
-  //       setTempData({ ...tempData, avatar: newAvatar });
-  //     } else {
-  //       const newData = { ...userData, avatar: newAvatar };
-  //       setUserData(newData);
-  //       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(newData));
-  //     }
-  //   }
-  // };
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.7,
+        base64: true,
+      });
+
+      if (result.canceled) return;
+      const selectedImage = result.assets[0];
+      if (!selectedImage.base64) {
+        Alert.alert('Erreur', 'Impossible de lire la photo sélectionnée.');
+        return;
+      }
+
+      setIsSavingAvatar(true);
+      const avatar = `data:image/jpeg;base64,${selectedImage.base64}`;
+      const response = await uploadProfileAvatar(avatar);
+      if (!response.success || !response.avatar) {
+        Alert.alert('Erreur', response.error || 'Impossible de mettre à jour votre photo.');
+        return;
+      }
+
+      const updatedProfile = { ...userData, avatar: response.avatar };
+      setUserData(updatedProfile);
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updatedProfile));
+      Alert.alert('Photo mise à jour', 'Votre photo de profil a été enregistrée.');
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour de la photo de profil', error);
+      Alert.alert('Erreur', 'Impossible de mettre à jour votre photo. Réessayez.');
+    } finally {
+      setIsSavingAvatar(false);
+    }
+  };
 
   const saveChanges = async () => {
     const result = await handleNameEmailChange(userData.username, userData.email, userData.userId);
     if (result?.success) {
-          Alert.alert("Succès", "Votre nom et email ont été mis à jour.");
-          setIsEditing(false);
-        }
+      if (result.data) {
+        const updatedProfile = { ...userData, ...result.data };
+        setUserData(updatedProfile);
+        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updatedProfile));
+      }
+      Alert.alert('Succès', 'Votre nom et email ont été mis à jour.');
+      setIsEditing(false);
+    }
   };
 
   const cancelChanges = () => {
@@ -194,7 +219,7 @@ export default function ProfileScreen() {
               } else {
                 Alert.alert("Erreur", "Impossible de supprimer le compte.");
               }
-            } catch (e) {
+            } catch {
               Alert.alert("Erreur", "Impossible de supprimer le compte.");
             }
           } 
@@ -241,7 +266,7 @@ export default function ProfileScreen() {
           
           <LinearGradient colors={['#f4efe4', '#e7dcc6']} style={styles.profileCard}>
             <View style={styles.avatarContainer}>
-              <TouchableOpacity onPress={() => Alert.alert("Fonctionnalité à venir", "La modification de l'avatar sera disponible dans une future mise à jour.")}>
+              <TouchableOpacity onPress={pickImage} disabled={isSavingAvatar} accessibilityRole="button" accessibilityLabel="Modifier la photo de profil">
                 <View style={styles.avatar}>
                   {currentAvatar ? (
                     <Image source={{ uri: currentAvatar }} style={styles.avatarImage} />
@@ -250,7 +275,9 @@ export default function ProfileScreen() {
                   )}
                 </View>
                 <View style={styles.editAvatarButton}>
-                  <Ionicons name="camera" size={16} color="#fff" />
+                  {isSavingAvatar
+                    ? <ActivityIndicator size="small" color="#fff" />
+                    : <Ionicons name="camera" size={16} color="#fff" />}
                 </View>
               </TouchableOpacity> 
             </View>
