@@ -9,6 +9,10 @@ type Props = {
   isPassword?: boolean; // Optionnel (le ? signifie non obligatoire)
   value: string;        // Obligatoire pour le "controlled input"
   onChangeText: (text: string) => void; // Obligatoire
+  accessibilityLabel?: string;
+  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
+  keyboardType?: 'default' | 'email-address';
+  autoCorrect?: boolean;
 };
 
 export default function CustomInput({ 
@@ -16,7 +20,11 @@ export default function CustomInput({
   placeholder, 
   isPassword = false, 
   value, 
-  onChangeText 
+  onChangeText,
+  accessibilityLabel,
+  autoCapitalize = 'none',
+  keyboardType = 'default',
+  autoCorrect = true,
 }: Props) {
   
   // 2. Initialisation de l'état pour la visibilité du mot de passe
@@ -37,8 +45,17 @@ export default function CustomInput({
         // 3. Liaison des données (Props)
         value={value}
         onChangeText={onChangeText}
-        
-        autoCapitalize="none"
+        accessibilityLabel={accessibilityLabel ?? placeholder}
+        autoCapitalize={autoCapitalize}
+        keyboardType={keyboardType}
+        autoCorrect={isPassword ? false : autoCorrect}
+        autoComplete={
+          isPassword
+            ? 'password'
+            : keyboardType === 'email-address'
+              ? 'email'
+              : undefined
+        }
       />
 
       {/* Afficher l'œil uniquement si c'est un champ mot de passe */}
