@@ -56,7 +56,7 @@ export const getVideosByClass = async (req, res) => {
 
     // Get videos
     const [rows] = await db.execute(
-      `SELECT youtube_video_id, title, classification, thumbnail, published_at
+      `SELECT id, youtube_video_id, title, classification, thumbnail, published_at
        FROM videos
        WHERE classification = ?
        ORDER BY published_at DESC
