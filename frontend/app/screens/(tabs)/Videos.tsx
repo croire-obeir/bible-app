@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as WebBrowser from 'expo-web-browser';
@@ -16,13 +17,17 @@ import YoutubePlayer from 'react-native-youtube-iframe';
 import { useTabBarScroll } from '../../../components/tab-bar-visibility';
 import Header from '../../../components/CustomHeader';
 import {
-  fetchMediaClasses,
+   fetchMediaClasses,
   fetchMediaPage,
+  fetchNewMedia,
   getMediaErrorMessage,
   getYouTubeUrl,
   MediaItem,
 } from '../../../api/services/mediaServices';
 
+import { useNotifications } from '../../../components/notification-context';
+
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const PAGE_SIZE = 10;
 
@@ -37,7 +42,23 @@ function formatPublishedDate(value: string): string {
   });
 }
 
+
+
 export default function VideosScreen() {
+ const {
+   hasNewVideos,
+   lastSeenVideoId,
+   markMediaSeen,
+   refreshNotifications,
+ } = useNotifications();
+
+const inspectAsyncStorage = async () => {
+  const keys = await AsyncStorage.getAllKeys();
+  const values = await AsyncStorage.multiGet(keys);
+
+  console.log('ASYNC STORAGE:', Object.fromEntries(values));
+};
+
   const handleTabBarScroll = useTabBarScroll();
   const scrollViewRef = useRef<ScrollView>(null);
 
@@ -52,6 +73,10 @@ export default function VideosScreen() {
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [retry, setRetry] = useState(0);
+
+  const [newVideos, setNewVideos] = useState<MediaItem[]>([]);
+  const [newVideosLoading, setNewVideosLoading] = useState(false);
+  const [newVideosError, setNewVideosError] = useState('');
 
   // ID of the video currently playing inline.
   const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
@@ -89,6 +114,58 @@ export default function VideosScreen() {
       active = false;
     };
   }, [retry]);
+
+  useEffect(() => {
+    if (!hasNewVideos || lastSeenVideoId === null) {
+      return;
+    }
+
+    let isActive = true;
+
+    const loadNewVideos = async () => {
+      try {
+        setNewVideosLoading(true);
+        setNewVideosError('');
+
+        console.log('Fetching new videos after ID:', lastSeenVideoId);
+
+        const result = await fetchNewMedia('videos', lastSeenVideoId);
+
+        console.log('New videos retrieved:', result.length);
+        console.log('Retrieved videos:', result);
+
+        if (!isActive) return;
+
+        setNewVideos(result);
+
+        console.log('Marking videos as seen...');
+        // await markMediaSeen('videos');
+
+
+      } catch (error) {
+        console.error('NEW VIDEOS FETCH ERROR:', error);
+
+        if (!isActive) return;
+
+        setNewVideosError(
+          getMediaErrorMessage(
+            error,
+            'Impossible de récupérer les nouvelles vidéos.'
+          )
+        );
+      } finally {
+        if (isActive) {
+          setNewVideosLoading(false);
+        }
+      }
+    };
+
+    void loadNewVideos();
+
+    return () => {
+      isActive = false;
+    };
+  }, [hasNewVideos, lastSeenVideoId, markMediaSeen]);
 
   useEffect(() => {
     if (!selectedClass) {
@@ -186,6 +263,46 @@ export default function VideosScreen() {
     }
   }, []);
 
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        setNewVideos([]);
+        setNewVideosError('');
+        setNewVideosLoading(false);
+      };
+    }, [])
+  );
+
+
+
+
+// useEffect(() => {
+//   const prepareTest = async () => {
+//     await AsyncStorage.setItem('lastSeenVideoId', '90');
+
+//     await refreshNotifications();
+
+//     await inspectAsyncStorage();
+//   };
+
+//   void prepareTest();
+//   console.log('useEffect executed');
+// }, [refreshNotifications]);
+
+useEffect(() => {
+  const prepareTest = async () => {
+    await AsyncStorage.setItem('lastSeenVideoId', '90');
+
+    console.log('Marker set to 90 ss');
+
+    await refreshNotifications();
+
+    console.log('Notifications refreshed');
+  };
+
+  void prepareTest();
+}, []);
+
   return (
     <View style={styles.container}>
       <Header title="Vidéos Sacrées" />
@@ -208,6 +325,146 @@ export default function VideosScreen() {
           Enseignements, témoignages et découvertes bibliques pour nourrir
           votre foi, à votre rythme.
         </Text>
+
+        {/* Nouveautés */}
+        
+        {/* Nouveautés */}
+        {(newVideosLoading || newVideos.length > 0 || newVideosError !== '') && (
+          <View style={styles.newVideosSection}>
+            <View style={styles.newVideosHeader}>
+              <Text style={styles.newVideosTitle}>Nouveautés</Text>
+
+              {newVideos.length > 0 && (
+                <Text style={styles.newVideosCount}>
+                  {newVideos.length}
+                </Text>
+              )}
+            </View>
+
+            {newVideosLoading && (
+              <ActivityIndicator size="small" color="#A88632" />
+            )}
+
+            {newVideosError !== '' && (
+              <View style={styles.notice}>
+                <Text style={styles.noticeText}>{newVideosError}</Text>
+              </View>
+            )}
+
+            {!newVideosLoading && newVideos.map((video) => {
+              const isActive =
+                playingVideoId === video.youtube_video_id;
+
+              return (
+                <View
+                  key={video.youtube_video_id}
+                  style={styles.inlineMediaCard}
+                >
+                  {isActive ? (
+                    <View style={styles.inlinePlayerWrap}>
+                      <YoutubePlayer
+                        height={220}
+                        videoId={video.youtube_video_id}
+                        play={true}
+                        onChangeState={(state) => {
+                          if (state === 'ended') {
+                            setPlayingVideoId(null);
+                          }
+                        }}
+                      />
+                    </View>
+                  ) : (
+                    <TouchableOpacity
+                      activeOpacity={0.9}
+                      onPress={() => openVideo(video)}
+                    >
+                      <ImageBackground
+                        source={
+                          video.thumbnail
+                            ? { uri: video.thumbnail }
+                            : require('../../../assets/pimage.jpg')
+                        }
+                        style={styles.inlinePlayerImage}
+                        imageStyle={styles.inlinePlayerImageRadius}
+                      >
+                        <LinearGradient
+                          colors={[
+                            'rgba(8,24,48,0.04)',
+                            'rgba(8,24,48,0.88)',
+                          ]}
+                          style={styles.inlinePlayerGradient}
+                        >
+                          <View style={styles.inlinePlayButton}>
+                            <Ionicons
+                              name="play"
+                              size={22}
+                              color="#12294B"
+                            />
+                          </View>
+
+                          <View style={styles.inlinePlayerBottom}>
+                            <Text
+                              style={styles.inlinePlayerCategory}
+                              numberOfLines={1}
+                            >
+                              {video.classification}
+                            </Text>
+
+                            <Text
+                              style={styles.inlinePlayerTitle}
+                              numberOfLines={2}
+                            >
+                              {video.title}
+                            </Text>
+                          </View>
+                        </LinearGradient>
+                      </ImageBackground>
+                    </TouchableOpacity>
+                  )}
+
+                  <View style={styles.inlineMediaInfo}>
+                    <Text style={styles.mediaTitle} numberOfLines={2}>
+                      {video.title}
+                    </Text>
+
+                    <Text style={styles.mediaMeta} numberOfLines={1}>
+                      {video.classification}
+                      {formatPublishedDate(video.published_at)
+                        ? `  ·  ${formatPublishedDate(video.published_at)}`
+                        : ''}
+                    </Text>
+
+                    <TouchableOpacity
+                      onPress={() => openYouTubeComments(video)}
+                      activeOpacity={0.8}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Voir ou publier des commentaires sur ${video.title} sur YouTube`}
+                      style={styles.inlineCommentsButton}
+                    >
+                      <Ionicons
+                        name="logo-youtube"
+                        size={18}
+                        color="#FFFFFF"
+                      />
+
+                      <Text style={styles.inlineCommentsText}>
+                        Voir les commentaires sur YouTube
+                      </Text>
+
+                      <Ionicons
+                        name="open-outline"
+                        size={16}
+                        color="#FFFFFF"
+                      />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        )}
+
+
 
         <View style={styles.sectionHeading}>
           <View>
@@ -658,6 +915,33 @@ inlineCommentsText: {
   marginHorizontal: 8,
   flexShrink: 1,
 },
+// new videos***********
 
+newVideosSection: {
+  marginBottom: 28,
+},
+
+newVideosHeader: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  marginBottom: 16,
+  gap: 10,
+},
+
+newVideosTitle: {
+  fontSize: 18,
+  fontWeight: '700',
+  color: '#12294B',
+},
+
+newVideosCount: {
+  fontSize: 12,
+  fontWeight: '700',
+  color: '#FFFFFF',
+  backgroundColor: '#E53935',
+  paddingHorizontal: 8,
+  paddingVertical: 3,
+  borderRadius: 12,
+},
 
 });
