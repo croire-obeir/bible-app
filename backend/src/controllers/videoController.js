@@ -8,11 +8,15 @@ export const getVideoClasses = async (req, res) => {
        ORDER BY classification ASC`
     );
 
-    const classes = rows.map((row) => row.classification);
+    const [latestRows] = await db.execute(
+      `SELECT COALESCE(MAX(id), 0) AS latestId
+       FROM videos`
+    );
 
     return res.status(200).json({
       success: true,
-      data: classes,
+      data: rows.map((row) => row.classification),
+      latestId: Number(latestRows[0].latestId),
     });
   } catch (error) {
     console.error('Error fetching video classes:', error);

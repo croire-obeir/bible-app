@@ -31,7 +31,7 @@ app.use('/api/media-classes', mediaClassesRoutes);
 app.use('/api/media', mediaByClassRoutes);
 
 app.get('/', (req, res) => {
-    res.send('Bienvenue a L\'API Croire et Obeir API! added media Ids');
+    res.send('Bienvenue a L\'API Croire et Obeir API! added media Ids and lastets ids');
 });
 
 const PORT = process.env.PORT || 3000;
