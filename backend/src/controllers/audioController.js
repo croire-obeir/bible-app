@@ -8,18 +8,22 @@ export const getAudioClasses = async (req, res) => {
        ORDER BY classification ASC`
     );
 
-    const classes = rows.map((row) => row.classification);
+    const [latestRows] = await db.execute(
+      `SELECT COALESCE(MAX(id), 0) AS latestId
+       FROM audios`
+    );
 
     return res.status(200).json({
       success: true,
-      data: classes,
+      data: rows.map((row) => row.classification),
+      latestId: Number(latestRows[0].latestId),
     });
   } catch (error) {
-    console.error('Error fetching audio classes:', error);
+    console.error('Error fetching video classes:', error);
 
     return res.status(500).json({
       success: false,
-      message: 'Échec de la récupération des catégories audio',
+      message: 'Échec de la récupération des catégories de vidéos',
     });
   }
 };
@@ -57,7 +61,7 @@ export const getAudiosByClass = async (req, res) => {
 
     // Get videos
     const [rows] = await db.execute(
-      `SELECT youtube_video_id, title, classification, thumbnail, published_at
+      `SELECT id,youtube_video_id, title, classification, thumbnail, published_at
        FROM audios
        WHERE classification = ?
        ORDER BY published_at DESC
