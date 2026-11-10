@@ -12,6 +12,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SQLiteProvider } from 'expo-sqlite';
 
 import { restoreSession } from '../api/services/authServices';
+import {NotificationProvider} from '../components/notification-context';
 
 const ONBOARDING_KEY = 'hasCompletedOnboarding';
 
@@ -90,6 +91,7 @@ export default function RootLayout() {
           </View>
         }
       >
+        
         <SQLiteProvider
           databaseName="lsg_1910.db"
           assetSource={{
@@ -97,26 +99,28 @@ export default function RootLayout() {
           }}
           useSuspense
         >
-          <StartupAuth />
+          <NotificationProvider>
+            <StartupAuth />
 
-          <Stack
-            screenOptions={{
-              headerShown: false,
-            }}
-          >
-            <Stack.Screen name="screens/index" />
+            <Stack
+              screenOptions={{
+                headerShown: false,
+              }}
+            >
+              <Stack.Screen name="screens/index" />
 
-            <Stack.Screen name="screens/AccountChoice" />
+              <Stack.Screen name="screens/AccountChoice" />
 
-            <Stack.Screen name="screens/Login" />
+              <Stack.Screen name="screens/Login" />
 
-            <Stack.Screen name="screens/Register" />
+              <Stack.Screen name="screens/Register" />
 
-            <Stack.Screen name="screens/(tabs)" />
+              <Stack.Screen name="screens/(tabs)" />
 
-            <Stack.Screen name="screens/VersionSelect" />
-             <Stack.Screen name="screens/SearchByTopic" />
-          </Stack>
+              <Stack.Screen name="screens/VersionSelect" />
+              <Stack.Screen name="screens/SearchByTopic" />
+            </Stack>
+          </NotificationProvider>
         </SQLiteProvider>
       </Suspense>
 

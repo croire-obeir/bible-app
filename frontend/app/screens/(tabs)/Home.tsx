@@ -8,6 +8,7 @@ import {
   ImageBackground,
   StatusBar,
 } from 'react-native';
+import { useNotifications } from '../../../components/notification-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -25,6 +26,8 @@ export default function HomeScreen() {
   const router = useRouter();
   const [drawerVisible, setDrawerVisible] = useState(false);
   const handleTabBarScroll = useTabBarScroll();
+  const { hasNewVideos, hasNewAudios } = useNotifications();
+  const hasNewNotifications = hasNewVideos || hasNewAudios;
 
   const features: Array<{
     id: string;
@@ -112,7 +115,23 @@ export default function HomeScreen() {
           Croire & Obéir
         </Text>
 
-        <View style={styles.headerButton} />
+        <TouchableOpacity
+          style={styles.headerButton}
+          activeOpacity={0.7}
+          onPress={() => router.push('/screens/Notifications')}
+        >
+          <View style={{ position: 'relative' }}>
+            <Ionicons
+              name="notifications"
+              size={23}
+              color="#0A2D55"
+            />
+
+            {hasNewNotifications && (
+              <View style={styles.notificationDot} />
+            )}
+          </View>
+        </TouchableOpacity>
       </View>
 
       {/* ==================================================
@@ -266,6 +285,17 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#233A59',
     marginTop: 1,
+  },
+  notificationDot: {
+  position: 'absolute',
+  top: -2,
+  right: -3,
+  width: 9,
+  height: 9,
+  borderRadius: 5,
+  backgroundColor: '#E53935',
+  borderWidth: 1,
+  borderColor: '#FFFFFF',
   },
 
   // ======================================================

@@ -1,13 +1,11 @@
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect,  useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Image,
   ImageBackground,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
