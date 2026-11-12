@@ -107,7 +107,7 @@ export const forgotPassword= async(req,res)=>{
 
         // 4. Send Email via Resend
         const { data, error } = await resend.emails.send({
-            from: 'croire et obéir <noreply@mail.tommytabe.dev>', // Change to your verified domain in production
+            from: 'Croire & Obéir <noreply@mail.croireobeir.org>', // Change to your verified domain in production
             to: [email], // Resend expects an array or a string
             subject: 'Demande de modification du mot de passe',
             html: `
