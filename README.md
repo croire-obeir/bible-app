@@ -60,8 +60,8 @@ visitez http://localhost:3000/ - Si la connexion s'établit et que l'API s'affic
 visitez http://localhost:8080/  pour accéder à l'interface graphique de MySQL
 
 
-docker exec -it bible_api npx knex migrate:latest --knexfile src/config/knexfile.js
-npx knex migrate:make users_test --knexfile src/config/knex.js --env development
+docker exec -it bible_api npx knex migrate:make create_daily_verses --knexfile src/config/knexfile.js --env development ///
+docker exec -it bible_api npx knex migrate:latest --knexfile src/config/knexfile.js --env development
 
 
 
