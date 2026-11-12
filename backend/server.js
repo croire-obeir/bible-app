@@ -37,7 +37,7 @@ app.use('/api/app-installations', appInstallationsRoutes);
 app.use('/api/daily-verse', dailyVerseRoutes);
 
 app.get('/', (req, res) => {
-    res.send('Bienvenue a L\'API Croire et Obeir API!, hahahahahaha');
+    res.send('Bienvenue a L\'API Croire et Obeir API!');
 });
 
 const PORT = process.env.PORT || 3000;
