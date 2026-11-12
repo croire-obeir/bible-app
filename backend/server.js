@@ -9,6 +9,9 @@ import passport from 'passport';
 import mediaClassesRoutes from './src/routes/mediaClassesRoutes.js';
 import mediaByClassRoutes from './src/routes/mediaByClassRoutes.js';
 import newMediaRoutes from './src/routes/newMediaRoutes.js';
+import appInstallationsRoutes from './src/routes/appInstallationsRoutes.js';
+import dailyVerseRoutes from './src/routes/dailyVerseRoutes.js';
+
 
 
 
@@ -30,9 +33,11 @@ app.use('/auth', youtubeRoutes);
 app.use('/api/media-classes', mediaClassesRoutes);
 app.use('/api/media', mediaByClassRoutes);
 app.use('/api/new-media', newMediaRoutes);
+app.use('/api/app-installations', appInstallationsRoutes);
+app.use('/api/daily-verse', dailyVerseRoutes);
 
 app.get('/', (req, res) => {
-    res.send('Bienvenue a L\'API Croire et Obeir API!, hahahahahaha');
+    res.send('Bienvenue a L\'API Croire et Obeir API!');
 });
 
 const PORT = process.env.PORT || 3000;
