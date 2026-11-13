@@ -14,6 +14,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import AppDrawer from '../../../components/AppDrawer';
 import { useTabBarScroll } from '../../../components/tab-bar-visibility';
+import AppHeader from '../../../components/AppHeader';
+import GreetingSection from '../../../components/GreetingSection';
 
 type AppRoute =
   | '/screens/VersionSelect'
@@ -94,45 +96,17 @@ export default function HomeScreen() {
         translucent={false}
       />
 
-      {/* ==================================================
-          HEADER
-      ================================================== */}
-
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.headerButton}
-          activeOpacity={0.7}
-          onPress={() => setDrawerVisible(true)}
-        >
-          <Ionicons
-            name="menu"
-            size={21}
-            color="#0A2D55"
-          />
-        </TouchableOpacity>
-
-        <Text style={styles.logo}>
-          Croire & Obéir
-        </Text>
-
-        <TouchableOpacity
-          style={styles.headerButton}
-          activeOpacity={0.7}
-          onPress={() => router.push('/screens/Notifications')}
-        >
-          <View style={{ position: 'relative' }}>
-            <Ionicons
-              name="notifications"
-              size={23}
-              color="#0A2D55"
-            />
-
-            {hasNewNotifications && (
-              <View style={styles.notificationDot} />
-            )}
-          </View>
-        </TouchableOpacity>
-      </View>
+      <AppHeader
+        actions={[
+          {
+            name: 'notifications-outline',
+            onPress: () => router.push('/screens/Notifications'),
+            showDot: hasNewNotifications,
+          },
+          
+        ]}
+      />
+      
 
       {/* ==================================================
           CONTENU
@@ -146,6 +120,8 @@ export default function HomeScreen() {
         onScroll={handleTabBarScroll}
         scrollEventThrottle={16}
       >
+
+        <GreetingSection />
 
         {/* ==================================================
             VERSET DU JOUR
@@ -260,43 +236,31 @@ const styles = StyleSheet.create({
   // HEADER
   // ======================================================
 
-  header: {
-    height: 100,
-    width: '100%',
-    backgroundColor: '#c7ba9d',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 14,
-    paddingTop: 20,
-  },
+ 
+ 
 
-  headerButton: {
-    width: 32,
-    height: 32,
-    alignItems: 'center',
+  headerGreeting: {
+    flex: 1,
     justifyContent: 'center',
   },
 
-  logo: {
-    fontFamily: 'serif',
-    fontStyle: 'normal',
+  greetingTitle: {
     fontSize: 25,
     fontWeight: '700',
-    color: '#233A59',
-    marginTop: 1,
+    color: '#1F2937',
+    letterSpacing: -0.6,
   },
-  notificationDot: {
-  position: 'absolute',
-  top: -2,
-  right: -3,
-  width: 9,
-  height: 9,
-  borderRadius: 5,
-  backgroundColor: '#E53935',
-  borderWidth: 1,
-  borderColor: '#FFFFFF',
+
+  greetingSubtitle: {
+    fontSize: 13,
+    color: '#8A8F98',
+    marginTop: 4,
+    fontWeight: '400',
   },
+
+ 
+
+
 
   // ======================================================
   // SCROLL

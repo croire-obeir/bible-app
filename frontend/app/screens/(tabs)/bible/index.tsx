@@ -87,42 +87,6 @@ export default function BibleScreen() {
   return (
     <View style={styles.container}>
       <ImageBackground source={require('../../../../assets/enregistrement.png')} style={styles.bg} imageStyle={{ opacity: 0.05 }}>
-      
-        {/* <CustomHeader
-          leftSlot={<TouchableOpacity onPress={() => setDrawerVisible(true)}><Ionicons name="menu" size={24} color="#0a2d55" /></TouchableOpacity>}
-          centerSlot="Croire & Obéir"
-          rightSlot={<TouchableOpacity onPress={() => router.push('/screens/SearchByTopic')}><Ionicons name="search" size={24} color="#0a2d55" /></TouchableOpacity>}
-        />   */}
-        {/* HEADER START */}
-        {/* <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.headerButton}
-            activeOpacity={0.7}
-            onPress={() => setDrawerVisible(true)}
-          >
-            <Ionicons
-              name="globe-outline"
-              size={21}
-              color="#0A2D55"
-            />
-          </TouchableOpacity> 
-
-          <Text style={styles.logo}>
-            Croire & Obéir
-          </Text>
-
-          <TouchableOpacity
-            style={styles.headerButton}
-            activeOpacity={0.7}
-            onPress={() => router.push('/screens/SearchByTopic')}
-          >
-            <Ionicons
-              name="search"
-              size={21}
-              color="#0A2D55"
-            />
-          </TouchableOpacity>
-        </View> */}
 
         <Header
           leftIcon="globe-outline"
