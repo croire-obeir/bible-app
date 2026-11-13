@@ -2,24 +2,24 @@ import axios from 'axios';
 import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 
-const getApiUrl = () => {
-    if (Platform.OS === 'web') {
-      return 'http://localhost:3000';
-    } else if (Platform.OS === 'android') {
-      // http://192.168.178.100:3000
-      //192.168.0.176
-      return 'http://192.168.0.176:3000';
-    } else {
-      // iOS Simulator or Physical Device
-      return 'http://192.168.1.XX:3000'; // Replace with your IP
-    }  
-    // //deployed backend url
-    // return 'https://backend-production-9988.up.railway.app'
-  };
-
 // const getApiUrl = () => {
-//   return 'https://api.croireobeir.org';
-// };
+//     if (Platform.OS === 'web') {
+//       return 'http://localhost:3000';
+//     } else if (Platform.OS === 'android') {
+//       // http://192.168.178.100:3000
+//       //192.168.0.176
+//       return 'http://192.168.0.176:3000';
+//     } else {
+//       // iOS Simulator or Physical Device
+//       return 'http://192.168.1.XX:3000'; // Replace with your IP
+//     }  
+//     // //deployed backend url
+//     // return 'https://backend-production-9988.up.railway.app'
+//   };
+
+const getApiUrl = () => {
+  return 'https://api.croireobeir.org';
+};
 
 const apiClient = axios.create({
   baseURL: `${getApiUrl()}`,
@@ -41,6 +41,9 @@ apiClient.interceptors.request.use(async (config) => {
     '/api/media-classes/audios',
     '/api/media/videos',
     '/api/media/audios',
+    '/api/new-media/videos',
+    '/api/new-media/audios',
+    '/api/app-installations/register'
   ];
 
   // Remove query parameters before checking the endpoint.

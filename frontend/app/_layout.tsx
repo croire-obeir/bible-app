@@ -13,6 +13,7 @@ import { SQLiteProvider } from 'expo-sqlite';
 
 import { restoreSession } from '../api/services/authServices';
 import {NotificationProvider} from '../components/notification-context';
+import { registerInstallation } from '../api/services/installationService';
 
 const ONBOARDING_KEY = 'hasCompletedOnboarding';
 
@@ -69,6 +70,10 @@ function StartupAuth() {
 
 export default function RootLayout() {
   const colorScheme = 'light';
+
+  useEffect(() => {
+    registerInstallation();
+  }, []);
 
   return (
     <ThemeProvider
