@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -8,14 +8,32 @@ import {
   ImageBackground,
   StatusBar,
 } from 'react-native';
-import { useNotifications } from '../../../components/notification-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import AppDrawer from '../../../components/AppDrawer';
 import { useTabBarScroll } from '../../../components/tab-bar-visibility';
-import AppHeader from '../../../components/AppHeader';
-import GreetingSection from '../../../components/GreetingSection';
+
+interface DailyVerse {
+  verse_text: string;
+  book_name: string;
+  chapter: number;
+  verse_num: number;
+}
+
+const dailyVerseImages = [
+  require('../../../assets/image_f6ac4965.jpg'),
+  require('../../../assets/image_2396cbbc.jpg'),
+  require('../../../assets/image_13dd7d69.jpg'),
+];
+
+const getLocalDateKey = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 type AppRoute =
   | '/screens/VersionSelect'
@@ -26,10 +44,95 @@ type AppRoute =
 
 export default function HomeScreen() {
   const router = useRouter();
+  const db = useSQLiteContext();
   const [drawerVisible, setDrawerVisible] = useState(false);
+  const [todayKey, setTodayKey] = useState(getLocalDateKey);
+  const [dailyVerse, setDailyVerse] = useState<DailyVerse | null>(null);
+  const [verseLoading, setVerseLoading] = useState(true);
   const handleTabBarScroll = useTabBarScroll();
-  const { hasNewVideos, hasNewAudios } = useNotifications();
-  const hasNewNotifications = hasNewVideos || hasNewAudios;
+  const [year, month, day] = todayKey.split('-').map(Number);
+  const dayNumber = Math.floor(Date.UTC(year, month - 1, day) / 86_400_000);
+  const dailyVerseImage = dailyVerseImages[dayNumber % dailyVerseImages.length];
+
+  useEffect(() => {
+    let midnightTimeout: ReturnType<typeof setTimeout>;
+
+    const refreshDate = () => setTodayKey(getLocalDateKey());
+    const scheduleMidnightRefresh = () => {
+      const now = new Date();
+      const nextMidnight = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate() + 1
+      ).getTime();
+
+      midnightTimeout = setTimeout(() => {
+        refreshDate();
+        scheduleMidnightRefresh();
+      }, Math.max(nextMidnight - Date.now() + 25, 25));
+    };
+
+    refreshDate();
+    scheduleMidnightRefresh();
+
+    const appStateSubscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') {
+        refreshDate();
+      }
+    });
+
+    return () => {
+      clearTimeout(midnightTimeout);
+      appStateSubscription.remove();
+    };
+  }, []);
+
+  useEffect(() => {
+    let isActive = true;
+
+    const loadDailyVerse = async () => {
+      try {
+        setVerseLoading(true);
+        const countRow = await db.getFirstAsync<{ total: number }>(
+          'SELECT COUNT(*) AS total FROM verses WHERE version_id = ?',
+          [1]
+        );
+        const total = countRow?.total ?? 0;
+
+        if (total === 0) {
+          if (isActive) setDailyVerse(null);
+          return;
+        }
+
+        const verseIndex = dayNumber % total;
+        const verse = await db.getFirstAsync<DailyVerse>(
+          `SELECT v.verse_text, b.name AS book_name, v.chapter, v.verse_num
+           FROM verses v
+           JOIN books b ON b.id = v.book_id
+           WHERE v.version_id = ?
+           ORDER BY v.canonical_id ASC
+           LIMIT 1 OFFSET ?`,
+          [1, verseIndex]
+        );
+
+        if (isActive) {
+          setDailyVerse(verse
+            ? { ...verse, verse_text: verse.verse_text.replace(/¶/g, '') }
+            : null);
+        }
+      } catch (error) {
+        console.error('Error loading daily verse from SQLite:', error);
+        if (isActive) setDailyVerse(null);
+      } finally {
+        if (isActive) setVerseLoading(false);
+      }
+    };
+
+    loadDailyVerse();
+    return () => {
+      isActive = false;
+    };
+  }, [db, todayKey]);
 
   const features: Array<{
     id: string;
@@ -96,19 +199,31 @@ export default function HomeScreen() {
         translucent={false}
       />
 
-      <AppHeader
-        actions={[
-          {
-            name: 'notifications-outline',
-            onPress: () => router.push('/screens/Notifications'),
-            showDot: hasNewNotifications,
-          },
-          
-        ]}
-      />
-      
-
       {/* ==================================================
+          HEADER
+      ================================================== */}
+
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.headerButton}
+          activeOpacity={0.7}
+          onPress={() => setDrawerVisible(true)}
+        >
+          <Ionicons
+            name="menu"
+            size={21}
+            color="#0A2D55"
+          />
+        </TouchableOpacity>
+
+        <Text style={styles.logo}>
+          Croire & Obéir
+        </Text>
+
+        <View style={styles.headerButton} />
+      </View>
+
+        {/* ==================================================
           CONTENU
       ================================================== */}
 
@@ -154,11 +269,17 @@ export default function HomeScreen() {
                 </View>
 
                 <Text style={styles.verseText}>
-                  “Que ce livre de la loi ne déloigne point de ta bouche; médite-le jour et nuit...”
+                  {dailyVerse
+                    ? `“${dailyVerse.verse_text}”`
+                    : verseLoading
+                      ? 'Chargement du verset...'
+                      : 'Verset indisponible'}
                 </Text>
 
                 <Text style={styles.verseReference}>
-                  Josué 1:8 →
+                  {dailyVerse
+                    ? `${dailyVerse.book_name} ${dailyVerse.chapter}:${dailyVerse.verse_num} →`
+                    : '→'}
                 </Text>
 
               </View>
@@ -221,6 +342,8 @@ export default function HomeScreen() {
       <AppDrawer
         visible={drawerVisible}
         onClose={() => setDrawerVisible(false)}
+        selectedVersion={selectedVersion}
+        setSelectedVersion={handleVersionChange}
       />
     </View>
   );
@@ -283,11 +406,11 @@ const styles = StyleSheet.create({
 
   verseCard: {
     width: '100%',
-    height: 350,
+    height: 300,
     borderRadius: 24,
     overflow: 'hidden',
-    marginBottom: 23,
-    marginTop: 10,
+    marginBottom: 20,
+    marginTop: 9,
   },
 
   verseBackground: {
@@ -306,7 +429,7 @@ const styles = StyleSheet.create({
 
   verseContent: {
     paddingHorizontal: 21,
-    paddingBottom: 20,
+    paddingBottom: 80,
   },
 
   verseLabel: {
@@ -350,17 +473,17 @@ const styles = StyleSheet.create({
     height: 160,
     borderRadius: 18,
     paddingHorizontal: 13,
-    paddingTop: 13,
-    marginBottom: 10,
+    paddingTop: 11,
+    marginBottom: 8,
   },
 
   featureIcon: {
-    width: 35,
-    height: 35,
-    borderRadius: 18,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 7,
+    marginBottom: 6,
   },
 
   featureTitle: {
