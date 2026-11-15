@@ -10,12 +10,66 @@ import {
 import { Stack, router, useRootNavigationState } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SQLiteProvider } from 'expo-sqlite';
+import { Asset } from 'expo-asset';
+import { WebView } from 'react-native-webview';
 
 import { restoreSession } from '../api/services/authServices';
 import {NotificationProvider} from '../components/notification-context';
 import { registerInstallation } from '../api/services/installationService';
 
 const ONBOARDING_KEY = 'hasCompletedOnboarding';
+const STARTUP_ANIMATION_HTML = require('../assets/images/Croire & Obéir – Animation de démarrage (1).html');
+
+function StartupAnimation() {
+  const [animationUri, setAnimationUri] = useState<string | null>(null);
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    const asset = Asset.fromModule(STARTUP_ANIMATION_HTML);
+
+    asset.downloadAsync().then(() => {
+      if (active) setAnimationUri(asset.localUri ?? asset.uri);
+    }).catch((error) => {
+      console.warn('Impossible de charger l’animation de démarrage:', error);
+      if (active) setVisible(false);
+    });
+
+    const fallbackTimer = setTimeout(() => setVisible(false), 8000);
+    return () => {
+      active = false;
+      clearTimeout(fallbackTimer);
+    };
+  }, []);
+
+  if (!visible) return null;
+
+  return (
+    <View
+      pointerEvents="auto"
+      style={{
+        position: 'absolute',
+        top: 0,
+        right: 0,
+        bottom: 0,
+        left: 0,
+        zIndex: 1000,
+        backgroundColor: '#ffffff',
+      }}
+    >
+      {animationUri ? (
+        <WebView
+          source={{ uri: animationUri }}
+          originWhitelist={['*']}
+          javaScriptEnabled
+          onMessage={() => setVisible(false)}
+          injectedJavaScript="setTimeout(function(){window.ReactNativeWebView.postMessage('animation-finished')}, 5200); true;"
+          onError={() => setVisible(false)}
+        />
+      ) : null}
+    </View>
+  );
+}
 
 function StartupAuth() {
   const rootNavigationState = useRootNavigationState();
@@ -125,6 +179,7 @@ export default function RootLayout() {
               <Stack.Screen name="screens/VersionSelect" />
               <Stack.Screen name="screens/SearchByTopic" />
             </Stack>
+            <StartupAnimation />
           </NotificationProvider>
         </SQLiteProvider>
       </Suspense>

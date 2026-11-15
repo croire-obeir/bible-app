@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
+  AppState,
   View,
   Text,
   TouchableOpacity,
@@ -12,7 +13,10 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import AppDrawer from '../../../components/AppDrawer';
+import { useSQLiteContext } from 'expo-sqlite';
 import { useTabBarScroll } from '../../../components/tab-bar-visibility';
+
+import GreetingSection from '../../../components/GreetingSection';
 
 interface DailyVerse {
   verse_text: string;
@@ -22,9 +26,9 @@ interface DailyVerse {
 }
 
 const dailyVerseImages = [
-  require('../../../assets/image_f6ac4965.jpg'),
-  require('../../../assets/image_2396cbbc.jpg'),
-  require('../../../assets/image_13dd7d69.jpg'),
+  require('../../../assets/bible.jpg'),
+  require('../../../assets/pimage.jpg'),
+  require('../../../assets/Timage.jpg'),
 ];
 
 const getLocalDateKey = () => {
@@ -46,10 +50,14 @@ export default function HomeScreen() {
   const router = useRouter();
   const db = useSQLiteContext();
   const [drawerVisible, setDrawerVisible] = useState(false);
+  const [selectedVersion, setSelectedVersion] = useState('LSG');
   const [todayKey, setTodayKey] = useState(getLocalDateKey);
   const [dailyVerse, setDailyVerse] = useState<DailyVerse | null>(null);
   const [verseLoading, setVerseLoading] = useState(true);
   const handleTabBarScroll = useTabBarScroll();
+  const handleVersionChange = (version: string) => {
+    setSelectedVersion(version);
+  };
   const [year, month, day] = todayKey.split('-').map(Number);
   const dayNumber = Math.floor(Date.UTC(year, month - 1, day) / 86_400_000);
   const dailyVerseImage = dailyVerseImages[dayNumber % dailyVerseImages.length];
@@ -132,7 +140,7 @@ export default function HomeScreen() {
     return () => {
       isActive = false;
     };
-  }, [db, todayKey]);
+  }, [db, todayKey, dayNumber]);
 
   const features: Array<{
     id: string;
@@ -247,7 +255,7 @@ export default function HomeScreen() {
           style={styles.verseCard}
         >
           <ImageBackground
-            source={require('../../../assets/bible.jpg')}
+            source={dailyVerseImage}
             resizeMode="cover"
             style={styles.verseBackground}
             imageStyle={styles.verseImage}
@@ -355,6 +363,31 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
 
+  header: {
+    height: 100,
+    width: '100%',
+    backgroundColor: '#c7ba9d',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 14,
+    paddingTop: 20,
+  },
+
+  headerButton: {
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  logo: {
+    fontFamily: 'serif',
+    fontSize: 25,
+    fontWeight: '700',
+    color: '#233A59',
+  },
+
   // ======================================================
   // HEADER
   // ======================================================
@@ -409,7 +442,7 @@ const styles = StyleSheet.create({
     height: 300,
     borderRadius: 24,
     overflow: 'hidden',
-    marginBottom: 20,
+    marginBottom: 13,
     marginTop: 9,
   },
 
@@ -429,7 +462,7 @@ const styles = StyleSheet.create({
 
   verseContent: {
     paddingHorizontal: 21,
-    paddingBottom: 80,
+    paddingBottom: 75,
   },
 
   verseLabel: {
