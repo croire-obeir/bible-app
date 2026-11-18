@@ -17,10 +17,9 @@ import Header from '../../../components/CustomHeader';
 import CustomInput from '../../../components/CustomInput';
 import { useTabBarScroll } from '../../../components/tab-bar-visibility';
 
-const WHATSAPP_PHONE_NUMBER =
-  process.env.EXPO_PUBLIC_WHATSAPP_NUMBER ?? '237000000000';
-const CONTACT_EMAIL =
-  process.env.EXPO_PUBLIC_CONTACT_EMAIL ?? 'contact@croireobeir.org';
+const WHATSAPP_PHONE_NUMBER_1 = process.env.EXPO_PUBLIC_WHATSAPP_NUMBER_1?? '';
+const WHATSAPP_PHONE_NUMBER_2 = process.env.EXPO_PUBLIC_WHATSAPP_NUMBER_2?? '';
+const CONTACT_EMAIL = process.env.EXPO_PUBLIC_CONTACT_EMAIL;
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -121,24 +120,45 @@ export default function ContactScreen() {
                 <View style={[styles.iconWrap, styles.whatsappIconWrap]}>
                   <Ionicons name="logo-whatsapp" size={26} color="#25D366" />
                 </View>
+
                 <View style={styles.cardHeaderText}>
-                  <Text style={styles.cardTitle}>Contactez-nous sur WhatsApp</Text>
+                  <Text style={styles.cardTitle}>
+                    Contactez-nous sur WhatsApp
+                  </Text>
                   <Text style={styles.cardDescription}>
-                    Besoin d'une réponse rapide ? Échangez directement avec notre équipe sur WhatsApp.
+                    Besoin d'une réponse rapide ? Échangez directement
+                    avec notre équipe sur WhatsApp.
                   </Text>
                 </View>
               </View>
 
-              <TouchableOpacity
-                style={styles.whatsappButton}
-                activeOpacity={0.85}
-                accessibilityRole="button"
-                accessibilityLabel="Discuter sur WhatsApp"
-                onPress={() => void openWhatsApp(WHATSAPP_PHONE_NUMBER)}
-              >
-                <Ionicons name="logo-whatsapp" size={18} color="#fff" />
-                <Text style={styles.primaryButtonText}>Discuter sur WhatsApp</Text>
-              </TouchableOpacity>
+              <View style={styles.whatsappButtons}>
+                <TouchableOpacity
+                  style={styles.whatsappButton}
+                  activeOpacity={0.85}
+                  accessibilityRole="button"
+                  accessibilityLabel="Contacter le premier numéro sur WhatsApp"
+                  onPress={() => void openWhatsApp(WHATSAPP_PHONE_NUMBER_1)}
+                >
+                  <Ionicons name="logo-whatsapp" size={18} color="#fff" />
+                  <Text style={styles.primaryButtonText}>
+                    Contact et accompagnement 1
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.whatsappButton}
+                  activeOpacity={0.85}
+                  accessibilityRole="button"
+                  accessibilityLabel="Contacter le deuxième numéro sur WhatsApp"
+                  onPress={() => void openWhatsApp(WHATSAPP_PHONE_NUMBER_2)}
+                >
+                  <Ionicons name="logo-whatsapp" size={18} color="#fff" />
+                  <Text style={styles.primaryButtonText}>
+                    Contact et accompagnement 2
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
 
             <View style={styles.card}>
@@ -270,4 +290,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   bottomPadding: { height: 20 },
+  whatsappButtons: {
+    gap: 10,
+  },
 });
