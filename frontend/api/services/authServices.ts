@@ -131,7 +131,7 @@ export const restoreSession = async (): Promise<boolean> => {
       return true;
     }
     const response = await apiClient.post(
-      '/api/auth/refresh',
+      '/api/refresh-token',
       {
         refreshToken,
       }

@@ -36,6 +36,8 @@ apiClient.interceptors.request.use(async (config) => {
     '/api/auth/signup',
     '/api/auth/login',
     '/api/auth/google-login',
+    '/api/refresh-token',
+    '/api/daily-verse',
     '/api/user/forgot-password',
     '/api/media-classes/videos',
     '/api/media-classes/audios',

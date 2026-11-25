@@ -7,6 +7,9 @@ import { useSQLiteContext } from 'expo-sqlite';
 import AppDrawer from '../../../../components/AppDrawer';
 import Header from '../../../../components/CustomHeader';
 import { useTabBarScroll } from '../../../../components/tab-bar-visibility';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const SELECTED_BIBLE_VERSION_KEY = '@croire_obeir/selected_bible_version';
 
 interface BibleBook {
   id: number;
@@ -39,8 +42,28 @@ export default function BibleScreen() {
         ? params.selectedVersion[0]
         : params.selectedVersion;
 
-      setCurrentVersion(selectedVersion || 'Louis Segond');
+      const version = selectedVersion.toLowerCase().includes('semeur')
+        ? 'LA_SEMEUR'
+        : 'LSG';
+      setSelectedVersion(version);
+      setCurrentVersion(version === 'LSG' ? 'Louis Segond' : 'La Semeur');
+      void AsyncStorage.setItem(SELECTED_BIBLE_VERSION_KEY, version).catch((error) => {
+        console.warn('Could not save the selected Bible version:', error);
+      });
     }
+  }, [params.selectedVersion]);
+
+  useEffect(() => {
+    if (params.selectedVersion) return;
+
+    void AsyncStorage.getItem(SELECTED_BIBLE_VERSION_KEY).then((savedVersion) => {
+      if (savedVersion === 'LSG' || savedVersion === 'LA_SEMEUR') {
+        setSelectedVersion(savedVersion);
+        setCurrentVersion(savedVersion === 'LSG' ? 'Louis Segond' : 'La Semeur');
+      }
+    }).catch((error) => {
+      console.warn('Could not load the selected Bible version:', error);
+    });
   }, [params.selectedVersion]);
 
   useEffect(() => {
@@ -81,6 +104,14 @@ export default function BibleScreen() {
         bookName: bookName,
         chapterCount: chapterCount
       }
+    });
+  };
+
+  const handleVersionChange = (version: string) => {
+    setSelectedVersion(version);
+    setCurrentVersion(version === 'LSG' ? 'Louis Segond' : version);
+    void AsyncStorage.setItem(SELECTED_BIBLE_VERSION_KEY, version).catch((error) => {
+      console.warn('Could not save the selected Bible version:', error);
     });
   };
 
@@ -189,7 +220,7 @@ export default function BibleScreen() {
       visible={drawerVisible} 
       onClose={() => setDrawerVisible(false)} 
       selectedVersion={selectedVersion}
-      setSelectedVersion={setSelectedVersion}
+      setSelectedVersion={handleVersionChange}
       />
     </View>
   );
