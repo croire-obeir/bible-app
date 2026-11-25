@@ -328,29 +328,7 @@ export default function HomeScreen() {
     },
   ];
 
-  const inspectAsyncStorage = async () => {
-  try {
-    const keys = await AsyncStorage.getAllKeys();
-    const items = await AsyncStorage.multiGet(keys);
-
-    console.log('========== ASYNC STORAGE ==========');
-
-    items.forEach(([key, value]) => {
-      console.log(`KEY: ${key}`);
-      console.log(`VALUE: ${value}`);
-      console.log('--------------------------------');
-    });
-
-    console.log('Total keys:', keys.length);
-  } catch (error) {
-    console.error('AsyncStorage inspection error:', error);
-  }
-};
-
-
-useEffect(() => {
-  inspectAsyncStorage();
-}, []);
+  
 
   return (
     <View style={styles.container}>
@@ -403,50 +381,7 @@ useEffect(() => {
             VERSET DU JOUR
         ================================================== */}
 
-        {/* <TouchableOpacity
-          activeOpacity={0.95}
-          style={styles.verseCard}
-        >
-          <ImageBackground
-            source={dailyVerseImage}
-            resizeMode="cover"
-            style={styles.verseBackground}
-            imageStyle={styles.verseImage}
-          >
-            <LinearGradient
-              colors={[
-                'rgba(10, 45, 85, 0.30)',
-                'rgba(10, 45, 85, 0.60)',
-                'rgba(10, 45, 85, 0.95)',
-              ]}
-              locations={[0, 0.48, 1]}
-              style={styles.verseGradient}
-            >
-              <View style={styles.verseContent}>
-
-                <View style={styles.verseLabelRow}>
-                  <Ionicons name="star" size={8} color="#D4AF37" />
-                  <Text style={styles.verseLabel}>VERSET DU JOUR</Text>
-                </View>
-
-                <Text style={styles.verseText}>
-                  {dailyVerse
-                    ? `“${dailyVerse.verse_text}”`
-                    : verseLoading
-                      ? 'Chargement du verset...'
-                      : 'Verset indisponible'}
-                </Text>
-
-                <Text style={styles.verseReference}>
-                  {dailyVerse
-                    ? `${dailyVerse.book_name} ${dailyVerse.chapter}:${dailyVerse.verse_num} →`
-                    : '→'}
-                </Text>
-
-              </View>
-            </LinearGradient>
-          </ImageBackground>
-        </TouchableOpacity> */}
+       
         <TouchableOpacity
           activeOpacity={0.95}
           style={styles.verseCard}
